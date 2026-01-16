@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.member.usecase;
+package com.tavemakers.surf.domain.member.facade;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -11,13 +11,13 @@ import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class MemberAdminUsecase {
+public class MemberAdminFacade {
 
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;

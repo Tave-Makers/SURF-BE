@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.comment.controller;
 import com.tavemakers.surf.domain.comment.dto.req.CommentCreateReqDTO;
 import com.tavemakers.surf.domain.comment.dto.res.CommentListResDTO;
 import com.tavemakers.surf.domain.comment.dto.res.CommentResDTO;
-import com.tavemakers.surf.domain.comment.service.CommentService;
+import com.tavemakers.surf.domain.comment.facade.CommentFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
@@ -27,7 +27,7 @@ import static com.tavemakers.surf.domain.comment.controller.ResponseMessage.*;
 @Tag(name = "댓글", description = "댓글 및 대댓글 관련 CRUD API")
 public class CommentController {
 
-    private final CommentService commentService;
+    private final CommentFacade commentFacade;
 
     @Operation(summary = "댓글 생성 (루트/대댓글)", description = "rootId가 null이면 루트 댓글")
     @PostMapping("/v1/user/posts/{postId}/comments")
@@ -35,7 +35,7 @@ public class CommentController {
             @PathVariable Long postId,
             @Valid @RequestBody CommentCreateReqDTO req) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CommentResDTO response = commentService.createComment(postId, memberId, req);
+        CommentResDTO response = commentFacade.createComment(postId, memberId, req);
         return ApiResponse.response(HttpStatus.CREATED, COMMENT_CREATED.getMessage(), response);
     }
 
@@ -49,7 +49,7 @@ public class CommentController {
             Pageable pageable
     ){
         Long memberId = SecurityUtils.getCurrentMemberId();
-        CommentListResDTO data = commentService.getComments(postId, pageable, memberId);
+        CommentListResDTO data = commentFacade.getComments(postId, pageable, memberId);
         return ApiResponse.response(HttpStatus.OK, COMMENT_READ.getMessage(), data);
     }
 
@@ -58,7 +58,7 @@ public class CommentController {
     public ApiResponse<Void> deleteComment(@PathVariable Long postId,
                                            @PathVariable Long commentId) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        commentService.deleteComment(postId, commentId, memberId);
+        commentFacade.deleteComment(postId, commentId, memberId);
         return ApiResponse.response(HttpStatus.NO_CONTENT, COMMENT_DELETED.getMessage());
     }
 }

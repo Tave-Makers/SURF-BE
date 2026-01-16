@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.reservation.usecase;
+package com.tavemakers.surf.domain.reservation.facade;
 
 import com.tavemakers.surf.domain.reservation.entity.Reservation;
 import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
@@ -6,7 +6,7 @@ import com.tavemakers.surf.domain.reservation.service.ReservationSaveService;
 import com.tavemakers.surf.domain.reservation.service.ReservationScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class ReservationUsecase {
+public class ReservationFacade {
 
     private final ReservationSaveService reservationSaveService;
     private final ReservationGetService reservationGetService;

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.badge.usecase;
+package com.tavemakers.surf.domain.badge.facade;
 
 import com.tavemakers.surf.domain.badge.dto.request.MemberBadgeReqDTO;
 import com.tavemakers.surf.domain.badge.dto.response.MemberBadgeResDTO;
@@ -11,11 +11,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class MemberBadgeUsecase {
+public class MemberBadgeFacade {
 
     private final MemberBadgeSaveService memberBadgeSaveService;
     private final MemberBadgeGetService memberBadgeGetService;

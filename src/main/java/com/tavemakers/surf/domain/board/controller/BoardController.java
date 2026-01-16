@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.board.controller;
 import com.tavemakers.surf.domain.board.dto.request.BoardCreateReqDTO;
 import com.tavemakers.surf.domain.board.dto.request.BoardUpdateReqDTO;
 import com.tavemakers.surf.domain.board.dto.response.BoardResDTO;
-import com.tavemakers.surf.domain.board.service.BoardService;
+import com.tavemakers.surf.domain.board.facade.BoardFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,20 +21,20 @@ import static com.tavemakers.surf.domain.board.controller.ResponseMessage.*;
 @RequestMapping
 @Tag(name = "게시판", description = "추후 MVP를 통해 디벨롭 될 예정")
 public class BoardController {
-    private final BoardService boardService;
+    private final BoardFacade boardFacade;
 
     @Operation(summary = "게시판 생성", description = "새로운 게시판을 생성합니다.")
     @PostMapping("/v1/admin/boards")
     public ApiResponse<BoardResDTO> createBoard(
             @Valid @RequestBody BoardCreateReqDTO req) {
-        BoardResDTO response = boardService.createBoard(req);
+        BoardResDTO response = boardFacade.createBoard(req);
         return ApiResponse.response(HttpStatus.CREATED, BOARD_CREATED.getMessage(), response);
     }
 
     @Operation(summary = "게시판 목록 조회", description = "모든 게시판을 조회합니다.")
     @GetMapping("/v1/user/boards")
     public ApiResponse<List<BoardResDTO>> getBoards() {
-        List<BoardResDTO> response = boardService.getBoards();
+        List<BoardResDTO> response = boardFacade.getBoards();
         return ApiResponse.response(HttpStatus.OK, BOARD_READ.getMessage(), response);
     }
 
@@ -42,7 +42,7 @@ public class BoardController {
     @GetMapping("/v1/admin/boards/{boardId}")
     public ApiResponse<BoardResDTO> getBoard(
             @PathVariable Long boardId) {
-        BoardResDTO response = boardService.getBoard(boardId);
+        BoardResDTO response = boardFacade.getBoard(boardId);
         return ApiResponse.response(HttpStatus.OK, BOARD_READ.getMessage(), response);
     }
 
@@ -51,7 +51,7 @@ public class BoardController {
     public ApiResponse<BoardResDTO> updateBoard(
             @PathVariable Long boardId,
             @Valid @RequestBody BoardUpdateReqDTO req) {
-        BoardResDTO response = boardService.updateBoard(boardId, req);
+        BoardResDTO response = boardFacade.updateBoard(boardId, req);
         return ApiResponse.response(HttpStatus.OK, BOARD_UPDATED.getMessage(), response);
     }
 
@@ -59,7 +59,7 @@ public class BoardController {
     @DeleteMapping("/v1/admin/boards/{boardId}")
     public ApiResponse<Void> deleteBoard(
             @PathVariable Long boardId) {
-        boardService.deleteBoard(boardId);
+        boardFacade.deleteBoard(boardId);
         return ApiResponse.response(HttpStatus.NO_CONTENT, BOARD_DELETED.getMessage());
     }
 }

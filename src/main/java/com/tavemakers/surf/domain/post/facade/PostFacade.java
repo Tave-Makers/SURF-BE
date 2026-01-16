@@ -1,16 +1,18 @@
-package com.tavemakers.surf.domain.post.service;
+package com.tavemakers.surf.domain.post.facade;
 
 import com.tavemakers.surf.domain.post.dto.res.PostLikeListResDTO;
+import com.tavemakers.surf.domain.post.service.PostGetService;
+import com.tavemakers.surf.domain.post.service.PostLikeGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Transactional
-public class PostUsecase {
+public class PostFacade {
     private final PostGetService postGetService;
     private final PostLikeGetService postLikeGetService;
 

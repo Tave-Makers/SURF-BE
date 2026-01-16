@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.feedback.controller;
 
 import com.tavemakers.surf.domain.feedback.dto.req.FeedbackCreateReqDTO;
 import com.tavemakers.surf.domain.feedback.dto.res.FeedbackResDTO;
-import com.tavemakers.surf.domain.feedback.service.FeedbackService;
+import com.tavemakers.surf.domain.feedback.facade.FeedbackFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +26,7 @@ import static com.tavemakers.surf.domain.feedback.controller.ResponseMessage.FEE
 @Tag(name = "피드백")
 public class FeedbackController {
 
-    private final FeedbackService feedbackService;
+    private final FeedbackFacade feedbackFacade;
 
     /** 피드백 생성 (로그인 사용자) */
     @Operation(summary = "피드백 생성", description = "익명의 피드백을 생성합니다. (하루 3회 제한)")
@@ -35,7 +35,7 @@ public class FeedbackController {
             @Valid @RequestBody FeedbackCreateReqDTO req
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        FeedbackResDTO response = feedbackService.createFeedback(req, memberId);
+        FeedbackResDTO response = feedbackFacade.createFeedback(req, memberId);
         return ApiResponse.response(HttpStatus.CREATED, FEEDBACK_CREATED.getMessage(), response);
     }
 
@@ -47,7 +47,7 @@ public class FeedbackController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Slice<FeedbackResDTO> response = feedbackService.getFeedbacks(pageable);
+        Slice<FeedbackResDTO> response = feedbackFacade.getFeedbacks(pageable);
         return ApiResponse.response(HttpStatus.OK, FEEDBACK_READ.getMessage(), response);
     }
 }

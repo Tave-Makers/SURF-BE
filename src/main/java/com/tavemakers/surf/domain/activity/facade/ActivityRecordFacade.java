@@ -1,10 +1,9 @@
-package com.tavemakers.surf.domain.activity.usecase;
+package com.tavemakers.surf.domain.activity.facade;
 
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
-import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordSaveService;
@@ -16,15 +15,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class ActivityRecordUsecase {
+public class ActivityRecordFacade {
 
     private final ActivityRecordSaveService activityRecordSaveService;
     private final ActivityRecordGetService activityRecordGetService;
@@ -33,7 +32,6 @@ public class ActivityRecordUsecase {
 
     @Transactional
     public void createActivityRecordList(ActivityRecordReqDTO dto) {
-        // 다수의 활동 점수 -> 감점 + 가점 -> 누적합과 함께 활동기록 생성
         List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {

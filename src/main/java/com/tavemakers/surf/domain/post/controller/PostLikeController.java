@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.post.controller;
 
 import com.tavemakers.surf.domain.post.dto.res.PostLikeListResDTO;
+import com.tavemakers.surf.domain.post.facade.PostFacade;
 import com.tavemakers.surf.domain.post.service.PostLikeService;
-import com.tavemakers.surf.domain.post.service.PostUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +24,7 @@ import static com.tavemakers.surf.domain.post.controller.ResponseMessage.POST_LI
 public class PostLikeController {
 
     private final PostLikeService postLikeService;
-    private final PostUsecase postUsecase;
+    private final PostFacade postFacade;
 
     @Operation(summary = "좋아요 설정", description = "이미 좋아요 상태여도 200(OK) 반환")
     @PostMapping("/v1/user/posts/{postId}/like")
@@ -45,6 +45,6 @@ public class PostLikeController {
     @Operation(summary = "특정 게시글 좋아요 리스트", description = "특정 게시글에 좋아요를 누른 유저의 리스트 반환")
     @GetMapping("/v1/user/posts/{postId}/like")
     public ApiResponse<PostLikeListResDTO> likePostList(@PathVariable Long postId) {
-        return ApiResponse.response(HttpStatus.OK,POST_LIKES_READ.getMessage() ,postUsecase.getPostLikes(postId));
+        return ApiResponse.response(HttpStatus.OK,POST_LIKES_READ.getMessage() ,postFacade.getPostLikes(postId));
     }
 }

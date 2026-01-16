@@ -1,17 +1,23 @@
-package com.tavemakers.surf.domain.post.service;
+package com.tavemakers.surf.domain.post.facade;
 
 import com.tavemakers.surf.domain.post.dto.req.ScheduleCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.req.ScheduleUpdateReqDTO;
 import com.tavemakers.surf.domain.post.dto.res.ScheduleResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.Schedule;
+import com.tavemakers.surf.domain.post.service.PostGetService;
+import com.tavemakers.surf.domain.post.service.PostService;
+import com.tavemakers.surf.domain.post.service.ScheduleCreateService;
+import com.tavemakers.surf.domain.post.service.ScheduleDeleteService;
+import com.tavemakers.surf.domain.post.service.ScheduleGetService;
+import com.tavemakers.surf.domain.post.service.SchedulePatchService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
+@Component
 @RequiredArgsConstructor
-public class ScheduleUseCase {
+public class ScheduleFacade {
 
     private final ScheduleCreateService scheduleCreateService;
     private final ScheduleGetService scheduleGetService;
@@ -20,7 +26,6 @@ public class ScheduleUseCase {
     private final PostService postService;
     private final PostGetService postGetService;
 
-    //게시글 생성 시 일정 생성
     @Transactional
     public void createScheduleAtPost(ScheduleCreateReqDTO dto, Long postId) {
         Post post = postService.findPostById(postId);
@@ -28,27 +33,23 @@ public class ScheduleUseCase {
         post.addScheduleId(scheduleId);
     }
 
-    //개별 일정 생성(캘린더에서)
     @Transactional
     public void createScheduleSingle(ScheduleCreateReqDTO dto){
         scheduleCreateService.createScheduleSingle(dto);
     }
 
-    //일정 수정
     @Transactional
     public void updateSchedule(ScheduleUpdateReqDTO dto, Long id) {
         Schedule schedule = scheduleGetService.getScheduleById(id);
         schedulePatchService.updateSchedule(schedule, dto);
     }
 
-    //일정 삭제 - 개별
     @Transactional
     public void deleteSchedule(Long id) {
         Schedule schedule = scheduleGetService.getScheduleById(id);
         scheduleDeleteService.deleteSchedule(schedule);
     }
 
-    //일정 삭제 - 게시글과 매핑
     @Transactional
     public void deleteScheduleAtPost(Long postId, Long scheduleId) {
         Schedule schedule = scheduleGetService.getScheduleById(scheduleId);
@@ -59,7 +60,6 @@ public class ScheduleUseCase {
         schedulePatchService.updateScheduleIdNull(post);
     }
 
-    //게시글별 일정 조회
     @Transactional(readOnly = true)
     public ScheduleResDTO getScheduleByPost(Long postId) {
            return scheduleGetService.getScheduleSingleDTO(postId);

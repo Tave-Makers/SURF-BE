@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.badge.controller;
 
 import com.tavemakers.surf.domain.badge.dto.request.MemberBadgeReqDTO;
 import com.tavemakers.surf.domain.badge.dto.response.MemberBadgeSliceResDTO;
-import com.tavemakers.surf.domain.badge.usecase.MemberBadgeUsecase;
+import com.tavemakers.surf.domain.badge.facade.MemberBadgeFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,7 @@ import static com.tavemakers.surf.domain.badge.controller.ResponseMessage.*;
 @Tag(name = "활동뱃지")
 public class MemberBadgeController {
 
-    private final MemberBadgeUsecase memberBadgeusecase;
+    private final MemberBadgeFacade memberBadgeFacade;
 
     @Operation(
             summary = "활동 뱃지 부여 API",
@@ -27,7 +27,7 @@ public class MemberBadgeController {
     )
     @PostMapping("/v1/admin/members/badges")
     public ApiResponse<Void> createBadge(@RequestBody @Valid MemberBadgeReqDTO dto) {
-        memberBadgeusecase.saveMemberBadgeList(dto);
+        memberBadgeFacade.saveMemberBadgeList(dto);
         return ApiResponse.response(HttpStatus.CREATED, MEMBER_BADGE_LIST_CREATED.getMessage(), null);
     }
 
@@ -42,7 +42,7 @@ public class MemberBadgeController {
             @RequestParam int pageNum
     ) {
         memberId = (memberId == null ? SecurityUtils.getCurrentMemberId() : memberId);
-        MemberBadgeSliceResDTO response = memberBadgeusecase.getMemberBadgeWithSlice(memberId, pageSize, pageNum);
+        MemberBadgeSliceResDTO response = memberBadgeFacade.getMemberBadgeWithSlice(memberId, pageSize, pageNum);
         return ApiResponse.response(HttpStatus.OK, MEMBER_BADGE_LIST_READ.getMessage(), response);
     }
 

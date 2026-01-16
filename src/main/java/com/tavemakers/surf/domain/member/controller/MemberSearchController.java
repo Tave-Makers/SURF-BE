@@ -4,7 +4,7 @@ import com.tavemakers.surf.domain.member.dto.response.MemberSearchResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberSearchSliceResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberSimpleResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MyPageProfileResDTO;
-import com.tavemakers.surf.domain.member.usecase.MemberUsecase;
+import com.tavemakers.surf.domain.member.facade.MemberFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +25,7 @@ import static com.tavemakers.surf.domain.member.controller.ResponseMessage.*;
 @Tag(name = "회원 조회", description = "회원 조회 관련 API")
 public class MemberSearchController {
 
-    private final MemberUsecase memberUsecase;
+    private final MemberFacade memberFacade;
 
     //이름 기반 조회
     @Operation(
@@ -38,7 +38,7 @@ public class MemberSearchController {
         return ApiResponse.response(
                 HttpStatus.OK,
                 ResponseMessage.MEMBER_GROUP_SUCCESS.getFormattedMessage(name),
-                memberUsecase.findMemberByNameAndTrack(name));
+                memberFacade.findMemberByNameAndTrack(name));
     }
 
     //유저 전체 출력시 트랙+기수별 묶어서 출력
@@ -50,7 +50,7 @@ public class MemberSearchController {
         return ApiResponse.response(
                 HttpStatus.OK,
                 ResponseMessage.MEMBER_GROUP_SUCCESS.getMessage(),
-                memberUsecase.getMembersGroupedByTrack());
+                memberFacade.getMembersGroupedByTrack());
     }
 
     @Operation(
@@ -61,7 +61,7 @@ public class MemberSearchController {
             @RequestParam(required = false) Long memberId
     ) {
         memberId = (memberId == null ? SecurityUtils.getCurrentMemberId() : memberId);
-        MyPageProfileResDTO response = memberUsecase.getMyPageAndProfile(memberId);
+        MyPageProfileResDTO response = memberFacade.getMyPageAndProfile(memberId);
         return ApiResponse.response(HttpStatus.OK, MYPAGE_MY_PROFILE_READ.getMessage(), response);
     }
 
@@ -77,7 +77,7 @@ public class MemberSearchController {
             @RequestParam(required = false) Integer generation,
             @RequestParam(required = false) String part
     ) {
-        MemberSearchSliceResDTO response = memberUsecase.searchMembers(pageNum, pageSize, generation, part, keyword);
+        MemberSearchSliceResDTO response = memberFacade.searchMembers(pageNum, pageSize, generation, part, keyword);
         return ApiResponse.response(HttpStatus.OK, MEMBER_LIST_SEARCH_SUCCESS.getMessage(), response);
     }
 

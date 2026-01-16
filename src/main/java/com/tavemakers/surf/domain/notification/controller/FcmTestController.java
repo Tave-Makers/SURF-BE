@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.notification.controller;
 import static com.tavemakers.surf.domain.notification.controller.ResponseMessage.FCM_TEST_SUCCESS;
 
 import com.tavemakers.surf.domain.notification.dto.req.FcmTestReqDTO;
-import com.tavemakers.surf.domain.notification.service.FcmService;
+import com.tavemakers.surf.domain.notification.facade.NotificationFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/user/notifications")
 public class FcmTestController {
 
-    private final FcmService fcmService;
+    private final NotificationFacade notificationFacade;
 
     @Operation(
             summary = "FCM 푸시 알림 테스트",
@@ -36,7 +36,7 @@ public class FcmTestController {
             )
             @RequestBody FcmTestReqDTO req
     ) {
-        fcmService.sendToMember(req.memberId(), req.title(), req.body(), 1L);
+        notificationFacade.sendPushToMember(req.memberId(), req.title(), req.body(), 1L);
         return ApiResponse.response(
                 HttpStatus.OK,
                 FCM_TEST_SUCCESS.getMessage()

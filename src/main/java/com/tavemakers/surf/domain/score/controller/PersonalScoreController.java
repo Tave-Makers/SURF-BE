@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.score.controller;
 
 import com.tavemakers.surf.domain.score.dto.response.PersonalScoreWithPinnedResDto;
-import com.tavemakers.surf.domain.score.usecase.PersonalScoreUsecase;
+import com.tavemakers.surf.domain.score.facade.PersonalScoreFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +18,7 @@ import static com.tavemakers.surf.domain.score.controller.ResponseMessage.*;
 @Tag(name = "활동점수")
 public class PersonalScoreController {
 
-    private final PersonalScoreUsecase personalScoreUsecase;
+    private final PersonalScoreFacade personalScoreFacade;
 
     @Operation(
             summary = "[활동점수] + 고정 5개[활동기록] 조회)",
@@ -28,7 +28,7 @@ public class PersonalScoreController {
     public ApiResponse<PersonalScoreWithPinnedResDto> getScoreAndPinned5(
     ) {
         PersonalScoreWithPinnedResDto response =
-                personalScoreUsecase.findPersonalScoreAndPinned(SecurityUtils.getCurrentMemberId());
+                personalScoreFacade.findPersonalScoreAndPinned(SecurityUtils.getCurrentMemberId());
         return ApiResponse.response(HttpStatus.OK, SCORE_AND_PINNED_READ.getMessage(), response);
     }
 

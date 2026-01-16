@@ -4,8 +4,8 @@ import com.tavemakers.surf.domain.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberSignupResDTO;
 import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
 import com.tavemakers.surf.domain.member.dto.response.OnboardingCheckResDTO;
-import com.tavemakers.surf.domain.member.usecase.MemberAdminUsecase;
-import com.tavemakers.surf.domain.member.usecase.MemberUsecase;
+import com.tavemakers.surf.domain.member.facade.MemberAdminFacade;
+import com.tavemakers.surf.domain.member.facade.MemberFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
@@ -25,8 +25,8 @@ import jakarta.validation.Valid;
 @Tag(name = "자체 회원가입 및 관리자 승인/거절")
 public class MemberController {
 
-    private final MemberUsecase memberUsecase;
-    private final MemberAdminUsecase memberAdminUsecase;
+    private final MemberFacade memberFacade;
+    private final MemberAdminFacade memberAdminFacade;
     private final LogEventEmitter logEventEmitter;
 
     /**
@@ -48,7 +48,7 @@ public class MemberController {
             ApiResponse<MemberSignupResDTO> response = ApiResponse.response(
                     HttpStatus.CREATED,
                     "회원가입 요청 접수",
-                    memberUsecase.signup(userId, request)
+                    memberFacade.signup(userId, request)
             );
 
             return response;
@@ -88,7 +88,7 @@ public class MemberController {
     @GetMapping("/v1/user/members/valid-status")
     public ApiResponse<OnboardingCheckResDTO> checkOnboardingStatus() {
         Long userId = SecurityUtils.getCurrentMemberId();
-        OnboardingCheckResDTO dto = memberUsecase.needsOnboarding(userId);
+        OnboardingCheckResDTO dto = memberFacade.needsOnboarding(userId);
 
         logEventEmitter.emit("onboarding.valid_status", dto.buildProps());
 
@@ -112,7 +112,7 @@ public class MemberController {
             @PathVariable Long memberId
     ) {
         Long approverId = SecurityUtils.getCurrentMemberId();
-        memberAdminUsecase.approveMember(memberId, approverId);
+        memberAdminFacade.approveMember(memberId, approverId);
 
         return ApiResponse.response(HttpStatus.OK, "승인되었습니다.", null);
     }
@@ -130,7 +130,7 @@ public class MemberController {
             @PathVariable Long memberId
     ) {
         Long approverId = SecurityUtils.getCurrentMemberId();
-        memberAdminUsecase.rejectMember(memberId, approverId);
+        memberAdminFacade.rejectMember(memberId, approverId);
 
         return ApiResponse.response(HttpStatus.OK, "거절되었습니다.", null);
     }

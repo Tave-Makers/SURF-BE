@@ -28,7 +28,7 @@ import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.repository.PostLikeRepository;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.repository.ScheduleRepository;
-import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
+import com.tavemakers.surf.domain.reservation.facade.ReservationFacade;
 import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
 import com.tavemakers.surf.domain.scrap.service.ScrapService;
 import com.tavemakers.surf.global.logging.LogEvent;
@@ -64,7 +64,7 @@ public class PostService {
 
     private final ScrapService scrapService;
     private final PostLikeService postLikeService;
-    private final ReservationUsecase reservationUsecase;
+    private final ReservationFacade reservationFacade;
     private final PostImageSaveService imageSaveService;
     private final PostImageGetService imageGetService;
     private final PostImageDeleteService imageDeleteService;
@@ -92,7 +92,7 @@ public class PostService {
 
         LocalDateTime reservedAt = null;
         if (req.isReserved()) {
-            reservationUsecase.reservePost(saved.getId(), req.reservedAt());
+            reservationFacade.reservePost(saved.getId(), req.reservedAt());
             reservedAt = req.reservedAt();
         } else{
             eventPublisher.publishEvent(
@@ -121,7 +121,7 @@ public class PostService {
         int viewCount = viewCountService.increaseViewCount(post, memberId);
         LocalDateTime reservedAt = null;
         if (post.isReserved()) {
-            reservedAt = reservationUsecase.getReservedAt(postId);
+            reservedAt = reservationFacade.getReservedAt(postId);
         }
 
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, reservedAt, viewCount);
@@ -229,12 +229,12 @@ public class PostService {
 
         // 예약 시간 변경 시 -> 기존의 예약 시간 조회 -> 기존의 예약 시간을 CANCELD로 수정하고 schedule 호출하면 끝.
         if (req.isReservationChanged()) {
-            reservationUsecase.updateReservationPost(post.getId(), req.reservedAt());
+            reservationFacade.updateReservationPost(post.getId(), req.reservedAt());
         }
 
         LocalDateTime reservedAt = null;
         if (post.isReserved()) {
-            reservedAt = reservationUsecase.getReservedAt(postId);
+            reservedAt = reservationFacade.getReservedAt(postId);
         }
 
         // 이미지 변경

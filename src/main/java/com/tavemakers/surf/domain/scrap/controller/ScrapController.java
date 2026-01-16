@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.scrap.controller;
 
 import com.tavemakers.surf.domain.post.dto.res.PostResDTO;
-import com.tavemakers.surf.domain.scrap.service.ScrapService;
+import com.tavemakers.surf.domain.scrap.facade.ScrapFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,14 +22,14 @@ import static com.tavemakers.surf.domain.scrap.controller.ResponseMessage.*;
 @Tag(name = "스크랩", description = "추후 MVP를 통해 디벨롭 될 예정")
 public class ScrapController {
 
-    private final ScrapService scrapService;
+    private final ScrapFacade scrapFacade;
 
     /** 스크랩 추가 (현재 로그인 사용자 기준) */
     @Operation(summary = "스크랩 추가", description = "특정 게시글을 스크랩합니다.")
     @PostMapping("/v1/user/scraps/{postId}")
     public ApiResponse<Void> addScrap(@PathVariable Long postId) {
         Long me = SecurityUtils.getCurrentMemberId();
-        scrapService.addScrap(me, postId);
+        scrapFacade.addScrap(me, postId);
         return ApiResponse.response(HttpStatus.CREATED, SCRAP_CREATED.getMessage());
     }
 
@@ -38,7 +38,7 @@ public class ScrapController {
     @DeleteMapping("/v1/user/scraps/{postId}")
     public ApiResponse<Void> removeScrap(@PathVariable Long postId) {
         Long me = SecurityUtils.getCurrentMemberId();
-        scrapService.removeScrap(me, postId);
+        scrapFacade.removeScrap(me, postId);
         return ApiResponse.response(HttpStatus.NO_CONTENT, SCRAP_DELETED.getMessage());
     }
 
@@ -50,7 +50,7 @@ public class ScrapController {
             Pageable pageable
     ) {
         Long me = SecurityUtils.getCurrentMemberId();
-        Slice<PostResDTO> response = scrapService.getMyScraps(me, pageable);
+        Slice<PostResDTO> response = scrapFacade.getMyScraps(me, pageable);
         return ApiResponse.response(HttpStatus.OK, MY_SCRAP_LIST_READ.getMessage(), response);
     }
 }

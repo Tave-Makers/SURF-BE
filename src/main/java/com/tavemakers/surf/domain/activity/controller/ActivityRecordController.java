@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.activity.controller;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
-import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
+import com.tavemakers.surf.domain.activity.facade.ActivityRecordFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,12 +20,12 @@ import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.*;
 @Tag(name = "활동기록")
 public class ActivityRecordController {
 
-    private final ActivityRecordUsecase activityRecordUsecase;
+    private final ActivityRecordFacade activityRecordFacade;
 
     @Operation(summary = "활동 점수(기록) 부여")
     @PostMapping("/v1/admin/activity-records")
     public ApiResponse<Void> createActivityRecord(@RequestBody @Valid ActivityRecordReqDTO dto) {
-        activityRecordUsecase.createActivityRecordList(dto);
+        activityRecordFacade.createActivityRecordList(dto);
         return ApiResponse.response(HttpStatus.CREATED, ACTIVITY_RECORD_CREATED.getMessage(), null);
     }
 
@@ -38,7 +38,7 @@ public class ActivityRecordController {
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
         ActivityRecordSliceResDTO response =
-                activityRecordUsecase.getActivityRecordList(memberId, scoreType, pageSize, pageNum);
+                activityRecordFacade.getActivityRecordList(memberId, scoreType, pageSize, pageNum);
         return ApiResponse.response(HttpStatus.OK, ACTIVITY_RECORD_READ.getMessage(), response);
     }
 

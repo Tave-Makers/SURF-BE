@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.home.controller;
 
 import com.tavemakers.surf.domain.home.dto.response.HomeResDTO;
-import com.tavemakers.surf.domain.home.service.HomeService;
+import com.tavemakers.surf.domain.home.facade.HomeFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,12 +17,12 @@ import static com.tavemakers.surf.domain.home.controller.ResponseMessage.HOME_PA
 @Tag(name = "홈 화면 렌더링")
 public class HomeController {
 
-    private final HomeService homeService;
+    private final HomeFacade homeFacade;
 
     @Operation(summary = "홈 화면 렌더링", description = "홈 화면에 필요한 데이터를 렌더링합니다.")
     @GetMapping("/v1/user/home")
     public ApiResponse<HomeResDTO> home() {
-        HomeResDTO response = homeService.getHome();
+        HomeResDTO response = homeFacade.getHome();
         return ApiResponse.response(HttpStatus.OK, HOME_PAGE_RENDERED.getMessage(), response);
     }
 }

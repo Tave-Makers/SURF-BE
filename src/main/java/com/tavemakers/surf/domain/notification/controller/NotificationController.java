@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.notification.controller;
 
 import com.tavemakers.surf.domain.notification.dto.res.NotificationResDTO;
 import com.tavemakers.surf.domain.notification.entity.NotificationCategory;
-import com.tavemakers.surf.domain.notification.service.NotificationService;
+import com.tavemakers.surf.domain.notification.facade.NotificationFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +21,7 @@ import static com.tavemakers.surf.domain.notification.controller.ResponseMessage
 @Tag(name = "알람")
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final NotificationFacade notificationFacade;
 
     @Operation(summary = "알람 조회", description = "category 파라미터로 카테고리별 필터링 조회합니다. null일 경우 전체 알람 조회")
     @GetMapping("/v1/user/notifications")
@@ -29,7 +29,7 @@ public class NotificationController {
             @RequestParam(required = false) NotificationCategory category
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        List<NotificationResDTO> response = notificationService.getNotifications(memberId, category);
+        List<NotificationResDTO> response = notificationFacade.getNotifications(memberId, category);
         return ApiResponse.response(HttpStatus.OK, NOTIFICATION_READ.getMessage(), response);
     }
 
@@ -39,7 +39,7 @@ public class NotificationController {
             @PathVariable Long notificationId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        notificationService.markAsRead(notificationId, memberId);
+        notificationFacade.markAsRead(notificationId, memberId);
         return ApiResponse.response(HttpStatus.OK, NOTIFICATION_READ_MARK.getMessage());
     }
 }
