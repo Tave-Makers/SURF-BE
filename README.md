@@ -17,6 +17,19 @@
 
 [📖 API 문서](https://tavesurf.site/swagger-ui.html) · [🐛 이슈 리포트](https://github.com/Tave-Makers/SURF-BE/issues) · [📋 프로젝트 보드](https://github.com/Tave-Makers/SURF-BE/projects)
 
+<br/>
+
+<table>
+<tr>
+<td align="center" width="50%">
+<img src="./docs/login.png" alt="로그인 화면" width="280"/>
+</td>
+<td align="center" width="50%">
+<img src="./docs/home.png" alt="홈 화면" width="280"/>
+</td>
+</tr>
+</table>
+
 </div>
 
 ---
