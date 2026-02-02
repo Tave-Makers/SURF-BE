@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.member.controller;
 
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.domain.member.dto.response.AdminTotalMemberListResDTO;
+import com.tavemakers.surf.domain.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberInformationResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationSliceResDTO;
 import com.tavemakers.surf.domain.member.usecase.MemberAdminUsecase;
@@ -58,6 +59,18 @@ public class AdminMemberController {
     public ApiResponse<AdminTotalMemberListResDTO> readAllMemberCountAndGeneration() {
         AdminTotalMemberListResDTO data = memberAdminUsecase.readAllMemberCountAndGeneration();
         return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_COUNT_AND_ALL_GENERATION.getMessage(), data);
+    }
+
+    @Operation
+    @GetMapping("/v1/manager/approved-members")
+    public ApiResponse<ApprovedMemberSliceResDTO> readApprovedMemberList(
+            @RequestParam int generation,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "20") int pageSize,
+            @RequestParam(defaultValue = "0") int pageNum
+    ) {
+        ApprovedMemberSliceResDTO data = memberAdminUsecase.readApprovedMemberList(generation, keyword, pageSize, pageNum);
+        return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_LIST.getMessage(), data);
     }
 
 }
