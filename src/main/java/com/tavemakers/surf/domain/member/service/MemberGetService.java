@@ -125,4 +125,8 @@ public class MemberGetService {
         return memberRepository.countByStatusAndIsDeletedFalse(MemberStatus.APPROVED);
     }
 
+    public Slice<Member> getApprovedMemberList(Integer generation, String keyword, Pageable pageable) {
+        return memberSearchRepository.searchMemberInAdminPage(generation, keyword, pageable);
+    }
+
 }
