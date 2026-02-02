@@ -19,6 +19,7 @@ public record MemberRegistrationDetailResDTO(
                 example = "APPROVED",
                 allowableValues = {"REGISTERING", "WAITING", "APPROVED", "REJECTED", "WITHDRAWN"}
         )
+        String role,
         String memberStatus,
         String createdAt
 ) {
@@ -33,6 +34,7 @@ public record MemberRegistrationDetailResDTO(
                 .trackList(member.getTracks().stream()
                         .map(TrackResDTO::from)
                         .toList())
+                .role(member.getRole().name())
                 .memberStatus(member.getStatus().name())
                 .createdAt(member.getCreatedAt().format(FORMATTER))
                 .build();
