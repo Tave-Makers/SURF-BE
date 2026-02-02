@@ -61,7 +61,7 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_COUNT_AND_ALL_GENERATION.getMessage(), data);
     }
 
-    @Operation
+    @Operation(summary = "승인된 [전체 회원 목록] 조회", description = "APPROVED 상태의 전체 회원 목록을 스크롤 조회")
     @GetMapping("/v1/manager/approved-members")
     public ApiResponse<ApprovedMemberSliceResDTO> readApprovedMemberList(
             @RequestParam int generation,
