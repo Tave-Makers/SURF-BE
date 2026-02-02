@@ -38,4 +38,8 @@ public class TrackGetService {
         return trackRepository.findAllWithActiveMember();
     }
 
+    public List<Integer> getExistsAllGenerations() {
+        return trackRepository.findAllDistinctGenerations();
+    }
+
 }

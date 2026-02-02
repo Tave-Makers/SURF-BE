@@ -61,6 +61,32 @@ public class MemberSearchRepository {
         return new SliceImpl<>(results, pageable, hasNext);
     }
 
+    public Slice<Member> searchMemberInAdminPage(Integer generation, String keyword, Pageable pageable) {
+        BooleanBuilder builder = createAdminPageMemberSearchBuilder(generation, keyword);
+        builder.and(member.status.eq(MemberStatus.APPROVED));
+
+        List<Member> results = queryFactory
+                .selectFrom(member)
+                .distinct()
+                .leftJoin(member.tracks, track)
+                .where(builder)
+                .orderBy(
+                        member.name.asc(),
+                        member.createdAt.asc()
+                )
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize() + 1)
+                .fetch();
+
+        boolean hasNext = false;
+        if (results.size() > pageable.getPageSize()) {
+            hasNext = true;
+            results.remove(results.size() - 1);
+        }
+
+        return new SliceImpl<>(results, pageable, hasNext);
+    }
+
     public Long countMembers(Integer generation, Part part, String keyword) {
         BooleanBuilder builder = createSearchBuilder(generation, part, keyword);
         builder.and(member.status.eq(MemberStatus.APPROVED));
@@ -90,6 +116,21 @@ public class MemberSearchRepository {
             builder.and(member.name.containsIgnoreCase(keyword)
                     .or(member.university.containsIgnoreCase(keyword))
                     .or(member.graduateSchool.containsIgnoreCase(keyword)));
+        }
+
+        return builder;
+    }
+
+    private BooleanBuilder createAdminPageMemberSearchBuilder(Integer generation,String keyword) {
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(member.status.ne(MemberStatus.WITHDRAWN));
+
+        if (generation != null) {
+            builder.and(member.tracks.any().generation.eq(generation));
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            builder.and(member.name.containsIgnoreCase(keyword));
         }
 
         return builder;

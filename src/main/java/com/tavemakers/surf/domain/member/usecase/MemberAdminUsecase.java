@@ -3,20 +3,12 @@ package com.tavemakers.surf.domain.member.usecase;
 import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDto;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDto;
-import com.tavemakers.surf.domain.member.dto.response.AdminPageLoginResDto;
-import com.tavemakers.surf.domain.member.dto.response.CareerResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberInformationResDTO;
-import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationDetailResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationSliceResDTO;
+import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.exception.AdminPageRoleException;
-import com.tavemakers.surf.domain.member.service.CareerGetService;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
-import com.tavemakers.surf.domain.member.service.MemberPatchService;
-import com.tavemakers.surf.domain.member.service.MemberService;
+import com.tavemakers.surf.domain.member.service.*;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
@@ -50,6 +42,7 @@ public class MemberAdminUsecase {
     private final PersonalScoreGetService scoreGetService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final TrackGetService trackGetService;
 
     /** 회원 권한 변경 */
     @Transactional
@@ -128,6 +121,21 @@ public class MemberAdminUsecase {
         }
 
         return MemberInformationResDTO.of(member, memberTracks, null, memberCareers);
+    }
+
+    /** 승인된 전체 회원수와 모든 기수를 구함. */
+    public AdminTotalMemberListResDTO readAllMemberCountAndGeneration() {
+        long approvedMemberCount = memberGetService.getApprovedMemberCount();
+        List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
+        return AdminTotalMemberListResDTO.of(approvedMemberCount, existsAllGenerations);
+    }
+
+    /** 승인된 회원 목록 스크롤 조회 */
+    public ApprovedMemberSliceResDTO readApprovedMemberList(Integer generation, String keyword, int pageSize, int pageNum) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending());
+        Slice<MemberRegistrationDetailResDTO> approvedMemberSlice = memberGetService.getApprovedMemberList(generation, keyword, pageable)
+                .map(MemberRegistrationDetailResDTO::from);
+        return ApprovedMemberSliceResDTO.from(approvedMemberSlice);
     }
 
     private void validateLoginMemberRole(Member member) {

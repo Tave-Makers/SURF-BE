@@ -63,4 +63,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             "where m.id = :memberId")
     Optional<Member> findByIdWithTracks(@Param("memberId") Long memberId);
 
+    long countByStatusAndIsDeletedFalse(MemberStatus status);
+
 }
