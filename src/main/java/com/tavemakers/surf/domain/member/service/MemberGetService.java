@@ -121,4 +121,8 @@ public class MemberGetService {
         return memberRepository.existsByIdAndStatusNot(memberId, status);
     }
 
+    public long getApprovedMemberCount() {
+        return memberRepository.countByStatusAndIsDeletedFalse(MemberStatus.APPROVED);
+    }
+
 }
