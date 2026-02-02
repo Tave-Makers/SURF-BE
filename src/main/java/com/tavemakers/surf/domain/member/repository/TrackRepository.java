@@ -29,4 +29,8 @@ public interface TrackRepository extends JpaRepository<Track, Long> {
     List<Track> findAllWithActiveMember();
 
     List<Track> findByMemberId(Long memberId);
+
+    @Query("SELECT DISTINCT t.generation FROM Track t ORDER BY t.generation DESC")
+    List<Integer> findAllDistinctGenerations();
+
 }
