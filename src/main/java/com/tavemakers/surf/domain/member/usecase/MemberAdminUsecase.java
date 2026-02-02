@@ -130,6 +130,14 @@ public class MemberAdminUsecase {
         return AdminTotalMemberListResDTO.of(approvedMemberCount, existsAllGenerations);
     }
 
+    /** 승인된 회원 목록 스크롤 조회 */
+    public ApprovedMemberSliceResDTO readApprovedMemberList(Integer generation, String keyword, int pageSize, int pageNum) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending());
+        Slice<MemberRegistrationDetailResDTO> approvedMemberSlice = memberGetService.getApprovedMemberList(generation, keyword, pageable)
+                .map(MemberRegistrationDetailResDTO::from);
+        return ApprovedMemberSliceResDTO.from(approvedMemberSlice);
+    }
+
     private void validateLoginMemberRole(Member member) {
         if(member.isMember()){
             throw new AdminPageRoleException();
