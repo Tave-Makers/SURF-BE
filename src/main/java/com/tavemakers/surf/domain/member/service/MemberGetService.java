@@ -129,4 +129,8 @@ public class MemberGetService {
         return memberSearchRepository.searchMemberInAdminPage(generation, keyword, pageable);
     }
 
+    public List<Member> findMembersByIds(List<Long> memberIds) {
+        return memberRepository.findMembersByIds(memberIds);
+    }
+
 }

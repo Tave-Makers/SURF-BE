@@ -65,4 +65,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     long countByStatusAndIsDeletedFalse(MemberStatus status);
 
+    @Query("""
+        select m 
+        from Member m 
+        where m.id in :memberIds
+    """)
+    List<Member> findMembersByIds(@Param("memberIds") List<Long> memberIds);
+
 }
