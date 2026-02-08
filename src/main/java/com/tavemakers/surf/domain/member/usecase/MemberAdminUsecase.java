@@ -36,7 +36,6 @@ public class MemberAdminUsecase {
 
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;
-    private final MemberService memberService;
     private final CareerGetService careerGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
     private final PersonalScoreGetService scoreGetService;
@@ -59,7 +58,7 @@ public class MemberAdminUsecase {
             @LogParam("approver_id") Long approverId
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
-        memberService.approveMembers(members);
+        members.forEach(Member::approve);
         personalScoreCreateService.savePersonalScores(members);
     }
 
@@ -71,7 +70,7 @@ public class MemberAdminUsecase {
             @LogParam("approver_id") Long approverId
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
-        memberService.rejectMembers(members);
+        members.forEach(Member::reject);
     }
 
     /** 관리자 비밀번호 설정 */

@@ -157,13 +157,12 @@ public class MemberUsecase {
     ) {
         Member member = memberGetService.getMember(memberId);
 
-        Boolean needOnboarding = memberService.needsOnboarding(member);
-        MemberStatus memberStatus = memberService.memberStatusCheck(member);
+        Boolean needOnboarding = member.isRegistering();
+        MemberStatus memberStatus = member.getStatus();
 
         MemberRole memberRole = SecurityUtils.getCurrentMember().getRole();
 
-        OnboardingCheckResDTO dto = OnboardingCheckResDTO.of(memberId, needOnboarding, memberStatus, memberRole);
-        return dto;
+        return OnboardingCheckResDTO.of(memberId, needOnboarding, memberStatus, memberRole);
     }
 
     /** 회원가입 요청 및 MemberStatus에 따른 로그 분기 */
