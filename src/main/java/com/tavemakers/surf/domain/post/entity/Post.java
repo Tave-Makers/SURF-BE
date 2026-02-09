@@ -32,6 +32,7 @@ public class Post extends BaseEntity {
     private String title;
 
     @NotBlank
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private LocalDateTime postedAt;

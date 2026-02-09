@@ -6,9 +6,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 
-import java.util.List;
 import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,31 +33,4 @@ public class MemberService {
         return MemberSignupResDTO.from(member);
     }
 
-    /** 회원 승인 (관리자) */
-    @Transactional
-    public void approveMembers(List<Member> members) {
-        for (Member member : members) {
-            member.approve();
-        }
-    }
-
-    /** 회원 거절 (관리자) */
-    @Transactional
-    public void rejectMembers(List<Member> members) {
-        for (Member member : members) {
-            member.reject();
-        }
-    }
-
-    /** 온보딩 필요 여부 확인 */
-    @Transactional(readOnly = true)
-    public Boolean needsOnboarding(Member member) {
-        return member.getStatus().equals(MemberStatus.REGISTERING);
-    }
-
-    /** 회원 상태 조회 */
-    @Transactional(readOnly = true)
-    public MemberStatus memberStatusCheck(Member member) {
-        return member.getStatus();
-    }
 }

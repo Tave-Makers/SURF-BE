@@ -99,6 +99,10 @@ public class Member extends BaseEntity {
         return status == MemberStatus.APPROVED;
     }
 
+    public boolean isRegistering() {
+        return status == MemberStatus.REGISTERING;
+    }
+
     @Builder
     public Member(Long kakaoId,
                   String name,
