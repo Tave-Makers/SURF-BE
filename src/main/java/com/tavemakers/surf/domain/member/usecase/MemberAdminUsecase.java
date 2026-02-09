@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.member.usecase;
 import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDto;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDto;
+import com.tavemakers.surf.domain.member.dto.request.RoleChangeRequestDtoV2;
 import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -49,6 +50,13 @@ public class MemberAdminUsecase {
     public void changeRole (Long memberId, MemberRole role) {
         Member member = memberGetService.getMember(memberId);
         memberPatchService.grantRole(member, role);
+    }
+
+    /** 회원 권한 변경 Version 2 */
+    @Transactional
+    public void changeMembersRole(RoleChangeRequestDtoV2 dto) {
+        List<Member> members = memberGetService.findMembersByIds(dto.memberIdList());
+        memberPatchService.grantRoleV2(members, dto.role());
     }
 
     /** 회원가입 승인 처리 */
