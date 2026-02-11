@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record RoleChangeRequestDtoV2(
+public record RoleChangeReqDTOV2(
 
         @Schema(description = "Role 변경 대상의 ID 목록")
         List<Long> memberIdList,
