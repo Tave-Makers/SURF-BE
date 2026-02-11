@@ -25,6 +25,7 @@ public class MemberPatchService {
         member.exchangeRole(role);
     }
 
+    /** 여러 회원의 권한을 일괄 변경 version 2*/
     @Transactional
     public void grantRoleV2(List<Member> members, MemberRole role) {
         members.forEach(member -> member.exchangeRole(role));
