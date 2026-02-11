@@ -35,6 +35,7 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
     }
 
+    @Operation(summary = "회원 역할 변경", description = "여러 회원들의 역할을 변경합니다.")
     @PatchMapping("/v1/admin/members/role")
     public ApiResponse<Void> changeMembersRole(
             @RequestBody RoleChangeReqDTOV2 dto
