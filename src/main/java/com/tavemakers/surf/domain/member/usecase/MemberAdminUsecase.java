@@ -130,7 +130,7 @@ public class MemberAdminUsecase {
     }
 
     /** 존재하는 모든 기수를 구함. */
-    public GenerationInfoListResDTO readAllMemberCountAndGeneration() {
+    public GenerationInfoListResDTO readExistingGenerations() {
         List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
         return GenerationInfoListResDTO.from(existsAllGenerations);
     }
