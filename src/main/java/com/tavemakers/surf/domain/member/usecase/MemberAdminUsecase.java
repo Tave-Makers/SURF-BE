@@ -107,8 +107,7 @@ public class MemberAdminUsecase {
         List<MemberStatus> statuses = List.of(MemberStatus.WAITING, MemberStatus.REJECTED);
         Slice<MemberRegistrationDetailResDTO> registrationList = memberGetService.searchWaitingMembers(keyword, pageable, statuses)
                 .map(MemberRegistrationDetailResDTO::from);
-        Long totalMemberCount = memberGetService.countMembers(statuses);
-        return MemberRegistrationSliceResDTO.of(registrationList, totalMemberCount);
+        return MemberRegistrationSliceResDTO.from(registrationList);
     }
 
     /** 회원 상세 정보 조회 */
