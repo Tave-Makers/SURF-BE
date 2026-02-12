@@ -28,7 +28,11 @@ public enum ResponseMessage {
     MYPAGE_OTHERS_PROFILE_READ("타인 마이페이지에서 [프로필 정보]를 조회합니다."),
 
     // 프로필 수정
-    MYPAGE_PROFILE_UPDATE_SUCCESS("마이페이지에서 [프로필 정보]를 수정했습니다.");
+    MYPAGE_PROFILE_UPDATE_SUCCESS("마이페이지에서 [프로필 정보]를 수정했습니다."),
+
+    // 회원 수 조회
+    MEMBERS_COUNT_READ("[멤버 상태]에 따른 [회원 수]를 조회합니다."),
+    ;
 
     private final String message;
 
