@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MemberPatchService {
@@ -21,5 +23,12 @@ public class MemberPatchService {
     public void grantRole(Member member, MemberRole role) {
         //유저 권한 부여
         member.exchangeRole(role);
+    }
+
+    /** 여러 회원의 권한을 일괄 변경 version 2*/
+    @Transactional
+    public void grantRoleV2(List<Member> members, MemberRole role) {
+        members.forEach(member -> member.exchangeRole(role));
+
     }
 }

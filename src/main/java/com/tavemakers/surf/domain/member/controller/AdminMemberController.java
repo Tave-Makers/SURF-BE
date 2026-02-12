@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.member.controller;
 
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTO;
+import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
 import com.tavemakers.surf.domain.member.dto.response.AdminTotalMemberListResDTO;
 import com.tavemakers.surf.domain.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberInformationResDTO;
@@ -31,6 +32,15 @@ public class AdminMemberController {
             @RequestBody @Valid RoleChangeReqDTO request) {
 
         memberAdminUsecase.changeRole(memberId, request.role());
+        return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
+    }
+
+    @Operation(summary = "회원 역할 변경", description = "여러 회원들의 역할을 변경합니다.")
+    @PatchMapping("/v1/admin/members/role")
+    public ApiResponse<Void> changeMembersRole(
+            @RequestBody RoleChangeReqDTOV2 dto
+    ) {
+        memberAdminUsecase.changeMembersRole(dto);
         return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
     }
 
