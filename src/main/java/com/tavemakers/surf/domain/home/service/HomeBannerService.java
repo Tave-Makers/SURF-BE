@@ -29,12 +29,7 @@ public class HomeBannerService {
     public HomeBannerResDTO createBanner(HomeBannerCreateReqDTO req) {
         int nextOrder = homeBannerRepository.findMaxDisplayOrder().orElse(0) + 1;
 
-        HomeBanner banner = HomeBanner.builder()
-                .name(req.name())
-                .imageUrl(req.imageUrl())
-                .linkUrl(req.linkUrl())
-                .displayOrder(nextOrder)
-                .build();
+        HomeBanner banner = HomeBanner.of(req.name(), req.imageUrl(), req.linkUrl(), nextOrder);
 
         return HomeBannerResDTO.from(homeBannerRepository.save(banner));
     }
