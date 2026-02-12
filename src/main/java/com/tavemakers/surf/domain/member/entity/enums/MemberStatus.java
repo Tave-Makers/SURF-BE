@@ -13,9 +13,13 @@ public enum MemberStatus {
     ;
 
     public static List<MemberStatus> toList(List<String> rawMemberStatuses) {
-        return rawMemberStatuses.stream()
-                .map(MemberStatus::valueOf)
-                .toList();
+        try {
+            return rawMemberStatuses.stream()
+                    .map(MemberStatus::valueOf)
+                    .toList();
+        } catch (Exception e) {
+            throw new MemberStatusConvertException();
+        }
     }
 
 }
