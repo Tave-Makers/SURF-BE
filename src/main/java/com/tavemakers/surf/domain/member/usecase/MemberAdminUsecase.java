@@ -130,11 +130,10 @@ public class MemberAdminUsecase {
         return MemberInformationResDTO.of(member, memberTracks, null, memberCareers);
     }
 
-    /** 승인된 전체 회원수와 모든 기수를 구함. */
-    public AdminTotalMemberListResDTO readAllMemberCountAndGeneration() {
-        long approvedMemberCount = memberGetService.getApprovedMemberCount();
+    /** 존재하는 모든 기수를 구함. */
+    public GenerationInfoListResDTO readAllMemberCountAndGeneration() {
         List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
-        return AdminTotalMemberListResDTO.of(approvedMemberCount, existsAllGenerations);
+        return GenerationInfoListResDTO.from(existsAllGenerations);
     }
 
     /** 승인된 회원 목록 스크롤 조회 */
