@@ -2,15 +2,7 @@ package com.tavemakers.surf.domain.member.usecase;
 
 import com.tavemakers.surf.domain.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
-import com.tavemakers.surf.domain.member.dto.response.CareerResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSearchDetailResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSearchResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSearchSliceResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSignupResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSimpleResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MyPageProfileResDTO;
-import com.tavemakers.surf.domain.member.dto.response.OnboardingCheckResDTO;
-import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
+import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -254,6 +246,13 @@ public class MemberUsecase {
         }
 
         return MemberSearchSliceResDTO.of(slice, totalCount);
+    }
+
+    /** MemberStatus에 따른 총 회원 수 카운트 조회 */
+    public MembersCountByMemberStatusResDTO getMembersCountByMemberStatus(List<String> rawMemberStatuses) {
+        List<MemberStatus> memberStatuses = MemberStatus.valueOf(rawMemberStatuses);
+        long membersCount = memberGetService.countMembers(memberStatuses);
+        return MembersCountByMemberStatusResDTO.of(memberStatuses, membersCount);
     }
 
     private Slice<MemberSearchDetailResDTO> search(Integer generation, Part part, String keyword, Pageable pageable) {
