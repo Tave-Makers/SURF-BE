@@ -53,10 +53,6 @@ public class Group extends BaseEntity {
         this.leader = leader;
     }
 
-    /**
-     * ✅ 생성 규칙:
-     * - 리더는 반드시 그룹 멤버에 포함되어야 함
-     */
     public static Group of(Integer generation, GroupType type, String name, String description, Member leader) {
         Group g = Group.builder()
                 .generation(generation)
@@ -74,26 +70,30 @@ public class Group extends BaseEntity {
         return groupMembers.size();
     }
 
-    public void changeBasicInfo(String name, String description) {
-        if (name != null) this.name = name;
-        if (description != null) this.description = description;
+    public void changeInfo(Integer generation, GroupType type, String name, String description
+    ) {
+        if (generation == null)
+            throw new IllegalArgumentException("generation is required");
+        if (type == null)
+            throw new IllegalArgumentException("type is required");
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("name is required");
+        if (description == null || description.isBlank())
+            throw new IllegalArgumentException("description is required");
+
+        this.generation = generation;
+        this.type = type;
+        this.name = name;
+        this.description = description;
     }
 
-    /**
-     * ✅ 리더 변경 규칙:
-     * - 리더는 반드시 그룹 멤버여야 함 (없으면 자동 추가)
-     */
     public void changeLeader(Member newLeader) {
-        this.leader = newLeader;
         if (!containsMember(newLeader.getId())) {
             addMemberInternal(newLeader);
         }
+        this.leader = newLeader;
     }
 
-    /**
-     * ✅ 멤버 추가 규칙:
-     * - 중복 추가 금지
-     */
     public void addMember(Member member) {
         if (containsMember(member.getId())) {
             throw new IllegalStateException("이미 그룹에 속한 멤버입니다.");
@@ -101,19 +101,21 @@ public class Group extends BaseEntity {
         addMemberInternal(member);
     }
 
-    /**
-     * ✅ 멤버 제거 규칙:
-     * - 그룹장 제거 금지
-     */
     public void removeMember(Long memberId) {
         if (leader.getId().equals(memberId)) {
             throw new IllegalStateException("그룹장은 제거할 수 없습니다.");
         }
-        groupMembers.removeIf(gm -> gm.getMember().getId().equals(memberId));
+
+        boolean removed = groupMembers.removeIf(gm -> gm.getMember().getId().equals(memberId));
+
+        if (!removed) {
+            throw new IllegalStateException("해당 멤버는 그룹에 존재하지 않습니다.");
+        }
     }
 
     private boolean containsMember(Long memberId) {
-        return groupMembers.stream().anyMatch(gm -> gm.getMember().getId().equals(memberId));
+        return groupMembers.stream()
+                .anyMatch(gm -> gm.getMember().getId().equals(memberId));
     }
 
     private void addMemberInternal(Member member) {

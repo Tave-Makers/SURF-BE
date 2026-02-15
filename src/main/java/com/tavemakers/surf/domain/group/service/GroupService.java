@@ -1,7 +1,6 @@
 package com.tavemakers.surf.domain.group.service;
 
-import com.tavemakers.surf.domain.group.dto.request.GroupCreateReqDTO;
-import com.tavemakers.surf.domain.group.dto.request.GroupUpdateReqDTO;
+import com.tavemakers.surf.domain.group.dto.request.GroupUpsertReqDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupDetailResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupMemberResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupListResDTO;
@@ -15,9 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,7 +48,6 @@ public class GroupService {
         List<GroupMemberResDTO> members = g.getGroupMembers().stream()
                 .map(gm -> {
                     Member m = gm.getMember();
-                    // ↓ 아래 필드는 너희 Member에 맞춰 수정
                     return new GroupMemberResDTO(m.getId(), m.getTracks());
                 })
                 .toList();
@@ -68,7 +64,78 @@ public class GroupService {
     }
 
     @Transactional
-    public GroupResDTO createGroup(GroupCreateReqDTO req) {
+    public GroupResDTO createGroup(GroupUpsertReqDTO req) {
+
+        ResolvedMembers resolved = resolveMembers(req);
+
+        Group group = Group.of(
+                req.generation(),
+                req.type(),
+                req.name(),
+                req.description(),
+                resolved.leader()
+        );
+
+        // leader 제외하고 추가
+        for (Member m : resolved.members()) {
+            if (!m.getId().equals(resolved.leader().getId())) {
+                group.addMember(m);
+            }
+        }
+
+        Group saved = groupRepository.save(group);
+
+        return GroupResDTO.from(saved);
+    }
+
+    @Transactional
+    public GroupResDTO updateGroup(Long groupId, GroupUpsertReqDTO req) {
+        Group group = groupRepository.findDetailById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+
+        ResolvedMembers resolved = resolveMembers(req);
+
+        // 1) 기본 정보(전체) 반영
+        group.changeInfo(req.generation(), req.type(), req.name(), req.description());
+        group.changeLeader(resolved.leader());
+
+        // 2) 멤버십을 요청 memberIds와 동일하게 맞추기
+        // 현재 멤버 id set
+        Set<Long> current = group.getGroupMembers().stream()
+                .map(gm -> gm.getMember().getId())
+                .collect(Collectors.toSet());
+
+        // 요청 멤버 id set
+        Set<Long> target = resolved.memberIdsSet();
+
+        // 2-1) 추가해야 할 멤버: target - current
+        for (Long memberId : target) {
+            if (!current.contains(memberId)) {
+                group.addMember(resolved.memberMap().get(memberId));
+            }
+        }
+
+        // 2-2) 제거해야 할 멤버: current - target
+        for (Long memberId : current) {
+            if (!target.contains(memberId)) {
+                group.removeMember(memberId);
+            }
+        }
+
+        return GroupResDTO.from(group);
+    }
+
+
+    @Transactional
+    public void delete(Long groupId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new IllegalArgumentException("Group not found");
+        }
+        groupRepository.deleteById(groupId);
+    }
+
+    private ResolvedMembers resolveMembers(GroupUpsertReqDTO req) {
+        List<Long> raw = req.memberIds();
 
         // 1) 중복 제거
         List<Long> distinctMemberIds = req.memberIds().stream()
@@ -76,7 +143,7 @@ public class GroupService {
                 .distinct()
                 .toList();
 
-        if (distinctMemberIds.size() != req.memberIds().size()) {
+        if (distinctMemberIds.size() != raw.size()) {
             throw new IllegalArgumentException("memberIds has duplicates");
         }
 
@@ -95,69 +162,16 @@ public class GroupService {
                 .collect(Collectors.toMap(Member::getId, m -> m));
 
         Member leader = memberMap.get(req.leaderMemberId());
-        if (leader == null) {
+        if (leader == null)
             throw new IllegalArgumentException("Leader not found");
-        }
 
-        // 4) Group 생성
-        Group group = Group.of(
-                req.generation(),
-                req.type(),
-                req.name(),
-                req.description(),
-                leader
-        );
-
-        // leader 제외하고 추가
-        for (Member m : members) {
-            if (!m.getId().equals(leader.getId())) {
-                group.addMember(m);
-            }
-        }
-
-        Group saved = groupRepository.save(group);
-
-        return GroupResDTO.from(saved);
+        return new ResolvedMembers(members, leader, memberMap, new HashSet<>(distinctMemberIds));
     }
 
-    @Transactional
-    public void update(Long groupId, GroupUpdateReqDTO req) {
-        Group group = groupRepository.findDetailById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
-
-        group.changeBasicInfo(req.name(), req.description());
-
-        if (req.leaderMemberId() != null) {
-            Member newLeader = memberRepository.findById(req.leaderMemberId())
-                    .orElseThrow(() -> new IllegalArgumentException("Leader not found"));
-            group.changeLeader(newLeader);
-        }
-
-        // add
-        List<Long> addIds = distinct(req.addMemberIds());
-        if (!addIds.isEmpty()) {
-            List<Member> addMembers = memberRepository.findAllById(addIds);
-            if (addMembers.size() != addIds.size()) throw new IllegalArgumentException("Some add members not found");
-            for (Member m : addMembers) group.addMember(m);
-        }
-
-        // remove
-        List<Long> removeIds = distinct(req.removeMemberIds());
-        for (Long memberId : removeIds) {
-            group.removeMember(memberId);
-        }
-    }
-
-    @Transactional
-    public void delete(Long groupId) {
-        if (!groupRepository.existsById(groupId)) {
-            throw new IllegalArgumentException("Group not found");
-        }
-        groupRepository.deleteById(groupId);
-    }
-
-    private static List<Long> distinct(List<Long> ids) {
-        if (ids == null) return List.of();
-        return ids.stream().filter(Objects::nonNull).distinct().toList();
-    }
+    private record ResolvedMembers(
+            List<Member> members,
+            Member leader,
+            Map<Long, Member> memberMap,
+            Set<Long> memberIdsSet
+    ) {}
 }

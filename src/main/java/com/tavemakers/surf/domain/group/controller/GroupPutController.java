@@ -9,28 +9,25 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.group.controller.ResponseMessage.GROUP_CREATED;
+import static com.tavemakers.surf.domain.group.controller.ResponseMessage.GROUP_UPDATED;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
 @Tag(name = "그룹", description = "그룹 관련 CRUD API")
-public class GroupCreateController {
+public class GroupPutController {
 
     private final GroupService groupService;
 
-    @Operation(summary = "그룹 생성", description = "새로운 그룹을 생성합니다.")
-    @PostMapping("/v1/admin/groups")
-    public ApiResponse<GroupResDTO> create(
+    @Operation(summary = "그룹 수정", description = "기존 그룹 정보를 새로운 정보로 완전히 대체합니다.")
+    @PutMapping("/v1/admin/groups/{groupId}")
+    public ApiResponse<GroupResDTO> replace(
+            @PathVariable Long groupId,
             @Valid @RequestBody GroupUpsertReqDTO req
     ) {
-
-        GroupResDTO response = groupService.createGroup(req);
-        return ApiResponse.response(HttpStatus.CREATED, GROUP_CREATED.getMessage(), response);
+        GroupResDTO response = groupService.updateGroup(groupId, req);
+        return ApiResponse.response(HttpStatus.OK, GROUP_UPDATED.getMessage(), response);
     }
 }

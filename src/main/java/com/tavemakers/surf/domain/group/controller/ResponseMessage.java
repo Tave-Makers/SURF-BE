@@ -7,7 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ResponseMessage {
 
-    GROUP_CREATED("[그룹]이 성공적으로 생성되었습니다.");
+    GROUP_CREATED("[그룹]이 성공적으로 생성되었습니다."),
+    GROUP_UPDATED("[그룹]이 성공적으로 수정되었습니다."),;
 
 
     private final String message;
