@@ -23,7 +23,7 @@ public class GroupPutController {
 
     @Operation(summary = "그룹 수정", description = "기존 그룹 정보를 새로운 정보로 완전히 대체합니다.")
     @PutMapping("/v1/admin/groups/{groupId}")
-    public ApiResponse<GroupResDTO> replace(
+    public ApiResponse<GroupResDTO> updateGroup(
             @PathVariable Long groupId,
             @Valid @RequestBody GroupUpsertReqDTO req
     ) {

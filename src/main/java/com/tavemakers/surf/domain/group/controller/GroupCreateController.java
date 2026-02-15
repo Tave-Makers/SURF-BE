@@ -26,7 +26,7 @@ public class GroupCreateController {
 
     @Operation(summary = "그룹 생성", description = "새로운 그룹을 생성합니다.")
     @PostMapping("/v1/admin/groups")
-    public ApiResponse<GroupResDTO> create(
+    public ApiResponse<GroupResDTO> createGroup(
             @Valid @RequestBody GroupUpsertReqDTO req
     ) {
 
