@@ -4,7 +4,7 @@ import com.tavemakers.surf.domain.group.dto.request.GroupCreateReqDTO;
 import com.tavemakers.surf.domain.group.dto.request.GroupUpdateReqDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupDetailResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupMemberResDTO;
-import com.tavemakers.surf.domain.group.dto.response.GroupResDTO;
+import com.tavemakers.surf.domain.group.dto.response.GroupListResDTO;
 import com.tavemakers.surf.domain.group.entity.Group;
 import com.tavemakers.surf.domain.group.entity.GroupType;
 import com.tavemakers.surf.domain.group.repository.GroupRepository;
@@ -25,11 +25,11 @@ public class GroupService {
     private final MemberRepository memberRepository;
 
     @Transactional(readOnly = true)
-    public List<GroupResDTO> getGroups(Integer generation, String type) {
+    public List<GroupListResDTO> getGroups(Integer generation, String type) {
         GroupType filter = "ALL".equalsIgnoreCase(type) ? null : GroupType.valueOf(type);
 
         return groupRepository.findList(generation, filter).stream()
-                .map(g -> new GroupResDTO(
+                .map(g -> new GroupListResDTO(
                         g.getId(),
                         g.getGeneration(),
                         g.getType(),

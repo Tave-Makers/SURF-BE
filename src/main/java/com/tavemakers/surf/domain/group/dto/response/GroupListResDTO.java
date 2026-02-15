@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.group.dto.response;
 
 import com.tavemakers.surf.domain.group.entity.GroupType;
 
-public record GroupResDTO(
+public record GroupListResDTO(
         Long groupId,
         Integer generation,
         GroupType type,
