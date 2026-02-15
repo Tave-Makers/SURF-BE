@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.group.dto.request.GroupUpdateReqDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupDetailResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupMemberResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupListResDTO;
+import com.tavemakers.surf.domain.group.dto.response.GroupResDTO;
 import com.tavemakers.surf.domain.group.entity.Group;
 import com.tavemakers.surf.domain.group.entity.GroupType;
 import com.tavemakers.surf.domain.group.repository.GroupRepository;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,10 +68,38 @@ public class GroupService {
     }
 
     @Transactional
-    public Long create(GroupCreateReqDTO req) {
-        Member leader = memberRepository.findById(req.leaderMemberId())
-                .orElseThrow(() -> new IllegalArgumentException("Leader not found"));
+    public GroupResDTO createGroup(GroupCreateReqDTO req) {
 
+        // 1) 중복 제거
+        List<Long> distinctMemberIds = req.memberIds().stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        if (distinctMemberIds.size() != req.memberIds().size()) {
+            throw new IllegalArgumentException("memberIds has duplicates");
+        }
+
+        // 2) 팀장은 팀원 목록에 반드시 포함
+        if (!distinctMemberIds.contains(req.leaderMemberId())) {
+            throw new IllegalArgumentException("leaderMemberId must be included in memberIds");
+        }
+
+        // 3) 멤버 조회
+        List<Member> members = memberRepository.findAllById(distinctMemberIds);
+        if (members.size() != distinctMemberIds.size()) {
+            throw new IllegalArgumentException("Some members not found");
+        }
+
+        Map<Long, Member> memberMap = members.stream()
+                .collect(Collectors.toMap(Member::getId, m -> m));
+
+        Member leader = memberMap.get(req.leaderMemberId());
+        if (leader == null) {
+            throw new IllegalArgumentException("Leader not found");
+        }
+
+        // 4) Group 생성
         Group group = Group.of(
                 req.generation(),
                 req.type(),
@@ -77,21 +108,16 @@ public class GroupService {
                 leader
         );
 
-        // 멤버 추가: Group AR 메서드를 통해서만
-        List<Long> ids = distinct(req.memberIds());
-        if (!ids.isEmpty()) {
-            List<Member> members = memberRepository.findAllById(ids);
-            if (members.size() != ids.size()) throw new IllegalArgumentException("Some members not found");
-
-            for (Member m : members) {
-                // 리더는 of()에서 이미 포함되어 있으므로 addMember에서 중복이면 예외가 날 수 있음
-                if (!m.getId().equals(leader.getId())) {
-                    group.addMember(m);
-                }
+        // leader 제외하고 추가
+        for (Member m : members) {
+            if (!m.getId().equals(leader.getId())) {
+                group.addMember(m);
             }
         }
 
-        return groupRepository.save(group).getId();
+        Group saved = groupRepository.save(group);
+
+        return GroupResDTO.from(saved);
     }
 
     @Transactional

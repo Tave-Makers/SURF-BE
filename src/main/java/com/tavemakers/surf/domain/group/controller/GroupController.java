@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.group.controller;
 
-import com.tavemakers.surf.domain.group.dto.request.GroupCreateReqDTO;
 import com.tavemakers.surf.domain.group.dto.request.GroupUpdateReqDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupDetailResDTO;
 import com.tavemakers.surf.domain.group.dto.response.GroupListResDTO;
@@ -9,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -30,10 +30,8 @@ public class GroupController {
         return groupService.getGroupDetail(groupId);
     }
 
-    @PostMapping("/v1/admin/groups")
-    public Long createGroup(@RequestBody GroupCreateReqDTO req) {
-        return groupService.create(req);
-    }
+
+
 
     @PatchMapping("/v1/admin/groups/{groupId}")
     public void updateGroup(@PathVariable Long groupId, @RequestBody GroupUpdateReqDTO req) {

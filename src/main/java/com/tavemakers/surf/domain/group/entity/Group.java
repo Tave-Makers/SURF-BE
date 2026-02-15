@@ -35,7 +35,7 @@ public class Group extends BaseEntity {
     @Column(length = 500)
     private String description;
 
-    /** 그룹장 */
+    /** 팀장 */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "leader_member_id", nullable = false)
     private Member leader;
