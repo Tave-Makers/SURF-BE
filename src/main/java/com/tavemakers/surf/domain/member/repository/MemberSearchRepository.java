@@ -201,8 +201,7 @@ public class MemberSearchRepository {
             return null;
         }
 
-        return member.name.contains(keyword)
-                .or(member.email.contains(keyword));
+        return member.name.contains(keyword);
     }
 
 }
