@@ -1,11 +1,11 @@
-package com.tavemakers.surf.domain.group.service;
+package com.tavemakers.surf.domain.team.service;
 
-import com.tavemakers.surf.domain.group.dto.request.GroupUpsertReqDTO;
-import com.tavemakers.surf.domain.group.dto.response.*;
-import com.tavemakers.surf.domain.group.entity.Group;
-import com.tavemakers.surf.domain.group.entity.GroupMember;
-import com.tavemakers.surf.domain.group.entity.GroupType;
-import com.tavemakers.surf.domain.group.repository.GroupRepository;
+import com.tavemakers.surf.domain.team.dto.request.TeamUpsertReqDTO;
+import com.tavemakers.surf.domain.team.dto.response.*;
+import com.tavemakers.surf.domain.team.entity.Team;
+import com.tavemakers.surf.domain.team.entity.TeamMember;
+import com.tavemakers.surf.domain.team.entity.TeamType;
+import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
@@ -20,42 +20,42 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class GroupService {
+public class TeamService {
 
-    private final GroupRepository groupRepository;
+    private final TeamRepository teamRepository;
     private final MemberRepository memberRepository;
     private final TrackRepository trackRepository;
 
     @Transactional(readOnly = true)
-    public List<GroupGenerationSectionResDTO> getGroups(String type) {
-        GroupType filterType = null;
+    public List<TeamGenerationSectionResDTO> getTeams(String type) {
+        TeamType filterType = null;
         if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
-            filterType = GroupType.valueOf(type);
+            filterType = TeamType.valueOf(type);
         }
 
-        List<GroupListResDTO> flat = groupRepository.findAllForAccordion(filterType).stream()
-                .map(GroupListResDTO::from)
+        List<TeamListResDTO> flat = teamRepository.findAllForAccordion(filterType).stream()
+                .map(TeamListResDTO::from)
                 .toList();
 
-        Map<Integer, List<GroupListResDTO>> grouped = new LinkedHashMap<>();
-        for (GroupListResDTO dto : flat) {
-            grouped.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
+        Map<Integer, List<TeamListResDTO>> teamed = new LinkedHashMap<>();
+        for (TeamListResDTO dto : flat) {
+            teamed.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
         }
 
-        return grouped.entrySet().stream()
-                .map(e -> new GroupGenerationSectionResDTO(e.getKey(), e.getValue()))
+        return teamed.entrySet().stream()
+                .map(e -> new TeamGenerationSectionResDTO(e.getKey(), e.getValue()))
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public GroupDetailResDTO getGroupDetail(Long groupId) {
-        Group g = groupRepository.findDetailBaseById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    public TeamDetailResDTO getTeamDetail(Long teamId) {
+        Team team = teamRepository.findDetailBaseById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
         // 1) tracks 조회에 필요한 memberIds
         Set<Long> memberIdSet = new HashSet<>();
-        memberIdSet.add(g.getLeader().getId());
-        g.getGroupMembers().forEach(gm -> memberIdSet.add(gm.getMember().getId()));
+        memberIdSet.add(team.getLeader().getId());
+        team.getTeamMembers().forEach(tm -> memberIdSet.add(tm.getMember().getId()));
         List<Long> memberIds = memberIdSet.stream().toList();
 
         // 2) Track을 한 번에 조회 (N+1 방지)
@@ -63,28 +63,28 @@ public class GroupService {
                 .collect(Collectors.groupingBy(t -> t.getMember().getId()));
 
         // 3) 팀장 DTO
-        GroupDetailResDTO.MemberCardDTO leaderDto = toMemberCard(g.getLeader(), trackMap);
+        TeamDetailResDTO.MemberCardDTO leaderDto = toMemberCard(team.getLeader(), trackMap);
 
         // 4) members: 리더 제외 정렬(최신 기수 순 -> 이름 순)
-        List<Member> members = g.getGroupMembers().stream()
-                .map(GroupMember::getMember)
-                .filter(m -> !m.getId().equals(g.getLeader().getId()))
+        List<Member> members = team.getTeamMembers().stream()
+                .map(TeamMember::getMember)
+                .filter(m -> !m.getId().equals(team.getLeader().getId()))
                 .sorted(memberComparator(trackMap))
                 .toList();
 
-        List<GroupDetailResDTO.MemberCardDTO> memberDtos = members.stream()
+        List<TeamDetailResDTO.MemberCardDTO> memberDtos = members.stream()
                 .map(m -> toMemberCard(m, trackMap))
                 .toList();
 
-        return GroupDetailResDTO.from(g, leaderDto, memberDtos);
+        return TeamDetailResDTO.from(team, leaderDto, memberDtos);
     }
 
     @Transactional
-    public GroupResDTO createGroup(GroupUpsertReqDTO req) {
+    public TeamResDTO createTeam(TeamUpsertReqDTO req) {
 
         ResolvedMembers resolved = resolveMembers(req);
 
-        Group group = Group.of(
+        Team team = Team.of(
                 req.generation(),
                 req.type(),
                 req.name(),
@@ -95,30 +95,30 @@ public class GroupService {
         // leader 제외하고 추가
         for (Member m : resolved.members()) {
             if (!m.getId().equals(resolved.leader().getId())) {
-                group.addMember(m);
+                team.addMember(m);
             }
         }
 
-        Group saved = groupRepository.save(group);
+        Team saved = teamRepository.save(team);
 
-        return GroupResDTO.from(saved);
+        return TeamResDTO.from(saved);
     }
 
     @Transactional
-    public GroupResDTO updateGroup(Long groupId, GroupUpsertReqDTO req) {
-        Group group = groupRepository.findDetailBaseById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    public TeamResDTO updateTeam(Long teamId, TeamUpsertReqDTO req) {
+        Team team = teamRepository.findDetailBaseById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
         ResolvedMembers resolved = resolveMembers(req);
 
         // 1) 기본 정보(전체) 반영
-        group.changeInfo(req.generation(), req.type(), req.name(), req.description());
-        group.changeLeader(resolved.leader());
+        team.changeInfo(req.generation(), req.type(), req.name(), req.description());
+        team.changeLeader(resolved.leader());
 
         // 2) 팀원을 요청 memberIds와 동일하게 맞추기
         // 현재 멤버 id set
-        Set<Long> current = group.getGroupMembers().stream()
-                .map(gm -> gm.getMember().getId())
+        Set<Long> current = team.getTeamMembers().stream()
+                .map(tm -> tm.getMember().getId())
                 .collect(Collectors.toSet());
 
         // 요청 멤버 id set
@@ -127,30 +127,30 @@ public class GroupService {
         // 2-1) 추가해야 할 팀원: target - current
         for (Long memberId : target) {
             if (!current.contains(memberId)) {
-                group.addMember(resolved.memberMap().get(memberId));
+                team.addMember(resolved.memberMap().get(memberId));
             }
         }
 
         // 2-2) 제거해야 할 팀원: current - target
         for (Long memberId : current) {
             if (!target.contains(memberId)) {
-                group.removeMember(memberId);
+                team.removeMember(memberId);
             }
         }
 
-        return GroupResDTO.from(group);
+        return TeamResDTO.from(team);
     }
 
 
     @Transactional
-    public void delete(Long groupId) {
-        Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+    public void deleteTeam(Long teamId) {
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
 
-        groupRepository.delete(group);
+        teamRepository.delete(team);
     }
 
-    private ResolvedMembers resolveMembers(GroupUpsertReqDTO req) {
+    private ResolvedMembers resolveMembers(TeamUpsertReqDTO req) {
         List<Long> raw = req.memberIds();
 
         // 1) 중복 제거
@@ -191,12 +191,12 @@ public class GroupService {
             Set<Long> memberIdsSet
     ) {}
 
-    private GroupDetailResDTO.MemberCardDTO toMemberCard(Member m, Map<Long, List<Track>> trackMap) {
+    private TeamDetailResDTO.MemberCardDTO toMemberCard(Member m, Map<Long, List<Track>> trackMap) {
         List<TrackResDTO> tracks = trackMap.getOrDefault(m.getId(), List.of()).stream()
                 .map(TrackResDTO::from)
                 .toList();
 
-        return new GroupDetailResDTO.MemberCardDTO(
+        return new TeamDetailResDTO.MemberCardDTO(
                 m.getId(),
                 m.getName(),
                 m.getProfileImageUrl(),

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.group.entity;
+package com.tavemakers.surf.domain.team.entity;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import jakarta.persistence.*;
@@ -6,36 +6,36 @@ import lombok.*;
 
 @Entity
 @Table(
-        name = "group_member",
+        name = "team_member",
         uniqueConstraints = @UniqueConstraint(
-                name = "uk_group_member",
-                columnNames = {"group_id", "member_id"}
+                name = "uk_team_member",
+                columnNames = {"team_id", "member_id"}
         )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GroupMember {
+public class TeamMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 소유자: Group */
+    /** 소유자: Team */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group group;
+    @JoinColumn(name = "team_id", nullable = false)
+    private Team team;
 
     /** 참여자: Member */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    private GroupMember(Group group, Member member) {
-        this.group = group;
+    private TeamMember(Team team, Member member) {
+        this.team = team;
         this.member = member;
     }
 
-    public static GroupMember of(Group group, Member member) {
-        return new GroupMember(group, member);
+    public static TeamMember of(Team team, Member member) {
+        return new TeamMember(team, member);
     }
 }

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.group.entity;
+package com.tavemakers.surf.domain.team.entity;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "team")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Group extends BaseEntity {
+public class Team extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,13 +25,13 @@ public class Group extends BaseEntity {
     /** 스터디/프로젝트 */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private GroupType type;
+    private TeamType type;
 
-    /** 그룹명 */
+    /** 팀명 */
     @Column(nullable = false, length = 50)
     private String name;
 
-    /** 그룹 소개 */
+    /** 팀 소개 */
     @Column(length = 500)
     private String description;
 
@@ -40,12 +40,12 @@ public class Group extends BaseEntity {
     @JoinColumn(name = "leader_member_id", nullable = false)
     private Member leader;
 
-    /** 멤버십(그룹 내부 엔티티) - Group AR이 생명주기 관리 */
-    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final List<GroupMember> groupMembers = new ArrayList<>();
+    /** 팀원(팀 내부 엔티티) - Team AR이 생명주기 관리 */
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<TeamMember> teamMembers = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Group(Integer generation, GroupType type, String name, String description, Member leader) {
+    private Team(Integer generation, TeamType type, String name, String description, Member leader) {
         this.generation = generation;
         this.type = type;
         this.name = name;
@@ -53,8 +53,8 @@ public class Group extends BaseEntity {
         this.leader = leader;
     }
 
-    public static Group of(Integer generation, GroupType type, String name, String description, Member leader) {
-        Group g = Group.builder()
+    public static Team of(Integer generation, TeamType type, String name, String description, Member leader) {
+        Team g = Team.builder()
                 .generation(generation)
                 .type(type)
                 .name(name)
@@ -67,10 +67,10 @@ public class Group extends BaseEntity {
     }
 
     public int getMemberCount() {
-        return groupMembers.size();
+        return teamMembers.size();
     }
 
-    public void changeInfo(Integer generation, GroupType type, String name, String description
+    public void changeInfo(Integer generation, TeamType type, String name, String description
     ) {
         if (generation == null)
             throw new IllegalArgumentException("generation is required");
@@ -96,29 +96,25 @@ public class Group extends BaseEntity {
 
     public void addMember(Member member) {
         if (containsMember(member.getId())) {
-            throw new IllegalStateException("이미 그룹에 속한 멤버입니다.");
+            throw new IllegalStateException("이미 팀에 속한 멤버입니다.");
         }
         addMemberInternal(member);
     }
 
     public void removeMember(Long memberId) {
-        if (leader.getId().equals(memberId)) {
-            throw new IllegalStateException("그룹장은 제거할 수 없습니다.");
-        }
-
-        boolean removed = groupMembers.removeIf(gm -> gm.getMember().getId().equals(memberId));
+        boolean removed = teamMembers.removeIf(gm -> gm.getMember().getId().equals(memberId));
 
         if (!removed) {
-            throw new IllegalStateException("해당 멤버는 그룹에 존재하지 않습니다.");
+            throw new IllegalStateException("해당 멤버는 팀에 존재하지 않습니다.");
         }
     }
 
     private boolean containsMember(Long memberId) {
-        return groupMembers.stream()
+        return teamMembers.stream()
                 .anyMatch(gm -> gm.getMember().getId().equals(memberId));
     }
 
     private void addMemberInternal(Member member) {
-        groupMembers.add(GroupMember.of(this, member));
+        teamMembers.add(TeamMember.of(this, member));
     }
 }
