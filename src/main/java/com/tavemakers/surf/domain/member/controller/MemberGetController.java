@@ -84,9 +84,10 @@ public class MemberGetController {
     )
     @GetMapping("/v1/user/members-count")
     public ApiResponse<MembersCountByMemberStatusResDTO> getMembersCount(
-            @RequestParam List<String> memberStatuses
+            @RequestParam List<String> memberStatuses,
+            @RequestParam(required = false) String keyword
     ) {
-        MembersCountByMemberStatusResDTO data = memberUsecase.getMembersCountByMemberStatus(memberStatuses);
+        MembersCountByMemberStatusResDTO data = memberUsecase.getMembersCountByMemberStatusAndKeyword(memberStatuses, keyword);
         return ApiResponse.response(HttpStatus.OK, MEMBERS_COUNT_READ.getMessage(), data);
     }
 

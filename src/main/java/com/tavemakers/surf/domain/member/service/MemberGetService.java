@@ -93,7 +93,7 @@ public class MemberGetService {
 
     /** 검색 조건에 해당하는 회원 수 조회 */
     public Long countSearchingMembers(Integer generation, Part memberPart, String keyword) {
-        return memberSearchRepository.countMembers(generation, memberPart, keyword);
+        return memberSearchRepository.countMembersByMemberStatusesAndKeyword(generation, memberPart, keyword);
     }
 
     /** 키워드와 상태 목록으로 대기 회원 검색 */
@@ -102,8 +102,8 @@ public class MemberGetService {
     }
 
     /** 상태 목록에 해당하는 회원 수 조회 */
-    public Long countMembers(List<MemberStatus> statuses) {
-        return memberSearchRepository.countMembers(statuses);
+    public Long countMembers(List<MemberStatus> statuses, String keyword) {
+        return memberSearchRepository.countMembersByMemberStatusesAndKeyword(statuses, keyword);
     }
 
     /** 회원 ID 목록으로 회원 목록 조회 (ID Set) */

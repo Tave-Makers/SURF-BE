@@ -249,9 +249,9 @@ public class MemberUsecase {
     }
 
     /** MemberStatus에 따른 총 회원 수 카운트 조회 */
-    public MembersCountByMemberStatusResDTO getMembersCountByMemberStatus(List<String> rawMemberStatuses) {
+    public MembersCountByMemberStatusResDTO getMembersCountByMemberStatusAndKeyword(List<String> rawMemberStatuses, String keyword) {
         List<MemberStatus> memberStatuses = MemberStatus.toList(rawMemberStatuses);
-        long membersCount = memberGetService.countMembers(memberStatuses);
+        long membersCount = memberGetService.countMembers(memberStatuses, keyword);
         return MembersCountByMemberStatusResDTO.of(memberStatuses, membersCount);
     }
 
