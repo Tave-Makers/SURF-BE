@@ -1,10 +1,15 @@
 package com.tavemakers.surf.domain.team.service;
 
+import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.team.dto.request.TeamUpsertReqDTO;
 import com.tavemakers.surf.domain.team.dto.response.*;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamMember;
 import com.tavemakers.surf.domain.team.entity.TeamType;
+import com.tavemakers.surf.domain.team.exception.TeamLeaderNotFoundException;
+import com.tavemakers.surf.domain.team.exception.TeamLeaderNotInMemberException;
+import com.tavemakers.surf.domain.team.exception.TeamMemberDuplicatedException;
+import com.tavemakers.surf.domain.team.exception.TeamNotFoundException;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -33,12 +38,12 @@ public class TeamService {
             filterType = TeamType.valueOf(type);
         }
 
-        List<TeamListResDTO> flat = teamRepository.findAllForAccordion(filterType).stream()
+        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(filterType).stream()
                 .map(TeamListResDTO::from)
                 .toList();
 
         Map<Integer, List<TeamListResDTO>> teamed = new LinkedHashMap<>();
-        for (TeamListResDTO dto : flat) {
+        for (TeamListResDTO dto : teams) {
             teamed.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
         }
 
@@ -50,7 +55,7 @@ public class TeamService {
     @Transactional(readOnly = true)
     public TeamDetailResDTO getTeamDetail(Long teamId) {
         Team team = teamRepository.findDetailBaseById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
+                .orElseThrow(TeamNotFoundException::new);
 
         // 1) tracks 조회에 필요한 memberIds
         Set<Long> memberIdSet = new HashSet<>();
@@ -107,7 +112,7 @@ public class TeamService {
     @Transactional
     public TeamResDTO updateTeam(Long teamId, TeamUpsertReqDTO req) {
         Team team = teamRepository.findDetailBaseById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
+                .orElseThrow(TeamNotFoundException::new);
 
         ResolvedMembers resolved = resolveMembers(req);
 
@@ -145,7 +150,7 @@ public class TeamService {
     @Transactional
     public void deleteTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
-                .orElseThrow(() -> new IllegalArgumentException("Team not found"));
+                .orElseThrow(TeamNotFoundException::new);
 
         teamRepository.delete(team);
     }
@@ -160,18 +165,18 @@ public class TeamService {
                 .toList();
 
         if (distinctMemberIds.size() != raw.size()) {
-            throw new IllegalArgumentException("memberIds has duplicates");
+            throw new TeamMemberDuplicatedException();
         }
 
         // 2) 팀장은 팀원 목록에 반드시 포함
         if (!distinctMemberIds.contains(req.leaderMemberId())) {
-            throw new IllegalArgumentException("leaderMemberId must be included in memberIds");
+            throw new TeamLeaderNotInMemberException();
         }
 
         // 3) 멤버 조회
         List<Member> members = memberRepository.findAllById(distinctMemberIds);
         if (members.size() != distinctMemberIds.size()) {
-            throw new IllegalArgumentException("Some members not found");
+            throw new MemberNotFoundException();
         }
 
         Map<Long, Member> memberMap = members.stream()
@@ -179,7 +184,7 @@ public class TeamService {
 
         Member leader = memberMap.get(req.leaderMemberId());
         if (leader == null)
-            throw new IllegalArgumentException("Leader not found");
+            throw new TeamLeaderNotFoundException();
 
         return new ResolvedMembers(members, leader, memberMap, new HashSet<>(distinctMemberIds));
     }
