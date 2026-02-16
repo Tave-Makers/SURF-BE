@@ -1,10 +1,7 @@
 package com.tavemakers.surf.domain.group.service;
 
 import com.tavemakers.surf.domain.group.dto.request.GroupUpsertReqDTO;
-import com.tavemakers.surf.domain.group.dto.response.GroupDetailResDTO;
-import com.tavemakers.surf.domain.group.dto.response.GroupMemberResDTO;
-import com.tavemakers.surf.domain.group.dto.response.GroupListResDTO;
-import com.tavemakers.surf.domain.group.dto.response.GroupResDTO;
+import com.tavemakers.surf.domain.group.dto.response.*;
 import com.tavemakers.surf.domain.group.entity.Group;
 import com.tavemakers.surf.domain.group.entity.GroupType;
 import com.tavemakers.surf.domain.group.repository.GroupRepository;
@@ -25,18 +22,23 @@ public class GroupService {
     private final MemberRepository memberRepository;
 
     @Transactional(readOnly = true)
-    public List<GroupListResDTO> getGroups(Integer generation, String type) {
-        GroupType filter = "ALL".equalsIgnoreCase(type) ? null : GroupType.valueOf(type);
+    public List<GroupGenerationSectionResDTO> getGroups(String type) {
+        GroupType filterType = null;
+        if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+            filterType = GroupType.valueOf(type);
+        }
 
-        return groupRepository.findList(generation, filter).stream()
-                .map(g -> new GroupListResDTO(
-                        g.getId(),
-                        g.getGeneration(),
-                        g.getType(),
-                        g.getName(),
-                        g.getLeader().getName(),
-                        g.getMemberCount()
-                ))
+        List<GroupListResDTO> flat = groupRepository.findAllForAccordion(filterType).stream()
+                .map(GroupListResDTO::from)
+                .toList();
+
+        Map<Integer, List<GroupListResDTO>> grouped = new LinkedHashMap<>();
+        for (GroupListResDTO dto : flat) {
+            grouped.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
+        }
+
+        return grouped.entrySet().stream()
+                .map(e -> new GroupGenerationSectionResDTO(e.getKey(), e.getValue()))
                 .toList();
     }
 
@@ -45,22 +47,11 @@ public class GroupService {
         Group g = groupRepository.findDetailById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
-        List<GroupMemberResDTO> members = g.getGroupMembers().stream()
-                .map(gm -> {
-                    Member m = gm.getMember();
-                    return new GroupMemberResDTO(m.getId(), m.getTracks());
-                })
+        var members = g.getGroupMembers().stream()
+                .map(gm -> GroupDetailResDTO.GroupMemberResDTO.from(gm.getMember()))
                 .toList();
 
-        return new GroupDetailResDTO(
-                g.getId(),
-                g.getGeneration(),
-                g.getType(),
-                g.getName(),
-                g.getLeader().getName(),
-                g.getDescription(),
-                members
-        );
+        return GroupDetailResDTO.from(g, members);
     }
 
     @Transactional

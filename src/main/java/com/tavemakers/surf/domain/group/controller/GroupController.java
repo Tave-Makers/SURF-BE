@@ -24,20 +24,6 @@ public class GroupController {
 
     private final GroupService groupService;
 
-    @GetMapping("/v1/admin/groups")
-    public List<GroupListResDTO> getGroups(
-            @RequestParam Integer generation,
-            @RequestParam(defaultValue = "ALL") String type
-    ) {
-        return groupService.getGroups(generation, type);
-    }
-
-    @GetMapping("/v1/admin/groups/{groupId}")
-    public GroupDetailResDTO getGroupDetail(@PathVariable Long groupId) {
-        return groupService.getGroupDetail(groupId);
-    }
-
-
 
 
     @DeleteMapping("/v1/admin/groups/{groupId}")
