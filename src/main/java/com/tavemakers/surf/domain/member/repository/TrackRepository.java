@@ -33,4 +33,10 @@ public interface TrackRepository extends JpaRepository<Track, Long> {
     @Query("SELECT DISTINCT t.generation FROM Track t ORDER BY t.generation DESC")
     List<Integer> findAllDistinctGenerations();
 
+    @Query("""
+        select t
+          from Track t
+         where t.member.id in :memberIds
+    """)
+    List<Track> findAllByMemberIds(@Param("memberIds") List<Long> memberIds);
 }

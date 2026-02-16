@@ -26,8 +26,9 @@ public class GroupGetController {
         return groupService.getGroups(type);
     }
 
+    @Operation(summary = "그룹 상세 조회", description = "그룹의 상세 정보를 조회합니다.")
     @GetMapping("/v1/admin/groups/{groupId}")
-    public GroupDetailResDTO getGroupDetail(@PathVariable Long groupId) {
+    public GroupDetailResDTO getDetail(@PathVariable Long groupId) {
         return groupService.getGroupDetail(groupId);
     }
 }

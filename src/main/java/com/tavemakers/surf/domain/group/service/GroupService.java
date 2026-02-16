@@ -3,10 +3,14 @@ package com.tavemakers.surf.domain.group.service;
 import com.tavemakers.surf.domain.group.dto.request.GroupUpsertReqDTO;
 import com.tavemakers.surf.domain.group.dto.response.*;
 import com.tavemakers.surf.domain.group.entity.Group;
+import com.tavemakers.surf.domain.group.entity.GroupMember;
 import com.tavemakers.surf.domain.group.entity.GroupType;
 import com.tavemakers.surf.domain.group.repository.GroupRepository;
+import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.repository.TrackRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,7 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
+    private final TrackRepository trackRepository;
 
     @Transactional(readOnly = true)
     public List<GroupGenerationSectionResDTO> getGroups(String type) {
@@ -44,14 +49,34 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public GroupDetailResDTO getGroupDetail(Long groupId) {
-        Group g = groupRepository.findDetailById(groupId)
+        Group g = groupRepository.findDetailBaseById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
-        var members = g.getGroupMembers().stream()
-                .map(gm -> GroupDetailResDTO.GroupMemberResDTO.from(gm.getMember()))
+        // 1) tracks 조회에 필요한 memberIds
+        Set<Long> memberIdSet = new HashSet<>();
+        memberIdSet.add(g.getLeader().getId());
+        g.getGroupMembers().forEach(gm -> memberIdSet.add(gm.getMember().getId()));
+        List<Long> memberIds = memberIdSet.stream().toList();
+
+        // 2) Track을 한 번에 조회 (N+1 방지)
+        Map<Long, List<Track>> trackMap = trackRepository.findAllByMemberIds(memberIds).stream()
+                .collect(Collectors.groupingBy(t -> t.getMember().getId()));
+
+        // 3) 팀장 DTO
+        GroupDetailResDTO.MemberCardDTO leaderDto = toMemberCard(g.getLeader(), trackMap);
+
+        // 4) members: 리더 제외 정렬(최신 기수 순 -> 이름 순)
+        List<Member> members = g.getGroupMembers().stream()
+                .map(GroupMember::getMember)
+                .filter(m -> !m.getId().equals(g.getLeader().getId()))
+                .sorted(memberComparator(trackMap))
                 .toList();
 
-        return GroupDetailResDTO.from(g, members);
+        List<GroupDetailResDTO.MemberCardDTO> memberDtos = members.stream()
+                .map(m -> toMemberCard(m, trackMap))
+                .toList();
+
+        return GroupDetailResDTO.from(g, leaderDto, memberDtos);
     }
 
     @Transactional
@@ -81,7 +106,7 @@ public class GroupService {
 
     @Transactional
     public GroupResDTO updateGroup(Long groupId, GroupUpsertReqDTO req) {
-        Group group = groupRepository.findDetailById(groupId)
+        Group group = groupRepository.findDetailBaseById(groupId)
                 .orElseThrow(() -> new IllegalArgumentException("Group not found"));
 
         ResolvedMembers resolved = resolveMembers(req);
@@ -165,4 +190,32 @@ public class GroupService {
             Map<Long, Member> memberMap,
             Set<Long> memberIdsSet
     ) {}
+
+    private GroupDetailResDTO.MemberCardDTO toMemberCard(Member m, Map<Long, List<Track>> trackMap) {
+        List<TrackResDTO> tracks = trackMap.getOrDefault(m.getId(), List.of()).stream()
+                .map(TrackResDTO::from)
+                .toList();
+
+        return new GroupDetailResDTO.MemberCardDTO(
+                m.getId(),
+                m.getName(),
+                m.getProfileImageUrl(),
+                tracks
+        );
+    }
+
+    private Comparator<Member> memberComparator(Map<Long, List<Track>> trackMap) {
+        Comparator<Integer> generationDesc = Comparator.nullsLast(Comparator.reverseOrder());
+
+        return Comparator
+                .comparing((Member m) -> mainGeneration(m.getId(), trackMap), generationDesc)
+                .thenComparing(Member::getName, Comparator.nullsLast(String::compareTo));
+    }
+
+    private Integer mainGeneration(Long memberId, Map<Long, List<Track>> trackMap) {
+        return trackMap.getOrDefault(memberId, List.of()).stream()
+                .map(Track::getGeneration)
+                .max(Integer::compareTo)
+                .orElse(null);
+    }
 }
