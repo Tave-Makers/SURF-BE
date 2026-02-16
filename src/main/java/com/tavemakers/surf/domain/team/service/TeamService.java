@@ -32,22 +32,18 @@ public class TeamService {
     private final TrackRepository trackRepository;
 
     @Transactional(readOnly = true)
-    public List<TeamGenerationSectionResDTO> getTeams(String type) {
-        TeamType filterType = null;
-        if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
-            filterType = TeamType.valueOf(type);
-        }
-
-        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(filterType).stream()
+    public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
+        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(type).stream()
                 .map(TeamListResDTO::from)
                 .toList();
 
-        Map<Integer, List<TeamListResDTO>> teamed = new LinkedHashMap<>();
+        Map<Integer, List<TeamListResDTO>> grouped = new LinkedHashMap<>();
+
         for (TeamListResDTO dto : teams) {
-            teamed.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
+            grouped.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
         }
 
-        return teamed.entrySet().stream()
+        return grouped.entrySet().stream()
                 .map(e -> new TeamGenerationSectionResDTO(e.getKey(), e.getValue()))
                 .toList();
     }
