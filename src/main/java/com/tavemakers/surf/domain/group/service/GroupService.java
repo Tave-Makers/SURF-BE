@@ -115,7 +115,7 @@ public class GroupService {
         group.changeInfo(req.generation(), req.type(), req.name(), req.description());
         group.changeLeader(resolved.leader());
 
-        // 2) 멤버십을 요청 memberIds와 동일하게 맞추기
+        // 2) 팀원을 요청 memberIds와 동일하게 맞추기
         // 현재 멤버 id set
         Set<Long> current = group.getGroupMembers().stream()
                 .map(gm -> gm.getMember().getId())
@@ -124,14 +124,14 @@ public class GroupService {
         // 요청 멤버 id set
         Set<Long> target = resolved.memberIdsSet();
 
-        // 2-1) 추가해야 할 멤버: target - current
+        // 2-1) 추가해야 할 팀원: target - current
         for (Long memberId : target) {
             if (!current.contains(memberId)) {
                 group.addMember(resolved.memberMap().get(memberId));
             }
         }
 
-        // 2-2) 제거해야 할 멤버: current - target
+        // 2-2) 제거해야 할 팀원: current - target
         for (Long memberId : current) {
             if (!target.contains(memberId)) {
                 group.removeMember(memberId);
@@ -144,10 +144,10 @@ public class GroupService {
 
     @Transactional
     public void delete(Long groupId) {
-        if (!groupRepository.existsById(groupId)) {
-            throw new IllegalArgumentException("Group not found");
-        }
-        groupRepository.deleteById(groupId);
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Group not found"));
+
+        groupRepository.delete(group);
     }
 
     private ResolvedMembers resolveMembers(GroupUpsertReqDTO req) {
