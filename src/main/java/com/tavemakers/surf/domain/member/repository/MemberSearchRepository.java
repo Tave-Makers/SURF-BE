@@ -201,7 +201,7 @@ public class MemberSearchRepository {
             return null;
         }
 
-        return member.name.contains(keyword);
+        return member.name.containsIgnoreCase(keyword);
     }
 
 }
