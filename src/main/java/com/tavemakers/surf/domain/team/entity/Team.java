@@ -1,6 +1,9 @@
 package com.tavemakers.surf.domain.team.entity;
 
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.team.exception.AlreadyExistingTeamMemberException;
+import com.tavemakers.surf.domain.team.exception.CannotRemoveTeamLeaderException;
+import com.tavemakers.surf.domain.team.exception.TeamMemberNotFoundException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -96,16 +99,20 @@ public class Team extends BaseEntity {
 
     public void addMember(Member member) {
         if (containsMember(member.getId())) {
-            throw new IllegalStateException("이미 팀에 속한 멤버입니다.");
+            throw new AlreadyExistingTeamMemberException();
         }
         addMemberInternal(member);
     }
 
     public void removeMember(Long memberId) {
+        if (leader.getId().equals(memberId)) {
+            throw new CannotRemoveTeamLeaderException();
+        }
+
         boolean removed = teamMembers.removeIf(gm -> gm.getMember().getId().equals(memberId));
 
         if (!removed) {
-            throw new IllegalStateException("해당 멤버는 팀에 존재하지 않습니다.");
+            throw new TeamMemberNotFoundException();
         }
     }
 
