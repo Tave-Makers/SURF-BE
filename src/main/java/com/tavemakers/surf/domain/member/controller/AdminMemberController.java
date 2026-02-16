@@ -65,10 +65,10 @@ public class AdminMemberController {
     }
 
     @Operation(summary = "존재하는 회원들의 [모든 기수 정보] 조회", description = "존재하는 회원들의 [모든 기수 정보] 조회")
-    @GetMapping("/v1/manager/members-count/generation")
+    @GetMapping("/v1/manager/generations")
     public ApiResponse<GenerationInfoListResDTO> readAllMemberCountAndGeneration() {
         GenerationInfoListResDTO data = memberAdminUsecase.readExistingGenerations();
-        return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_COUNT_AND_ALL_GENERATION.getMessage(), data);
+        return ApiResponse.response(HttpStatus.OK, APPROVED_ALL_GENERATION.getMessage(), data);
     }
 
     @Operation(summary = "승인된 [전체 회원 목록] 조회", description = "APPROVED 상태의 전체 회원 목록을 스크롤 조회")
