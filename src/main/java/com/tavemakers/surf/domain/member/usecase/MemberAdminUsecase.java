@@ -35,6 +35,7 @@ import java.util.UUID;
 @Slf4j
 public class MemberAdminUsecase {
 
+    //<editor-fold desc="MemberAdminUsecase Dependency Summary">
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;
     private final CareerGetService careerGetService;
@@ -43,6 +44,7 @@ public class MemberAdminUsecase {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
+    //</editor-fold>
 
     /** 회원 권한 변경 */
     @Transactional
