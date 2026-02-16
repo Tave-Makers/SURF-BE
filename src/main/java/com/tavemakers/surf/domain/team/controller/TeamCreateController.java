@@ -25,6 +25,7 @@ public class TeamCreateController {
 
     private final TeamService teamService;
 
+    /** 팀 생성 (팀장 memberId(leaderMemberId)는 팀원 memberId 리스트(memberIds) 내에 포함되어야 합니다.)*/
     @Operation(summary = "팀 생성", description = "새로운 팀을 생성합니다.")
     @PostMapping("/v1/admin/teams")
     public ApiResponse<TeamResDTO> createTeam(

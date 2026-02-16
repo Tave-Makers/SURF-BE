@@ -19,6 +19,7 @@ public class TeamDeleteController {
 
     private  final TeamService teamService;
 
+    /** 팀 삭제*/
     @Operation(summary = "팀 삭제", description = "특정 ID의 팀을 삭제합니다.")
     @DeleteMapping("/v1/admin/teams/{teamId}")
     public ApiResponse<Void> deleteTeam(@PathVariable Long teamId) {

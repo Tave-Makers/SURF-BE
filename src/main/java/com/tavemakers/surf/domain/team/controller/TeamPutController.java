@@ -22,6 +22,7 @@ public class TeamPutController {
 
     private final TeamService teamService;
 
+    /** 팀 정보 수정 (팀장 memberId(leaderMemberId)는 팀원 memberId 리스트(memberIds) 내에 포함되어야 합니다.)*/
     @Operation(summary = "팀 수정", description = "기존 팀 정보를 새로운 정보로 완전히 대체합니다.")
     @PutMapping("/v1/admin/teams/{teamId}")
     public ApiResponse<TeamResDTO> updateTeam(
