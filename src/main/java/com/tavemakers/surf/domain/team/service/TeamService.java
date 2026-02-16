@@ -220,7 +220,7 @@ public class TeamService {
     private Integer mainGeneration(Long memberId, Map<Long, List<Track>> trackMap) {
         return trackMap.getOrDefault(memberId, List.of()).stream()
                 .map(Track::getGeneration)
-                .max(Integer::compareTo)
+                .min(Integer::compareTo)
                 .orElse(null);
     }
 }
