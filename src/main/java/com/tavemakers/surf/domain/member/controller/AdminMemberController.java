@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.member.controller;
 
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
-import com.tavemakers.surf.domain.member.dto.response.AdminTotalMemberListResDTO;
+import com.tavemakers.surf.domain.member.dto.response.GenerationInfoListResDTO;
 import com.tavemakers.surf.domain.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberInformationResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationSliceResDTO;
@@ -64,11 +64,11 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, MEMBER_INFORMATION_READ.getMessage(), data);
     }
 
-    @Operation(summary = "[전체 회원수]와 회원들의 [기수] 조회", description = "APPROVED 상태의 전체 회원수, 존재하는 모든 기수 조회")
-    @GetMapping("/v1/manager/members-count/generation")
-    public ApiResponse<AdminTotalMemberListResDTO> readAllMemberCountAndGeneration() {
-        AdminTotalMemberListResDTO data = memberAdminUsecase.readAllMemberCountAndGeneration();
-        return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_COUNT_AND_ALL_GENERATION.getMessage(), data);
+    @Operation(summary = "존재하는 회원들의 [모든 기수 정보] 조회", description = "존재하는 회원들의 [모든 기수 정보] 조회")
+    @GetMapping("/v1/manager/generations")
+    public ApiResponse<GenerationInfoListResDTO> readAllMemberCountAndGeneration() {
+        GenerationInfoListResDTO data = memberAdminUsecase.readExistingGenerations();
+        return ApiResponse.response(HttpStatus.OK, APPROVED_ALL_GENERATION.getMessage(), data);
     }
 
     @Operation(summary = "승인된 [전체 회원 목록] 조회", description = "APPROVED 상태의 전체 회원 목록을 스크롤 조회")

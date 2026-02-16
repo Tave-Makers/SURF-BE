@@ -13,6 +13,7 @@ public enum ErrorMessage {
     INVALID_MEMBER_INFO(HttpStatus.BAD_REQUEST, "유효하지 않은 [회원 정보]입니다."),
     TRACK_NOT_FOUND(HttpStatus.NOT_FOUND, "회원의 [트랙]이 존재하지 않습니다."),
     CAREER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않은 [경력]입니다."),
+    MEMBER_STATUS_CANNOT_CONVERT(HttpStatus.BAD_REQUEST, "잘못된 [MemberStatus]입니다."),
 
     PASSWORD_ENCRYPTION_FAILED(HttpStatus.BAD_REQUEST ,"비밀번호 암호화에 실패했습니다."),
     PASSWORD_NOT_SETTING(HttpStatus.BAD_REQUEST, "비밀번호가 설정되지 않았습니다."),

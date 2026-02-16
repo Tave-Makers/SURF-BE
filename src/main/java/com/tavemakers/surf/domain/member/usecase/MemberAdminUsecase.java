@@ -35,6 +35,7 @@ import java.util.UUID;
 @Slf4j
 public class MemberAdminUsecase {
 
+    //<editor-fold desc="MemberAdminUsecase Dependency Summary">
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;
     private final CareerGetService careerGetService;
@@ -43,6 +44,7 @@ public class MemberAdminUsecase {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
+    //</editor-fold>
 
     /** 회원 권한 변경 */
     @Transactional
@@ -107,8 +109,7 @@ public class MemberAdminUsecase {
         List<MemberStatus> statuses = List.of(MemberStatus.WAITING, MemberStatus.REJECTED);
         Slice<MemberRegistrationDetailResDTO> registrationList = memberGetService.searchWaitingMembers(keyword, pageable, statuses)
                 .map(MemberRegistrationDetailResDTO::from);
-        Long totalMemberCount = memberGetService.countMembers(statuses);
-        return MemberRegistrationSliceResDTO.of(registrationList, totalMemberCount);
+        return MemberRegistrationSliceResDTO.from(registrationList);
     }
 
     /** 회원 상세 정보 조회 */
@@ -130,11 +131,10 @@ public class MemberAdminUsecase {
         return MemberInformationResDTO.of(member, memberTracks, null, memberCareers);
     }
 
-    /** 승인된 전체 회원수와 모든 기수를 구함. */
-    public AdminTotalMemberListResDTO readAllMemberCountAndGeneration() {
-        long approvedMemberCount = memberGetService.getApprovedMemberCount();
+    /** 존재하는 모든 기수를 구함. */
+    public GenerationInfoListResDTO readExistingGenerations() {
         List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
-        return AdminTotalMemberListResDTO.of(approvedMemberCount, existsAllGenerations);
+        return GenerationInfoListResDTO.from(existsAllGenerations);
     }
 
     /** 승인된 회원 목록 스크롤 조회 */

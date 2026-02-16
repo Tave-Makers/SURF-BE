@@ -87,7 +87,7 @@ public class MemberSearchRepository {
         return new SliceImpl<>(results, pageable, hasNext);
     }
 
-    public Long countMembers(Integer generation, Part part, String keyword) {
+    public Long countMembersByMemberStatusesAndKeyword(Integer generation, Part part, String keyword) {
         BooleanBuilder builder = createSearchBuilder(generation, part, keyword);
         builder.and(member.status.eq(MemberStatus.APPROVED));
 
@@ -183,14 +183,25 @@ public class MemberSearchRepository {
         return new SliceImpl<>(results, pageable, hasNext);
     }
 
-    public Long countMembers(List<MemberStatus> statuses) {
+    public Long countMembersByMemberStatusesAndKeyword(List<MemberStatus> statuses, String keyword) {
         if (statuses == null || statuses.isEmpty()) return 0L;
 
         return queryFactory
                 .select(member.count())
                 .from(member)
-                .where(member.status.in(statuses))
+                .where(
+                        member.status.in(statuses),
+                        containsKeyword(keyword)
+                )
                 .fetchOne();
+    }
+
+    private BooleanExpression containsKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return null;
+        }
+
+        return member.name.containsIgnoreCase(keyword);
     }
 
 }

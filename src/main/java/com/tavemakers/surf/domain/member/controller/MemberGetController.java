@@ -1,9 +1,6 @@
 package com.tavemakers.surf.domain.member.controller;
 
-import com.tavemakers.surf.domain.member.dto.response.MemberSearchResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSearchSliceResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MemberSimpleResDTO;
-import com.tavemakers.surf.domain.member.dto.response.MyPageProfileResDTO;
+import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.usecase.MemberUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -79,6 +76,19 @@ public class MemberGetController {
     ) {
         MemberSearchSliceResDTO response = memberUsecase.searchMembers(pageNum, pageSize, generation, part, keyword);
         return ApiResponse.response(HttpStatus.OK, MEMBER_LIST_SEARCH_SUCCESS.getMessage(), response);
+    }
+
+    @Operation(
+            summary = "멤버 상태에 따른 전체 회원 수 조회",
+            description = "멤버 상태에 따른 전체 회원 수 조회"
+    )
+    @GetMapping("/v1/user/members-count")
+    public ApiResponse<MembersCountByMemberStatusResDTO> getMembersCount(
+            @RequestParam List<String> memberStatuses,
+            @RequestParam(required = false) String keyword
+    ) {
+        MembersCountByMemberStatusResDTO data = memberUsecase.getMembersCountByMemberStatusAndKeyword(memberStatuses, keyword);
+        return ApiResponse.response(HttpStatus.OK, MEMBERS_COUNT_READ.getMessage(), data);
     }
 
 }

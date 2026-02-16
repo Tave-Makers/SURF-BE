@@ -5,17 +5,15 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record AdminTotalMemberListResDTO(
-        long totalMemberCount,
+public record GenerationInfoListResDTO(
         List<GenerationResDTO> generations
 ) {
-    public static AdminTotalMemberListResDTO of(long totalMemberCount, List<Integer> generations) {
+    public static GenerationInfoListResDTO from(List<Integer> generations) {
         List<GenerationResDTO> generationResDTOList = generations.stream()
                 .map(GenerationResDTO::from)
                 .toList();
 
-        return AdminTotalMemberListResDTO.builder()
-                .totalMemberCount(totalMemberCount)
+        return GenerationInfoListResDTO.builder()
                 .generations(generationResDTOList)
                 .build();
     }
