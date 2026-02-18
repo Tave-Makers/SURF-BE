@@ -91,4 +91,11 @@ public class MemberGetController {
         return ApiResponse.response(HttpStatus.OK, MEMBERS_COUNT_READ.getMessage(), data);
     }
 
+    @Operation(summary = "존재하는 회원들의 [모든 기수 정보] 조회", description = "존재하는 회원들의 [모든 기수 정보] 조회")
+    @GetMapping("/v1/user/generations")
+    public ApiResponse<GenerationInfoListResDTO> readAllMemberCountAndGeneration() {
+        GenerationInfoListResDTO data = memberUsecase.readExistingGenerations();
+        return ApiResponse.response(HttpStatus.OK, APPROVED_ALL_GENERATION.getMessage(), data);
+    }
+
 }

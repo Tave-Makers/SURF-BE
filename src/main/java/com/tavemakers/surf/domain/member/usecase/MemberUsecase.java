@@ -249,6 +249,13 @@ public class MemberUsecase {
         return MembersCountByMemberStatusResDTO.of(memberStatuses, membersCount);
     }
 
+    /** 존재하는 모든 기수를 구함. */
+    public GenerationInfoListResDTO readExistingGenerations() {
+        List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
+        return GenerationInfoListResDTO.from(existsAllGenerations);
+    }
+
+
     private Slice<MemberSearchDetailResDTO> search(Integer generation, Part part, String keyword, Pageable pageable) {
         return memberGetService.searchMembers(generation, part, keyword, pageable)
                 .map(MemberSearchDetailResDTO::from);
