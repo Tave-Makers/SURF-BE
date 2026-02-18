@@ -14,12 +14,12 @@ public record MemberRegistrationDetailResDTO(
         String university,
         String profileImageUrl,
         List<TrackResDTO> trackList,
+        String role,
         @Schema(
                 description = "가입 상태 (REGISTERING: 가입중, WAITING: 대기, APPROVED: 승인, REJECTED: 거절, WITHDRAWN: 탈퇴)",
                 example = "APPROVED",
                 allowableValues = {"REGISTERING", "WAITING", "APPROVED", "REJECTED", "WITHDRAWN"}
         )
-        String role,
         String memberStatus,
         String createdAt
 ) {
