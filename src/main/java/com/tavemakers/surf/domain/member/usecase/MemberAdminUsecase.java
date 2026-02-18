@@ -131,12 +131,6 @@ public class MemberAdminUsecase {
         return MemberInformationResDTO.of(member, memberTracks, null, memberCareers);
     }
 
-    /** 존재하는 모든 기수를 구함. */
-    public GenerationInfoListResDTO readExistingGenerations() {
-        List<Integer> existsAllGenerations = trackGetService.getExistsAllGenerations();
-        return GenerationInfoListResDTO.from(existsAllGenerations);
-    }
-
     /** 승인된 회원 목록 스크롤 조회 */
     public ApprovedMemberSliceResDTO readApprovedMemberList(Integer generation, String keyword, int pageSize, int pageNum) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending());
