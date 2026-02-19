@@ -21,6 +21,7 @@ public record MemberRegistrationDetailResDTO(
                 allowableValues = {"REGISTERING", "WAITING", "APPROVED", "REJECTED", "WITHDRAWN"}
         )
         String memberStatus,
+        boolean isBanned,
         String createdAt
 ) {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yy.MM.dd HH:mm");
@@ -36,6 +37,7 @@ public record MemberRegistrationDetailResDTO(
                         .toList())
                 .role(member.getRole().name())
                 .memberStatus(member.getStatus().name())
+                .isBanned(member.isBanned())
                 .createdAt(member.getCreatedAt().format(FORMATTER))
                 .build();
     }
