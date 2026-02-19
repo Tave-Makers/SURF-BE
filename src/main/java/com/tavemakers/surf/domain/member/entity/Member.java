@@ -2,9 +2,7 @@ package com.tavemakers.surf.domain.member.entity;
 
 import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDto;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
-import com.tavemakers.surf.domain.member.exception.CanBanApprovedMemberException;
-import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
-import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
+import com.tavemakers.surf.domain.member.exception.*;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import com.tavemakers.surf.domain.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
@@ -316,18 +314,13 @@ public class Member extends BaseEntity {
 
     // 회원 퇴출/제명(ban) 처리
     public void ban() {
-        if (this.isBanned) return;
-
-        if (this.status != MemberStatus.APPROVED) {
-            throw new CanBanApprovedMemberException();
-        }
-
+        if (this.isBanned) throw new AlreadyBannedMemberException();
         this.isBanned = true;
         this.activityStatus = false;
     }
 
     public void unban() {
-        if (!this.isBanned) return;
+        if (!this.isBanned) throw new NotBannedMemberException();
         this.isBanned = false;
         this.activityStatus = true;
     }

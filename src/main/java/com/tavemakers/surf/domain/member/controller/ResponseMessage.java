@@ -34,7 +34,8 @@ public enum ResponseMessage {
     MEMBERS_COUNT_READ("[멤버 상태]에 따른 [회원 수]를 조회합니다."),
 
     // 회원 퇴출
-    MEMBER_BAN_SUCCESS("회원 퇴출이 완료되었습니다.")
+    MEMBER_BAN_SUCCESS("회원 퇴출이 완료되었습니다."),
+    MEMBER_UNBAN_SUCCESS("회원 퇴출이 해제되었습니다.")
     ;
 
     private final String message;

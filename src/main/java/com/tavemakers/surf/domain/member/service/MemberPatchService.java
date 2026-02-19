@@ -4,9 +4,7 @@ import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.exception.AlreadyBannedMemberException;
-import com.tavemakers.surf.domain.member.exception.CanBanApprovedMemberException;
-import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
+import com.tavemakers.surf.domain.member.exception.*;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -40,27 +38,32 @@ public class MemberPatchService {
 
     @Transactional
     public void banMembers(List<Long> memberIds) {
-
         List<Member> members = memberRepository.findAllById(memberIds);
+        if (members.size() != memberIds.size()) throw new MemberNotFoundException();
 
-        if (members.size() != memberIds.size()) {
-            throw new MemberNotFoundException();
-        }
-
-        boolean alreadyBannedExists = members.stream()
-                .anyMatch(Member::isBanned);
-
-        if (alreadyBannedExists) {
+        if (members.stream().anyMatch(Member::isBanned))
             throw new AlreadyBannedMemberException();
-        }
 
-        boolean notApprovedExists = members.stream()
-                .anyMatch(m -> m.getStatus() != MemberStatus.APPROVED);
+        if (members.stream().anyMatch(m -> m.getStatus() == MemberStatus.WITHDRAWN || m.isDeleted()))
+            throw new IncludedWithdrawnMemberException();
 
-        if (notApprovedExists) {
+        if (members.stream().anyMatch(m -> m.getStatus() != MemberStatus.APPROVED))
             throw new CanBanApprovedMemberException();
-        }
 
         members.forEach(Member::ban);
+    }
+
+    @Transactional
+    public void unbanMembers(List<Long> memberIds) {
+        List<Member> members = memberRepository.findAllById(memberIds);
+        if (members.size() != memberIds.size()) throw new MemberNotFoundException();
+
+        if (members.stream().anyMatch(m -> !m.isBanned()))
+            throw new NotBannedMemberException();
+
+        if (members.stream().anyMatch(m -> m.getStatus() == MemberStatus.WITHDRAWN || m.isDeleted()))
+            throw new IncludedWithdrawnMemberException();
+
+        members.forEach(Member::unban);
     }
 }

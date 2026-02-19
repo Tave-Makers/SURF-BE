@@ -23,7 +23,10 @@ public enum ErrorMessage {
     INVALID_SIGNUP_LIST(HttpStatus.BAD_REQUEST, "[회원 가입 요청 목록]이 올바르지 않습니다."),
 
     CAN_BAN_APPROVED_MEMBER(HttpStatus.BAD_REQUEST, "승인된 [회원]만 퇴출할 수 있습니다."),
-    ALREADY_BANNED_MEMBER(HttpStatus.BAD_REQUEST, "이미 퇴출된 [회원]이 포함되어 있습니다.")
+    ALREADY_BANNED_MEMBER(HttpStatus.BAD_REQUEST, "이미 퇴출된 [회원]이 포함되어 있습니다."),
+    NOT_BANNED_MEMBER(HttpStatus.BAD_REQUEST, "퇴출되지 않은 [회원]이 포함되어 있습니다."),
+
+    INCLUDED_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "탈퇴된 [회원]이 포함되어 있습니다.")
     ;
 
     private final HttpStatus status;

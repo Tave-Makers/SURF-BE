@@ -93,4 +93,12 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, MEMBER_BAN_SUCCESS.getMessage(), null);
     }
 
+    @PostMapping("/v1/manager/members/unban")
+    public ApiResponse<Void> unbanMembers(
+            @RequestBody @Valid MemberBanReqDTO req
+    ) {
+        memberAdminUsecase.unbanMembers(req.memberIds());
+        return ApiResponse.response(HttpStatus.OK, MEMBER_UNBAN_SUCCESS.getMessage(), null);
+    }
+
 }

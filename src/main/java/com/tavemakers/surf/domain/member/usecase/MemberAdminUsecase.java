@@ -150,6 +150,11 @@ public class MemberAdminUsecase {
         memberPatchService.banMembers(memberIds);
     }
 
+    @Transactional
+    public void unbanMembers(List<Long> memberIds) {
+        memberPatchService.unbanMembers(memberIds);
+    }
+
     private void validateLoginMemberRole(Member member) {
         if(member.isMember()){
             throw new AdminPageRoleException();
