@@ -28,6 +28,8 @@ public class ActivityRecord extends BaseEntity {
 
     private Long memberId;
 
+    private Long teamId;
+
     @Enumerated(EnumType.STRING)
     private ActivityCategory category; // 대주제
 
