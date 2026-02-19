@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.member.entity;
 
 import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDto;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
-import com.tavemakers.surf.domain.member.exception.CanBanApprovedMember;
+import com.tavemakers.surf.domain.member.exception.CanBanApprovedMemberException;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -319,7 +319,7 @@ public class Member extends BaseEntity {
         if (this.isBanned) return;
 
         if (this.status != MemberStatus.APPROVED) {
-            throw new CanBanApprovedMember();
+            throw new CanBanApprovedMemberException();
         }
 
         this.isBanned = true;

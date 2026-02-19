@@ -145,6 +145,11 @@ public class MemberAdminUsecase {
         return ApprovedMemberSliceResDTO.from(approvedMemberSlice);
     }
 
+    @Transactional
+    public void banMembers(List<Long> memberIds) {
+        memberPatchService.banMembers(memberIds);
+    }
+
     private void validateLoginMemberRole(Member member) {
         if(member.isMember()){
             throw new AdminPageRoleException();

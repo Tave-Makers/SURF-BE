@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.member.controller;
 
+import com.tavemakers.surf.domain.member.dto.request.MemberBanReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
 import com.tavemakers.surf.domain.member.dto.response.GenerationInfoListResDTO;
@@ -81,6 +82,15 @@ public class AdminMemberController {
     ) {
         ApprovedMemberSliceResDTO data = memberAdminUsecase.readApprovedMemberList(generation, keyword, pageSize, pageNum);
         return ApiResponse.response(HttpStatus.OK, APPROVED_MEMBER_LIST.getMessage(), data);
+    }
+
+    @Operation(summary = "회원 퇴출/제명", description = "특정 회원들을 퇴출/제명 처리합니다. (APPROVED 상태인 member만 가능)")
+    @PostMapping("/v1/manager/members/ban")
+    public ApiResponse<Void> banMember(
+            @RequestBody @Valid MemberBanReqDTO req
+    ) {
+        memberAdminUsecase.banMembers(req.memberIds());
+        return ApiResponse.response(HttpStatus.OK, MEMBER_BAN_SUCCESS.getMessage(), null);
     }
 
 }
