@@ -28,12 +28,12 @@ public final class ActivityGroupConstants {
     );
 
     public static final List<ActivityType> TEAM_LATE_GROUP = List.of(
-            STUDY_LATE_5_TO_9,
-            STUDY_LATE_10_TO_19,
-            STUDY_LATE_20_TO_29,
-            PROJECT_LATE_5_TO_9,
-            PROJECT_LATE_10_TO_19,
-            PROJECT_LATE_20_TO_29
+            STUDY_LATE_6_TO_10,
+            STUDY_LATE_11_TO_20,
+            STUDY_LATE_21_TO_30,
+            PROJECT_LATE_6_TO_10,
+            PROJECT_LATE_11_TO_20,
+            PROJECT_LATE_21_TO_30
     );
 
     public static final List<ActivityType> SESSION_ABSENCE_GROUP = List.of(
