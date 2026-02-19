@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.score.entity;
 
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -24,6 +25,10 @@ public class PersonalActivityScore extends BaseEntity implements ScoreComputable
     @JoinColumn(name = "member_id")
     private Member member;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
+
     @Column(precision = 19, scale = 1)
     private BigDecimal score = BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
 
@@ -42,6 +47,13 @@ public class PersonalActivityScore extends BaseEntity implements ScoreComputable
         return PersonalActivityScore.builder()
                 .member(member)
                 .score(member.isYB() ? BigDecimal.valueOf(100) : BigDecimal.valueOf(50)) // 기본 점수 100
+                .build();
+    }
+
+    public static PersonalActivityScore from(Team team) {
+        return PersonalActivityScore.builder()
+                .team(team)
+                .score(BigDecimal.valueOf(0))
                 .build();
     }
 
