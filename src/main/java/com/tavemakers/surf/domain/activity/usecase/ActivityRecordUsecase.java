@@ -1,9 +1,11 @@
 package com.tavemakers.surf.domain.activity.usecase;
 
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
+import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
+import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordCreateService;
@@ -43,6 +45,33 @@ public class ActivityRecordUsecase {
                         }
                 ).toList();
 
+        activityRecordCreateService.saveActivityRecordList(recordList);
+    }
+
+    @Transactional
+    public void applyActivityRecord(ActivityRecordReqDTOV2 dto) {
+        ActivityType activityType = dto.activityName();
+        BigDecimal delta = BigDecimal.valueOf(activityType.getDelta());
+
+        if (dto.isTeam()) {
+            List<PersonalActivityScore> teamScoreList = personalScoreGetService.getTeamScoreList(dto.teamIdList());
+            List<ActivityRecord> recordList = teamScoreList.stream()
+                    .map(teamScore -> {
+                                BigDecimal prefixSum = teamScore.updateScore(delta);
+                                return ActivityRecord.ofTeam(teamScore.getTeam().getId(), dto, prefixSum);
+                            }
+                    ).toList();
+            activityRecordCreateService.saveActivityRecordList(recordList);
+            return;
+        }
+
+        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
+        List<ActivityRecord> recordList = scoreList.stream()
+                .map(personalScore -> {
+                            BigDecimal prefixSum = personalScore.updateScore(delta);
+                            return ActivityRecord.ofPersonal(personalScore.getMember().getId(), dto, prefixSum);
+                        }
+                ).toList();
         activityRecordCreateService.saveActivityRecordList(recordList);
     }
 

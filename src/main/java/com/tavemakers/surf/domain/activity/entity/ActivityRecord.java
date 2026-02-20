@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.activity.entity;
 
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
+import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
@@ -63,5 +64,33 @@ public class ActivityRecord extends BaseEntity {
                 .isDeleted(false)
                 .build();
     }
+
+    public static ActivityRecord ofPersonal(Long memberId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
+        return ActivityRecord.builder()
+                .memberId(memberId)
+                .category(dto.category() != null ? dto.category() : null)
+                .activityType(dto.activityName())
+                .activityDate(dto.activityDate())
+                .scoreType(dto.activityName().getScoreType())
+                .appliedScore(BigDecimal.valueOf(dto.activityName().getDelta()))
+                .prefixSum(prefixSum)
+                .isDeleted(false)
+                .build();
+    }
+
+    public static ActivityRecord ofTeam(Long teamId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
+        return ActivityRecord.builder()
+                .teamId(teamId)
+                .category(dto.category() != null ? dto.category() : null)
+                .activityType(dto.activityName())
+                .activityDate(dto.activityDate())
+                .scoreType(dto.activityName().getScoreType())
+                .appliedScore(BigDecimal.valueOf(dto.activityName().getDelta()))
+                .prefixSum(prefixSum)
+                .isDeleted(false)
+                .build();
+    }
+
+
 
 }
