@@ -27,4 +27,10 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
 
     List<ActivityRecord> findByMemberIdAndIsDeleted(Long memberId,Boolean isDeleted);
 
+    @Query("SELECT ar.memberId, ar.scoreType, SUM(ar.appliedScore) " +
+            "FROM ActivityRecord ar " +
+            "WHERE ar.memberId IN :memberIds AND ar.isDeleted = false " +
+            "GROUP BY ar.memberId, ar.scoreType")
+    List<Object[]> findScoreAggregationByMemberIds(@Param("memberIds") List<Long> memberIds);
+
 }

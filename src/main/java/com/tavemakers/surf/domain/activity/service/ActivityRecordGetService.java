@@ -8,7 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +28,27 @@ public class ActivityRecordGetService {
     /** 회원의 전체 활동기록 조회 */
     public List<ActivityRecord> findAllByMemberId(Long memberId) {
         return activityRecordRepository.findByMemberIdAndIsDeleted(memberId, false);
+    }
+
+    /** 다수 회원의 상/벌점 집계 조회 */
+    public Map<Long, Map<ScoreType, BigDecimal>> getScoreAggregation(List<Long> memberIds) {
+        if (memberIds == null || memberIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<Long, Map<ScoreType, BigDecimal>> result = new HashMap<>();
+        List<Object[]> rows = activityRecordRepository.findScoreAggregationByMemberIds(memberIds);
+
+        for (Object[] row : rows) {
+            Long memberId = (Long) row[0];
+            ScoreType scoreType = (ScoreType) row[1];
+            BigDecimal sum = (BigDecimal) row[2];
+
+            result.computeIfAbsent(memberId, k -> new EnumMap<>(ScoreType.class))
+                    .put(scoreType, sum);
+        }
+
+        return result;
     }
 
 }

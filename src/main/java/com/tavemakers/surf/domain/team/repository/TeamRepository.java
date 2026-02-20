@@ -27,4 +27,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     })
     @Query("select t from Team t where t.id = :id")
     Optional<Team> findDetailBaseById(@Param("id") Long id);
+
+    @EntityGraph(attributePaths = {"teamMembers", "teamMembers.member"})
+    @Query("select t from Team t where (:generation is null or t.generation = :generation)")
+    List<Team> findTeamsWithMembers(@Param("generation") Integer generation);
 }
