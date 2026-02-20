@@ -15,7 +15,7 @@ import java.math.RoundingMode;
 @Getter
 @SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PersonalActivityScore extends BaseEntity implements ScoreComputable {
+public class PersonalActivityScore extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,12 +32,6 @@ public class PersonalActivityScore extends BaseEntity implements ScoreComputable
     @Column(precision = 19, scale = 1)
     private BigDecimal score = BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
 
-    @Override
-    public BigDecimal getScore() {
-        return this.score;
-    }
-
-    @Override
     public BigDecimal updateScore(BigDecimal score) {
         this.score = this.score.add(score);
         return this.score;
