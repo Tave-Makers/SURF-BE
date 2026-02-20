@@ -93,6 +93,7 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, MEMBER_BAN_SUCCESS.getMessage(), null);
     }
 
+    @Operation(summary = "회원 퇴출/제명 해제", description = "특정 회원들의 제명 처리를 해제합니다.")
     @PostMapping("/v1/manager/members/unban")
     public ApiResponse<Void> unbanMembers(
             @RequestBody @Valid MemberBanReqDTO req
