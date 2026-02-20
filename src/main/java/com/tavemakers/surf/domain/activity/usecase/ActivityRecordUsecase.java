@@ -37,7 +37,8 @@ public class ActivityRecordUsecase {
         List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
-                            BigDecimal prefixSum = scoreCalculator.calculateScore(personalScore, BigDecimal.valueOf(dto.activityName().getDelta()));
+                    BigDecimal delta = BigDecimal.valueOf(dto.activityName().getDelta());
+                    BigDecimal prefixSum = personalScore.updateScore(delta);
                             return ActivityRecord.of(personalScore.getMember().getId(), dto, prefixSum);
                         }
                 ).toList();
