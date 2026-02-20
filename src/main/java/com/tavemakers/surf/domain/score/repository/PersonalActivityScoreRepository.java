@@ -14,4 +14,6 @@ public interface PersonalActivityScoreRepository extends JpaRepository<PersonalA
 
     List<PersonalActivityScore> findAllByMemberIdIn(List<Long> memberIds);
 
+    List<PersonalActivityScore> findAllByTeamIdIn(List<Long> teamIds);
+
 }

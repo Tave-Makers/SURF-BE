@@ -25,4 +25,8 @@ public class PersonalScoreGetService {
         return personalScoreRepository.findAllByMemberIdIn(memberIdList);
     }
 
+    public List<PersonalActivityScore> getTeamScoreList(List<Long> teamIdList) {
+        return personalScoreRepository.findAllByTeamIdIn(teamIdList);
+    }
+
 }
