@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.activity.controller;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
@@ -60,6 +61,13 @@ public class ActivityRecordController {
     public ApiResponse<List<ActivityCategoryDetailResDTO>> getAllActivityTypeInformation() {
         List<ActivityCategoryDetailResDTO> data = activityRecordUsecase.getAllActivityTypeInformation();
         return ApiResponse.response(HttpStatus.OK, ALL_ACTIVITY_TYPE_READ.getMessage(), data);
+    }
+
+    @Operation(summary = "활동 종류의 카테고리들만 조회 (카테고리에 포함된 활동 종류는 포함 X)")
+    @GetMapping("/v1/manager/activity-categories")
+    public ApiResponse<List<ActivityCategoryResDTO>> getAllActivityCategoriesInformation() {
+        List<ActivityCategoryResDTO> data = activityRecordUsecase.getAllActivityCategoriesInformation();
+        return ApiResponse.response(HttpStatus.OK, ALL_ACTIVITY_CATEGORY_READ.getMessage(), data);
     }
 
 }
