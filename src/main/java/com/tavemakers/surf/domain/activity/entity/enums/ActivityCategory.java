@@ -6,6 +6,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ActivityCategory {
-    // 미정
-    NOTHING
+    STUDY_ON_PERSONAL,
+    PROJECT_ON_PERSONAL,
+    STUDY_ON_TEAM,
+    PROJECT_ON_TEAM,
+    REGULAR_SESSION,
+    ACTIVITY,
+    ;
 }
