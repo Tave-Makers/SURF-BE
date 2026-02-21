@@ -1,9 +1,11 @@
 package com.tavemakers.surf.domain.activity.entity.enums;
 
+import com.tavemakers.surf.domain.activity.dto.response.ActivityTypeDetailResDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import static com.tavemakers.surf.domain.activity.entity.enums.AppliedTarget.INDIVIDUAL;
+import static com.tavemakers.surf.domain.activity.entity.enums.AppliedTarget.TEAM;
 import static com.tavemakers.surf.domain.activity.entity.enums.ScoreType.*;
 
 @Getter
@@ -49,11 +51,34 @@ public enum ActivityType {
     NO_VOTE("투표 미참여", -15, PENALTY, INDIVIDUAL),
     DELAY_DEPOSIT("보증금 입금 지연", -5, PENALTY, INDIVIDUAL),
     NO_SHOW_AFTER_PARTY("뒷풀이 불참", -10, PENALTY, INDIVIDUAL),
+
+    // TEAM_PENALTY
+    PROJECT_LATE_6_TO_10_ON_TEAM("프로젝트 지각", -5, PENALTY, TEAM),
+    PROJECT_LATE_11_TO_20_ON_TEAM("프로젝트 지각", -10, PENALTY, TEAM),
+    PROJECT_LATE_21_TO_30_ON_TEAM("프로젝트 지각", -15, PENALTY, TEAM),
+
+    LATE_CLERK_UPLOAD("서기 업로드 지각", -10, PENALTY, TEAM),
+    LATE_PROGRESS_TABLE_UPLOAD("진행표 업로드 지각", -10, PENALTY, TEAM),
+    DO_NOT_UPLOAD_CLERK("서기 미제출", -30, PENALTY, TEAM),
+    DO_NOT_UPLOAD_PROGRESS_TABLE("진행표 미제출", -30, PENALTY, TEAM),
+    LATE_UPLOAD_CERTIFICATION_PHOTO("사진 업로드 지각", -5, PENALTY, TEAM),
+    LATE_SCHEDULE_ALERT("일정 공지 지각", -5, PENALTY, TEAM),
+    LATE_SUBMIT_FINAL_PRODUCT("결과물 제출 지각", -30, PENALTY, TEAM),
+    DO_NOT_ALERT_ABSENCE_OF_PERSONAL_REASON("개인 사유로 인한 결석 미공지", -10, PENALTY, TEAM),
+    DO_NOT_ALERT_TARDINESS_OF_PERSONAL_REASON("개인 사유로 인한 지각 미공지", -10, PENALTY, TEAM),
     ;
 
     private String displayName;
     private Integer delta;
     private ScoreType scoreType;
     private AppliedTarget appliedTarget;
+
+    public ActivityTypeDetailResDTO toDto() {
+        return ActivityTypeDetailResDTO.of(this);
+    }
+
+    public boolean isReward() {
+        return scoreType.equals(REWARD);
+    }
 
 }
