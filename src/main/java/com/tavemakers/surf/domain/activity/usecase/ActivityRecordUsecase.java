@@ -86,7 +86,7 @@ public class ActivityRecordUsecase {
 
     /** 모든 활동 종류 조회 */
     public List<ActivityCategoryDetailResDTO> getAllActivityTypeInformation() {
-        return ActivityCategory.getDtoList();
+        return ActivityCategory.getDetailDtoList();
     }
 
 }

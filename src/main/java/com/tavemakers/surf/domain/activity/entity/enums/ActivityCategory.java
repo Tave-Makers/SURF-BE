@@ -20,7 +20,7 @@ public enum ActivityCategory {
 
     final String displayName;
 
-    public static List<ActivityCategoryDetailResDTO> getDtoList() {
+    public static List<ActivityCategoryDetailResDTO> getDetailDtoList() {
         return Arrays.stream(ActivityCategory.values())
                 .map(ActivityType::getDtoListByCategory)
                 .toList();
