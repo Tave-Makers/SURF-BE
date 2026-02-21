@@ -21,11 +21,11 @@ public class PersonalScoreGetService {
     }
 
     /** 다수 회원의 개인 활동 점수 목록 조회 */
-    public List<PersonalActivityScore> getPersonalScoreList(List<Long> memberIdList) {
+    public List<PersonalActivityScore> getPersonalScoreListByIds(List<Long> memberIdList) {
         return personalScoreRepository.findAllByMemberIdIn(memberIdList);
     }
 
-    public List<PersonalActivityScore> getTeamScoreList(List<Long> teamIdList) {
+    public List<PersonalActivityScore> getTeamScoreListByIds(List<Long> teamIdList) {
         return personalScoreRepository.findAllByTeamIdIn(teamIdList);
     }
 

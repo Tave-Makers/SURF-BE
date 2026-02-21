@@ -39,7 +39,7 @@ public class ActivityRecordUsecase {
     @Transactional
     public void createActivityRecordList(ActivityRecordReqDTO dto) {
         // 다수의 활동 점수 -> 감점 + 가점 -> 누적합과 함께 활동기록 생성
-        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
+        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
                     BigDecimal prefixSum = personalScore.updateScore(dto.activityName());
@@ -56,7 +56,7 @@ public class ActivityRecordUsecase {
         ActivityType activityType = dto.activityName();
 
         if (dto.isTeam()) {
-            List<PersonalActivityScore> teamScoreList = personalScoreGetService.getTeamScoreList(dto.teamIdList());
+            List<PersonalActivityScore> teamScoreList = personalScoreGetService.getTeamScoreListByIds(dto.teamIdList());
             List<ActivityRecord> recordList = teamScoreList.stream()
                     .map(teamScore -> {
                         BigDecimal prefixSum = teamScore.updateScore(activityType);
@@ -67,7 +67,7 @@ public class ActivityRecordUsecase {
             return;
         }
 
-        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
+        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
                             BigDecimal prefixSum = personalScore.updateScore(activityType);
