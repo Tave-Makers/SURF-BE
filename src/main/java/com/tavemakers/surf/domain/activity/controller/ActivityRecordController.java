@@ -70,4 +70,13 @@ public class ActivityRecordController {
         return ApiResponse.response(HttpStatus.OK, ALL_ACTIVITY_CATEGORY_READ.getMessage(), data);
     }
 
+    @Operation(summary = "특정 카테고리의 활동 종류 조회")
+    @GetMapping("/v1/manager/activity-type")
+    public ApiResponse<ActivityCategoryDetailResDTO> getActivityTypeInformationByCategory(
+            @RequestParam String category
+    ) {
+        ActivityCategoryDetailResDTO data = activityRecordUsecase.getActivityTypeInformationByCategory(category);
+        return ApiResponse.response(HttpStatus.OK, SPECIFIC_ACTIVITY_CATEGORY_READ.getMessage(), data);
+    }
+
 }
