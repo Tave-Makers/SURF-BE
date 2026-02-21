@@ -27,9 +27,19 @@ public class PersonalScoreGetService {
         return personalScoreRepository.findAllByMemberIdIn(memberIdList);
     }
 
-    /** 여러 팀의 개인 활동 점수 목록 조회 */
+    /** 여러 팀의 활동 점수 목록 조회 */
     public List<PersonalActivityScore> getTeamScoreListByIds(List<Long> teamIdList) {
         return personalScoreRepository.findAllByTeamIdIn(teamIdList);
+    }
+
+    /** 여러 회원의 개인 활동 점수 목록 Slice 조회 */
+    public Slice<PersonalActivityScore> getPersonalScoreSlice(Pageable pageable) {
+        return personalScoreRepository.findPersonalActivityScoreSlice(pageable);
+    }
+
+    /** 여러 팀의 활동 점수 목록 Slice 조회 */
+    public Slice<PersonalActivityScore> getTeamScoreSlice(Pageable pageable) {
+        return personalScoreRepository.findTeamActivityScoreSlice(pageable);
     }
 
 }
