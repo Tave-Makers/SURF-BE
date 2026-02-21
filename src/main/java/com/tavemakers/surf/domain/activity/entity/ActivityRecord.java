@@ -68,7 +68,7 @@ public class ActivityRecord extends BaseEntity {
     public static ActivityRecord ofPersonal(Long memberId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .memberId(memberId)
-                .category(dto.category() != null ? dto.category() : null)
+                .category(dto.activityName().getCategory())
                 .activityType(dto.activityName())
                 .activityDate(dto.activityDate())
                 .scoreType(dto.activityName().getScoreType())
@@ -81,7 +81,7 @@ public class ActivityRecord extends BaseEntity {
     public static ActivityRecord ofTeam(Long teamId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .teamId(teamId)
-                .category(dto.category() != null ? dto.category() : null)
+                .category(dto.activityName().getCategory())
                 .activityType(dto.activityName())
                 .activityDate(dto.activityDate())
                 .scoreType(dto.activityName().getScoreType())
