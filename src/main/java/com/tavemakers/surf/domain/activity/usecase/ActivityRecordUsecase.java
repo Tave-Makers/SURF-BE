@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.activity.usecase;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
@@ -87,6 +88,11 @@ public class ActivityRecordUsecase {
     /** 모든 활동 종류 조회 */
     public List<ActivityCategoryDetailResDTO> getAllActivityTypeInformation() {
         return ActivityCategory.getDetailDtoList();
+    }
+
+    /** 모든 활동 카테고리 조회 */
+    public List<ActivityCategoryResDTO> getAllActivityCategoriesInformation() {
+        return ActivityCategory.getDtoList();
     }
 
 }
