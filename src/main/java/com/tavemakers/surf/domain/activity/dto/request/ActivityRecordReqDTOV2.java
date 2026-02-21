@@ -3,11 +3,9 @@ package com.tavemakers.surf.domain.activity.dto.request;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.AppliedTarget;
-import com.tavemakers.surf.domain.activity.exception.AppliedIdIsNullException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.time.LocalDate;
 import java.util.List;
