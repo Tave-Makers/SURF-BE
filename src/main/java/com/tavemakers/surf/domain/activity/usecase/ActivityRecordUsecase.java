@@ -95,4 +95,10 @@ public class ActivityRecordUsecase {
         return ActivityCategory.getDtoList();
     }
 
+    /** 특정 카테고리의 활동 종류 조회 */
+    public ActivityCategoryDetailResDTO getActivityTypeInformationByCategory(String category) {
+        ActivityCategory activityCategory = ActivityCategory.valueOf(category);
+        return ActivityType.getDtoListByCategory(activityCategory);
+    }
+
 }
