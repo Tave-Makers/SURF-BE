@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.activity.entity.enums;
 
 import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryResDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -23,6 +24,12 @@ public enum ActivityCategory {
     public static List<ActivityCategoryDetailResDTO> getDetailDtoList() {
         return Arrays.stream(ActivityCategory.values())
                 .map(ActivityType::getDtoListByCategory)
+                .toList();
+    }
+
+    public static List<ActivityCategoryResDTO> getDtoList() {
+        return Arrays.stream(ActivityCategory.values())
+                .map(ActivityCategoryResDTO::of)
                 .toList();
     }
 

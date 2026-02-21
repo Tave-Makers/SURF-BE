@@ -7,14 +7,12 @@ import java.util.List;
 
 @Builder
 public record ActivityCategoryDetailResDTO(
-        String categoryName,
-        String categoryDisplayName,
+        ActivityCategoryResDTO category,
         List<ActivityTypeDetailResDTO> activityTypeList
 ) {
     public static ActivityCategoryDetailResDTO of(ActivityCategory category, List<ActivityTypeDetailResDTO> activityTypeList) {
         return ActivityCategoryDetailResDTO.builder()
-                .categoryName(category.name())
-                .categoryDisplayName(category.getDisplayName())
+                .category(ActivityCategoryResDTO.of(category))
                 .activityTypeList(activityTypeList)
                 .build();
     }
