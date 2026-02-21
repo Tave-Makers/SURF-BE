@@ -1,6 +1,8 @@
 package com.tavemakers.surf.domain.activity.controller;
 
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
+import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
@@ -12,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.*;
 
@@ -29,6 +33,15 @@ public class ActivityRecordController {
         return ApiResponse.response(HttpStatus.CREATED, ACTIVITY_RECORD_CREATED.getMessage(), null);
     }
 
+    @Operation(summary = "활동 점수(기록) 부여 Version 2")
+    @PostMapping("/v1/manager/activity-records")
+    public ApiResponse<Void> applyActivityRecord(
+            @RequestBody @Valid ActivityRecordReqDTOV2 dto
+    ) {
+        activityRecordUsecase.applyActivityRecord(dto);
+        return ApiResponse.response(HttpStatus.CREATED, ACTIVITY_RECORD_CREATED.getMessage(), null);
+    }
+
     @Operation(summary = "활동 기록 조회(무한스크롤)")
     @GetMapping("/v1/user/members/activity-records")
     public ApiResponse<ActivityRecordSliceResDTO> getActivityRecord(
@@ -40,6 +53,13 @@ public class ActivityRecordController {
         ActivityRecordSliceResDTO response =
                 activityRecordUsecase.getActivityRecordList(memberId, scoreType, pageSize, pageNum);
         return ApiResponse.response(HttpStatus.OK, ACTIVITY_RECORD_READ.getMessage(), response);
+    }
+
+    @Operation(summary = "활동 종류 조회")
+    @GetMapping("/v1/manager/activity-types")
+    public ApiResponse<List<ActivityCategoryDetailResDTO>> getAllActivityTypeInformation() {
+        List<ActivityCategoryDetailResDTO> data = activityRecordUsecase.getAllActivityTypeInformation();
+        return ApiResponse.response(HttpStatus.OK, ALL_ACTIVITY_TYPE_READ.getMessage(), data);
     }
 
 }

@@ -8,7 +8,9 @@ import lombok.Getter;
 public enum ResponseMessage {
 
     ACTIVITY_RECORD_READ("[활동 기록]을 조회했습니다."),
-    ACTIVITY_RECORD_CREATED("[활동 기록]을 적용했습니다.");
+    ACTIVITY_RECORD_CREATED("[활동 기록]을 적용했습니다."),
+    ALL_ACTIVITY_TYPE_READ("[모든 활동 종류]를 조회합니다."),
+    ;
 
     private final String message;
 }

@@ -2,9 +2,11 @@ package com.tavemakers.surf.domain.activity.usecase;
 
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
+import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
@@ -39,26 +41,25 @@ public class ActivityRecordUsecase {
         List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
-                    BigDecimal delta = BigDecimal.valueOf(dto.activityName().getDelta());
-                    BigDecimal prefixSum = personalScore.updateScore(delta);
-                            return ActivityRecord.of(personalScore.getMember().getId(), dto, prefixSum);
+                    BigDecimal prefixSum = personalScore.updateScore(dto.activityName());
+                    return ActivityRecord.of(personalScore.getMember().getId(), dto, prefixSum);
                         }
                 ).toList();
 
         activityRecordCreateService.saveActivityRecordList(recordList);
     }
 
+    /** 활동기록 생성 및 점수 반영 */
     @Transactional
     public void applyActivityRecord(ActivityRecordReqDTOV2 dto) {
         ActivityType activityType = dto.activityName();
-        BigDecimal delta = BigDecimal.valueOf(activityType.getDelta());
 
         if (dto.isTeam()) {
             List<PersonalActivityScore> teamScoreList = personalScoreGetService.getTeamScoreList(dto.teamIdList());
             List<ActivityRecord> recordList = teamScoreList.stream()
                     .map(teamScore -> {
-                                BigDecimal prefixSum = teamScore.updateScore(delta);
-                                return ActivityRecord.ofTeam(teamScore.getTeam().getId(), dto, prefixSum);
+                        BigDecimal prefixSum = teamScore.updateScore(activityType);
+                        return ActivityRecord.ofTeam(teamScore.getTeam().getId(), dto, prefixSum);
                             }
                     ).toList();
             activityRecordCreateService.saveActivityRecordList(recordList);
@@ -68,7 +69,7 @@ public class ActivityRecordUsecase {
         List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreList(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
-                            BigDecimal prefixSum = personalScore.updateScore(delta);
+                            BigDecimal prefixSum = personalScore.updateScore(activityType);
                             return ActivityRecord.ofPersonal(personalScore.getMember().getId(), dto, prefixSum);
                         }
                 ).toList();
@@ -81,6 +82,11 @@ public class ActivityRecordUsecase {
         Slice<ActivityRecord> slice = activityRecordGetService.findActivityRecordList(memberId, scoreType, pageable);
 
         return ActivityRecordSliceResDTO.from(slice.map(ActivityRecordResDTO::from));
+    }
+
+    /** 모든 활동 종류 조회 */
+    public List<ActivityCategoryDetailResDTO> getAllActivityTypeInformation() {
+        return ActivityCategory.getDtoList();
     }
 
 }
