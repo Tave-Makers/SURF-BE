@@ -76,4 +76,8 @@ public class PersonalActivityScore extends BaseEntity {
                 .build();
     }
 
+    public boolean isTeam() {
+        return team != null;
+    }
+
 }
