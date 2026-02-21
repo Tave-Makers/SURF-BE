@@ -1,8 +1,12 @@
 package com.tavemakers.surf.domain.activity.entity.enums;
 
+import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityTypeDetailResDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory.*;
 import static com.tavemakers.surf.domain.activity.entity.enums.AppliedTarget.INDIVIDUAL;
@@ -37,7 +41,7 @@ public enum ActivityType {
     SESSION_LATE_11_TO_20("정규 세션 지각", -20, PENALTY, INDIVIDUAL, REGULAR_SESSION),
     SESSION_LATE_21_TO_30("정규 세션 지각", -30, PENALTY, INDIVIDUAL, REGULAR_SESSION),
 
-//    TEAM_LATE("스터디/프로젝트 지각", 0, PENALTY, INDIVIDUAL, STUDY_ON_PERSONAL),
+    TEAM_LATE("스터디/프로젝트 지각", 0, PENALTY, INDIVIDUAL, STUDY_ON_PERSONAL),
     STUDY_LATE_6_TO_10("스터디 지각", -5, PENALTY, INDIVIDUAL, STUDY_ON_PERSONAL),
     STUDY_LATE_11_TO_20("스터디 지각", -10, PENALTY, INDIVIDUAL, STUDY_ON_PERSONAL),
     STUDY_LATE_21_TO_30("스터디 지각", -15, PENALTY, INDIVIDUAL, STUDY_ON_PERSONAL),
@@ -95,6 +99,14 @@ public enum ActivityType {
 
     public boolean isReward() {
         return scoreType.equals(REWARD);
+    }
+
+    public static ActivityCategoryDetailResDTO getDtoListByCategory(ActivityCategory category) {
+        List<ActivityTypeDetailResDTO> collect = Arrays.stream(ActivityType.values())
+                .filter(activity -> activity.getCategory() == category)
+                .map(ActivityType::toDto)
+                .toList();
+        return ActivityCategoryDetailResDTO.of(category, collect);
     }
 
 }
