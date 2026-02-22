@@ -101,6 +101,7 @@ public enum ActivityType {
         return scoreType.equals(REWARD);
     }
 
+    /** 특정 카테고리에 속한 모든 활동 종류(ActivityType) 조회 */
     public static ActivityCategoryDetailResDTO getDtoListByCategory(ActivityCategory category) {
         List<ActivityTypeDetailResDTO> collect = Arrays.stream(ActivityType.values())
                 .filter(activity -> activity.getCategory() == category)
