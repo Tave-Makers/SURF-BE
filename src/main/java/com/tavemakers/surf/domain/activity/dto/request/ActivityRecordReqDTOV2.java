@@ -35,7 +35,7 @@ public record ActivityRecordReqDTOV2(
     }
 
     public boolean isTeam() {
-        return teamIdList != null && teamIdList.isEmpty();
+        return teamIdList != null && !teamIdList.isEmpty();
     }
 
 }
