@@ -34,7 +34,7 @@ public class PersonalScoreController {
         return ApiResponse.response(HttpStatus.OK, SCORE_AND_PINNED_READ.getMessage(), response);
     }
 
-    @GetMapping("/v1/user/personal-score")
+    @GetMapping("/v1/manager/personal-score")
     public ApiResponse<ScoreSliceResDTO> getPersonalActivityScoreList(
             @RequestParam int pageNumber,
             @RequestParam int pageSize
@@ -43,7 +43,7 @@ public class PersonalScoreController {
         return ApiResponse.response(HttpStatus.OK, PERSONAL_ACTIVITY_SCORE_LIST_READ.getMessage(), data);
     }
 
-    @GetMapping("/v1/user/team-score")
+    @GetMapping("/v1/manager/team-score")
     public ApiResponse<ScoreSliceResDTO> getTeamActivityScoreList(
             @RequestParam int pageNumber,
             @RequestParam int pageSize
