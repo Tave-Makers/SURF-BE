@@ -65,6 +65,7 @@ public class ActivityRecord extends BaseEntity {
                 .build();
     }
 
+    /** 개인 활동 점수 기록 */
     public static ActivityRecord ofPersonal(Long memberId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .memberId(memberId)
@@ -78,6 +79,7 @@ public class ActivityRecord extends BaseEntity {
                 .build();
     }
 
+    /** 팀 활동 점수 기록 */
     public static ActivityRecord ofTeam(Long teamId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .teamId(teamId)
