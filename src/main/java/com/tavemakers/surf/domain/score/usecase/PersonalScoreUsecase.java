@@ -36,6 +36,7 @@ public class PersonalScoreUsecase {
         return PersonalScoreWithPinnedResDto.of(personalScore.getScore(), dto);
     }
 
+    /** 개인 활동 점수 목록 조회 */
     public ScoreSliceResDTO readPersonalScore(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Slice<ScoreDetailResDTO> slice = personalScoreGetService.getPersonalScoreSlice(pageable)
@@ -43,6 +44,7 @@ public class PersonalScoreUsecase {
         return ScoreSliceResDTO.from(slice);
     }
 
+    /** 팀 활동 점수 목록 조회 */
     public ScoreSliceResDTO readTeamScore(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         Slice<ScoreDetailResDTO> slice = personalScoreGetService.getTeamScoreSlice(pageable)
