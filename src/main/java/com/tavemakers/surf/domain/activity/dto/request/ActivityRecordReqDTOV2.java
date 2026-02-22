@@ -27,7 +27,7 @@ public record ActivityRecordReqDTOV2(
 ) {
 
     @AssertTrue(message = "memberIdList와 teamIdList 둘 중 하나만 존재해야 합니다.")
-    public boolean checkAppliedIdList() {
+    public boolean isAppliedIdListValid() {
         boolean hasMember = (memberIdList != null && !memberIdList.isEmpty());
         boolean hasTeam = (teamIdList != null && !teamIdList.isEmpty());
 
