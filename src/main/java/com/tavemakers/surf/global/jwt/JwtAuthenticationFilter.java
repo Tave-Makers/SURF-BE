@@ -61,17 +61,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 3) member 로드 + 탈퇴 판별 + 인증 주입
         AuthResult result = authenticateUser(accessToken, request);
 
-        if (result != AuthResult.AUTHENTICATED) {
-            unauthorized(response, result.message);
+        if (result == AuthResult.AUTHENTICATED) {
+            chain.doFilter(request, response);
             return;
         }
-        chain.doFilter(request, response);
+
+        if (result == AuthResult.NOT_FOUND) {
+            unauthorized(response, result.message); // 401
+        } else {
+            forbidden(response, result.message);    // 403 (WITHDRAWN / BANNED)
+        }
     }
 
     private enum AuthResult {
         AUTHENTICATED(""),
         NOT_FOUND("Member not found"),
-        WITHDRAWN("Withdrawn member");
+        WITHDRAWN("Withdrawn member"),
+        BANNED("Banned member");
 
         final String message;
         AuthResult(String message) { this.message = message; }
@@ -85,6 +91,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .map(member -> {
                     if (member.getStatus() == MemberStatus.WITHDRAWN) {
                         return AuthResult.WITHDRAWN;
+                    }
+                    if (member.isBanned()) {
+                        return AuthResult.BANNED;
                     }
 
                     CustomUserDetails principal = new CustomUserDetails(member);
@@ -105,6 +114,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void unauthorized(HttpServletResponse res, String message) throws IOException {
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType("application/json;charset=UTF-8");
+        res.getWriter().write(objectMapper.writeValueAsString(Map.of("message", message)));
+    }
+
+    private void forbidden(HttpServletResponse res, String message) throws IOException {
+        res.setStatus(HttpServletResponse.SC_FORBIDDEN);
         res.setContentType("application/json;charset=UTF-8");
         res.getWriter().write(objectMapper.writeValueAsString(Map.of("message", message)));
     }
