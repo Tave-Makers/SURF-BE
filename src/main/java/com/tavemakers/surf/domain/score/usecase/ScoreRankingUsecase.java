@@ -52,7 +52,7 @@ public class ScoreRankingUsecase {
                 .collect(Collectors.toMap(Member::getId, m -> m));
 
         // 3. 누적 점수 조회
-        List<PersonalActivityScore> scores = personalScoreGetService.getPersonalScoreList(memberIds);
+        List<PersonalActivityScore> scores = personalScoreGetService.getPersonalScoreListByIds(memberIds);
         Map<Long, BigDecimal> scoreMap = scores.stream()
                 .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
 
@@ -96,7 +96,7 @@ public class ScoreRankingUsecase {
         // 3. 누적 점수 조회
         Map<Long, BigDecimal> scoreMap = Map.of();
         if (!allMemberIds.isEmpty()) {
-            scoreMap = personalScoreGetService.getPersonalScoreList(allMemberIds).stream()
+            scoreMap = personalScoreGetService.getPersonalScoreListByIds(allMemberIds).stream()
                     .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
         }
 
@@ -140,7 +140,7 @@ public class ScoreRankingUsecase {
             return TeamMemberScoreListResDTO.of(team.getId(), team.getName(), List.of());
         }
 
-        Map<Long, BigDecimal> scoreMap = personalScoreGetService.getPersonalScoreList(memberIds).stream()
+        Map<Long, BigDecimal> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
                 .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
 
         Map<Long, Map<ScoreType, BigDecimal>> aggregation = activityRecordGetService.getScoreAggregation(memberIds);
