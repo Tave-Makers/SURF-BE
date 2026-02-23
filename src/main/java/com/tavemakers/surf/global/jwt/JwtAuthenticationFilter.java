@@ -89,7 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         return memberRepository.findById(memberId)
                 .map(member -> {
-                    if (member.getStatus() == MemberStatus.WITHDRAWN) {
+                    if (member.getStatus() == MemberStatus.WITHDRAWN || member.isDeleted()) {
                         return AuthResult.WITHDRAWN;
                     }
                     if (member.isBanned()) {
