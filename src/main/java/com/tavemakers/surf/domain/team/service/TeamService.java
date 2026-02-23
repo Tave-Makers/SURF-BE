@@ -16,6 +16,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
+import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final MemberRepository memberRepository;
     private final TrackRepository trackRepository;
+    private final PersonalScoreCreateService personalScoreCreateService;
 
     @Transactional(readOnly = true)
     public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
@@ -101,6 +103,7 @@ public class TeamService {
         }
 
         Team saved = teamRepository.save(team);
+        personalScoreCreateService.saveTeamScore(saved);
 
         return TeamResDTO.from(saved);
     }

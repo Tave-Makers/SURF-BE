@@ -101,6 +101,14 @@ public class ActivityRecordUsecase {
         return AdminActivityRecordSliceResDTO.from(slice.map(AdminActivityRecordResDTO::from));
     }
 
+    /** 관리자용 팀의 전체 활동기록 페이징 조회 */
+    public AdminActivityRecordSliceResDTO getAdminTeamActivityRecordList(Long teamId, int pageNum, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Slice<ActivityRecord> slice = activityRecordGetService.findAllActiveByTeamId(teamId, pageable);
+
+        return AdminActivityRecordSliceResDTO.from(slice.map(AdminActivityRecordResDTO::from));
+    }
+
     /** 활동기록 수정 (activityType, activityDate) */
     @Transactional
     public void patchActivityRecord(Long activityRecordId, ActivityRecordPatchReqDTO dto) {

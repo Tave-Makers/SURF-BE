@@ -79,47 +79,37 @@ public class ScoreRankingUsecase {
 
     /** 팀별 상/벌점 현황 조회 (무한스크롤) */
     public TeamScoreRankingSliceResDTO getTeamScoreRanking(Integer generation, int pageNum, int pageSize) {
-        // 1. 팀 + 멤버 목록 조회
+        // 1. 팀 목록 조회
         List<Team> teams = teamGetService.getTeamsWithMembers(generation);
         if (teams.isEmpty()) {
             return TeamScoreRankingSliceResDTO.from(
                     new SliceImpl<>(List.of(), PageRequest.of(pageNum, pageSize), false));
         }
 
-        // 2. 전체 팀 멤버 ID 수집
-        List<Long> allMemberIds = teams.stream()
-                .flatMap(team -> team.getTeamMembers().stream())
-                .map(tm -> tm.getMember().getId())
-                .distinct()
+        // 2. 팀 ID 수집
+        List<Long> teamIds = teams.stream()
+                .map(Team::getId)
                 .toList();
 
-        // 3. 누적 점수 조회
-        Map<Long, BigDecimal> scoreMap = Map.of();
-        if (!allMemberIds.isEmpty()) {
-            scoreMap = personalScoreGetService.getPersonalScoreListByIds(allMemberIds).stream()
-                    .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
-        }
+        // 3. 팀 자체 누적 점수 조회
+        Map<Long, PersonalActivityScore> teamScoreMap =
+                personalScoreGetService.getTeamScoreListByIds(teamIds).stream()
+                        .collect(Collectors.toMap(s -> s.getTeam().getId(), s -> s));
 
-        // 4. 상/벌점 집계 조회
+        // 4. 팀 활동기록 상/벌점 집계 조회
         Map<Long, Map<ScoreType, BigDecimal>> aggregation =
-                activityRecordGetService.getScoreAggregation(allMemberIds);
+                activityRecordGetService.getTeamScoreAggregation(teamIds);
 
-        // 5. 팀별 합산 및 DTO 조립
-        final Map<Long, BigDecimal> finalScoreMap = scoreMap;
+        // 5. DTO 조립 후 totalScore DESC 정렬
         List<TeamScoreRankingResDTO> dtoList = teams.stream()
                 .map(team -> {
-                    BigDecimal teamReward = BigDecimal.ZERO;
-                    BigDecimal teamPenalty = BigDecimal.ZERO;
-                    BigDecimal teamTotal = BigDecimal.ZERO;
-
-                    for (TeamMember tm : team.getTeamMembers()) {
-                        Long memberId = tm.getMember().getId();
-                        teamReward = teamReward.add(getAggregatedScore(aggregation, memberId, ScoreType.REWARD));
-                        teamPenalty = teamPenalty.add(getAggregatedScore(aggregation, memberId, ScoreType.PENALTY).abs());
-                        teamTotal = teamTotal.add(finalScoreMap.getOrDefault(memberId, BigDecimal.ZERO));
-                    }
-
-                    return TeamScoreRankingResDTO.of(team, teamReward, teamPenalty, teamTotal);
+                    Long teamId = team.getId();
+                    BigDecimal rewardTotal = getAggregatedScore(aggregation, teamId, ScoreType.REWARD);
+                    BigDecimal penaltyTotal = getAggregatedScore(aggregation, teamId, ScoreType.PENALTY).abs();
+                    BigDecimal totalScore = Optional.ofNullable(teamScoreMap.get(teamId))
+                            .map(PersonalActivityScore::getScore)
+                            .orElse(BigDecimal.ZERO);
+                    return TeamScoreRankingResDTO.of(team, rewardTotal, penaltyTotal, totalScore);
                 })
                 .sorted(Comparator.comparing(TeamScoreRankingResDTO::totalScore).reversed())
                 .toList();
@@ -168,10 +158,10 @@ public class ScoreRankingUsecase {
                 .orElse(null);
     }
 
-    /** 집계 결과에서 특정 멤버의 ScoreType별 합계 조회 */
+    /** 집계 결과에서 특정 ID의 ScoreType별 합계 조회 */
     private BigDecimal getAggregatedScore(Map<Long, Map<ScoreType, BigDecimal>> aggregation,
-                                           Long memberId, ScoreType scoreType) {
-        return aggregation.getOrDefault(memberId, Map.of())
+                                           Long id, ScoreType scoreType) {
+        return aggregation.getOrDefault(id, Map.of())
                 .getOrDefault(scoreType, BigDecimal.ZERO);
     }
 

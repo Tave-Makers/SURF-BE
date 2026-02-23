@@ -1,5 +1,7 @@
 package com.tavemakers.surf.domain.activity.dto.response;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
@@ -10,6 +12,7 @@ import java.time.LocalDate;
 
 @Builder
 public record AdminActivityRecordResDTO(
+        @JsonSerialize(using = ToStringSerializer.class)
         Long activityRecordId,
         ActivityType activityType,
         String activityName,

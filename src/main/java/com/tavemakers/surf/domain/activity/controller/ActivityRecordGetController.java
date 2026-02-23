@@ -32,6 +32,17 @@ public class ActivityRecordGetController {
         return ApiResponse.response(HttpStatus.OK, ACTIVITY_RECORD_READ.getMessage(), response);
     }
 
+    @Operation(summary = "특정 팀의 활동기록 조회 (관리자)")
+    @GetMapping("/v1/admin/scores/teams/{teamId}/activity-records")
+    public ApiResponse<AdminActivityRecordSliceResDTO> getAdminTeamActivityRecords(
+            @PathVariable Long teamId,
+            @RequestParam int pageNum,
+            @RequestParam int pageSize
+    ) {
+        AdminActivityRecordSliceResDTO response = activityRecordUsecase.getAdminTeamActivityRecordList(teamId, pageNum, pageSize);
+        return ApiResponse.response(HttpStatus.OK, ACTIVITY_RECORD_READ.getMessage(), response);
+    }
+
     @Operation(summary = "특정 팀의 멤버별 점수 현황 조회 (관리자)")
     @GetMapping("/v1/admin/scores/teams/{teamId}/members")
     public ApiResponse<TeamMemberScoreListResDTO> getTeamMemberScores(
