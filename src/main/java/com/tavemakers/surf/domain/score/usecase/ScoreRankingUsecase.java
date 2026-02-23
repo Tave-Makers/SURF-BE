@@ -1,8 +1,6 @@
 package com.tavemakers.surf.domain.score.usecase;
 
 import com.tavemakers.surf.domain.activity.dto.response.TeamMemberScoreListResDTO;
-import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
-import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -34,7 +32,6 @@ public class ScoreRankingUsecase {
 
     private final MemberGetService memberGetService;
     private final PersonalScoreGetService personalScoreGetService;
-    private final ActivityRecordGetService activityRecordGetService;
     private final TeamGetService teamGetService;
 
     /** 개인별 상/벌점 현황 조회 (무한스크롤) */
@@ -52,28 +49,25 @@ public class ScoreRankingUsecase {
                 .collect(Collectors.toMap(Member::getId, m -> m));
 
         // 3. 누적 점수 조회
-        List<PersonalActivityScore> scores = personalScoreGetService.getPersonalScoreListByIds(memberIds);
-        Map<Long, BigDecimal> scoreMap = scores.stream()
-                .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
+        Map<Long, PersonalActivityScore> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
+                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s));
 
-        // 4. 상/벌점 집계 조회
-        Map<Long, Map<ScoreType, BigDecimal>> aggregation = activityRecordGetService.getScoreAggregation(memberIds);
-
-        // 5. DTO 조립 후 totalScore DESC 정렬
+        // 4. DTO 조립 후 totalScore DESC 정렬
         List<MemberScoreRankingResDTO> dtoList = memberIds.stream()
                 .filter(memberMap::containsKey)
                 .map(id -> {
                     Member member = memberMap.get(id);
                     Part part = extractLatestPart(member);
-                    BigDecimal rewardTotal = getAggregatedScore(aggregation, id, ScoreType.REWARD);
-                    BigDecimal penaltyTotal = getAggregatedScore(aggregation, id, ScoreType.PENALTY).abs();
-                    BigDecimal totalScore = scoreMap.getOrDefault(id, BigDecimal.ZERO);
+                    PersonalActivityScore score = scoreMap.get(id);
+                    BigDecimal rewardTotal = score != null ? score.getRewardPrefixSum() : BigDecimal.ZERO;
+                    BigDecimal penaltyTotal = score != null ? score.getPenaltyPrefixSum().abs() : BigDecimal.ZERO;
+                    BigDecimal totalScore = score != null ? score.getScore() : BigDecimal.ZERO;
                     return MemberScoreRankingResDTO.of(member, part, rewardTotal, penaltyTotal, totalScore);
                 })
                 .sorted(Comparator.comparing(MemberScoreRankingResDTO::totalScore).reversed())
                 .toList();
 
-        // 6. 수동 Slice 생성
+        // 5. 수동 Slice 생성
         return MemberScoreRankingSliceResDTO.from(createSlice(dtoList, pageNum, pageSize));
     }
 
@@ -96,25 +90,19 @@ public class ScoreRankingUsecase {
                 personalScoreGetService.getTeamScoreListByIds(teamIds).stream()
                         .collect(Collectors.toMap(s -> s.getTeam().getId(), s -> s));
 
-        // 4. 팀 활동기록 상/벌점 집계 조회
-        Map<Long, Map<ScoreType, BigDecimal>> aggregation =
-                activityRecordGetService.getTeamScoreAggregation(teamIds);
-
-        // 5. DTO 조립 후 totalScore DESC 정렬
+        // 4. DTO 조립 후 totalScore DESC 정렬
         List<TeamScoreRankingResDTO> dtoList = teams.stream()
                 .map(team -> {
-                    Long teamId = team.getId();
-                    BigDecimal rewardTotal = getAggregatedScore(aggregation, teamId, ScoreType.REWARD);
-                    BigDecimal penaltyTotal = getAggregatedScore(aggregation, teamId, ScoreType.PENALTY).abs();
-                    BigDecimal totalScore = Optional.ofNullable(teamScoreMap.get(teamId))
-                            .map(PersonalActivityScore::getScore)
-                            .orElse(BigDecimal.ZERO);
+                    PersonalActivityScore teamScore = teamScoreMap.get(team.getId());
+                    BigDecimal rewardTotal = teamScore != null ? teamScore.getRewardPrefixSum() : BigDecimal.ZERO;
+                    BigDecimal penaltyTotal = teamScore != null ? teamScore.getPenaltyPrefixSum().abs() : BigDecimal.ZERO;
+                    BigDecimal totalScore = teamScore != null ? teamScore.getScore() : BigDecimal.ZERO;
                     return TeamScoreRankingResDTO.of(team, rewardTotal, penaltyTotal, totalScore);
                 })
                 .sorted(Comparator.comparing(TeamScoreRankingResDTO::totalScore).reversed())
                 .toList();
 
-        // 6. 수동 Slice 생성
+        // 5. 수동 Slice 생성
         return TeamScoreRankingSliceResDTO.from(createSlice(dtoList, pageNum, pageSize));
     }
 
@@ -130,18 +118,17 @@ public class ScoreRankingUsecase {
             return TeamMemberScoreListResDTO.of(team.getId(), team.getName(), List.of());
         }
 
-        Map<Long, BigDecimal> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
-                .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
-
-        Map<Long, Map<ScoreType, BigDecimal>> aggregation = activityRecordGetService.getScoreAggregation(memberIds);
+        Map<Long, PersonalActivityScore> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
+                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s));
 
         List<MemberScoreRankingResDTO> members = team.getTeamMembers().stream()
                 .map(tm -> {
                     Member member = tm.getMember();
                     Part part = extractLatestPart(member);
-                    BigDecimal rewardTotal = getAggregatedScore(aggregation, member.getId(), ScoreType.REWARD);
-                    BigDecimal penaltyTotal = getAggregatedScore(aggregation, member.getId(), ScoreType.PENALTY).abs();
-                    BigDecimal totalScore = scoreMap.getOrDefault(member.getId(), BigDecimal.ZERO);
+                    PersonalActivityScore score = scoreMap.get(member.getId());
+                    BigDecimal rewardTotal = score != null ? score.getRewardPrefixSum() : BigDecimal.ZERO;
+                    BigDecimal penaltyTotal = score != null ? score.getPenaltyPrefixSum().abs() : BigDecimal.ZERO;
+                    BigDecimal totalScore = score != null ? score.getScore() : BigDecimal.ZERO;
                     return MemberScoreRankingResDTO.of(member, part, rewardTotal, penaltyTotal, totalScore);
                 })
                 .sorted(Comparator.comparing(MemberScoreRankingResDTO::totalScore).reversed())
@@ -156,13 +143,6 @@ public class ScoreRankingUsecase {
                 .max(Comparator.comparing(Track::getGeneration))
                 .map(Track::getPart)
                 .orElse(null);
-    }
-
-    /** 집계 결과에서 특정 ID의 ScoreType별 합계 조회 */
-    private BigDecimal getAggregatedScore(Map<Long, Map<ScoreType, BigDecimal>> aggregation,
-                                           Long id, ScoreType scoreType) {
-        return aggregation.getOrDefault(id, Map.of())
-                .getOrDefault(scoreType, BigDecimal.ZERO);
     }
 
     /** 리스트에서 수동 Slice 생성 (offset/limit 기반) */

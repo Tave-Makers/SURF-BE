@@ -33,12 +33,6 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
             "GROUP BY ar.memberId, ar.scoreType")
     List<Object[]> findScoreAggregationByMemberIds(@Param("memberIds") List<Long> memberIds);
 
-    @Query("SELECT ar.teamId, ar.scoreType, SUM(ar.appliedScore) " +
-            "FROM ActivityRecord ar " +
-            "WHERE ar.teamId IN :teamIds AND ar.isDeleted = false " +
-            "GROUP BY ar.teamId, ar.scoreType")
-    List<Object[]> findScoreAggregationByTeamIds(@Param("teamIds") List<Long> teamIds);
-
     @Query("SELECT ar " +
             "FROM ActivityRecord ar " +
             "WHERE ar.memberId = :memberId " +

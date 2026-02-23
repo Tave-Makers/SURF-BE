@@ -68,25 +68,4 @@ public class ActivityRecordGetService {
         return result;
     }
 
-    /** 다수 팀의 상/벌점 집계 조회 */
-    public Map<Long, Map<ScoreType, BigDecimal>> getTeamScoreAggregation(List<Long> teamIds) {
-        if (teamIds == null || teamIds.isEmpty()) {
-            return Map.of();
-        }
-
-        Map<Long, Map<ScoreType, BigDecimal>> result = new HashMap<>();
-        List<Object[]> rows = activityRecordRepository.findScoreAggregationByTeamIds(teamIds);
-
-        for (Object[] row : rows) {
-            Long teamId = (Long) row[0];
-            ScoreType scoreType = (ScoreType) row[1];
-            BigDecimal sum = (BigDecimal) row[2];
-
-            result.computeIfAbsent(teamId, k -> new EnumMap<>(ScoreType.class))
-                    .put(scoreType, sum);
-        }
-
-        return result;
-    }
-
 }
