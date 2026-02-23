@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.activity.service;
 
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
+import com.tavemakers.surf.domain.activity.exception.ActivityRecordNotFoundException;
 import com.tavemakers.surf.domain.activity.repository.ActivityRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,17 @@ public class ActivityRecordGetService {
     /** 회원의 전체 활동기록 조회 */
     public List<ActivityRecord> findAllByMemberId(Long memberId) {
         return activityRecordRepository.findByMemberIdAndIsDeleted(memberId, false);
+    }
+
+    /** 활동기록 단건 조회 */
+    public ActivityRecord findById(Long activityRecordId) {
+        return activityRecordRepository.findById(activityRecordId)
+                .orElseThrow(ActivityRecordNotFoundException::new);
+    }
+
+    /** 회원의 전체 활동기록 페이징 조회 (scoreType 필터 없이) */
+    public Slice<ActivityRecord> findAllActiveByMemberId(Long memberId, Pageable pageable) {
+        return activityRecordRepository.findAllActiveByMemberId(memberId, pageable);
     }
 
     /** 다수 회원의 상/벌점 집계 조회 */

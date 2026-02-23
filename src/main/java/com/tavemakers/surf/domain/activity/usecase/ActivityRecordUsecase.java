@@ -1,12 +1,18 @@
 package com.tavemakers.surf.domain.activity.usecase;
 
+import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordPatchReqDTO;
 import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordResDTO;
 import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
+import com.tavemakers.surf.domain.activity.dto.response.AdminActivityRecordResDTO;
+import com.tavemakers.surf.domain.activity.dto.response.AdminActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
+import com.tavemakers.surf.domain.activity.exception.ActivityRecordAlreadyDeletedException;
+import com.tavemakers.surf.domain.activity.service.ActivityRecordDeleteService;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordCreateService;
+import com.tavemakers.surf.domain.activity.service.ActivityRecordPatchService;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.utils.ScoreCalculator;
@@ -27,6 +33,8 @@ public class ActivityRecordUsecase {
 
     private final ActivityRecordCreateService activityRecordCreateService;
     private final ActivityRecordGetService activityRecordGetService;
+    private final ActivityRecordPatchService activityRecordPatchService;
+    private final ActivityRecordDeleteService activityRecordDeleteService;
     private final PersonalScoreGetService personalScoreGetService;
     private final ScoreCalculator scoreCalculator;
 
@@ -51,6 +59,50 @@ public class ActivityRecordUsecase {
         Slice<ActivityRecord> slice = activityRecordGetService.findActivityRecordList(memberId, scoreType, pageable);
 
         return ActivityRecordSliceResDTO.from(slice.map(ActivityRecordResDTO::from));
+    }
+
+    /** 관리자용 회원의 전체 활동기록 페이징 조회 */
+    public AdminActivityRecordSliceResDTO getAdminActivityRecordList(Long memberId, int pageNum, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Slice<ActivityRecord> slice = activityRecordGetService.findAllActiveByMemberId(memberId, pageable);
+
+        return AdminActivityRecordSliceResDTO.from(slice.map(AdminActivityRecordResDTO::from));
+    }
+
+    /** 활동기록 수정 (activityType, activityDate) */
+    @Transactional
+    public void patchActivityRecord(Long activityRecordId, ActivityRecordPatchReqDTO dto) {
+        ActivityRecord record = activityRecordGetService.findById(activityRecordId);
+        validateNotDeleted(record);
+
+        if (dto.activityType() != null) {
+            BigDecimal scoreDelta = activityRecordPatchService.updateActivityType(record, dto.activityType());
+            PersonalActivityScore personalScore = personalScoreGetService.getPersonalScore(record.getMemberId());
+            personalScore.updateScore(scoreDelta);
+        }
+
+        if (dto.activityDate() != null) {
+            activityRecordPatchService.updateActivityDate(record, dto.activityDate());
+        }
+    }
+
+    /** 활동기록 소프트 삭제 */
+    @Transactional
+    public void deleteActivityRecord(Long activityRecordId) {
+        ActivityRecord record = activityRecordGetService.findById(activityRecordId);
+        validateNotDeleted(record);
+
+        activityRecordDeleteService.softDelete(record);
+
+        PersonalActivityScore personalScore = personalScoreGetService.getPersonalScore(record.getMemberId());
+        personalScore.updateScore(record.getAppliedScore().negate());
+    }
+
+    /** 이미 삭제된 활동기록 검증 */
+    private void validateNotDeleted(ActivityRecord record) {
+        if (record.isDeleted()) {
+            throw new ActivityRecordAlreadyDeletedException();
+        }
     }
 
 }

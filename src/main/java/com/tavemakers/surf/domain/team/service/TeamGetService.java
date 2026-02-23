@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.team.service;
 
 import com.tavemakers.surf.domain.team.entity.Team;
+import com.tavemakers.surf.domain.team.exception.TeamNotFoundException;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,12 @@ public class TeamGetService {
     /** 기수별 팀 목록 조회 (멤버 포함) */
     public List<Team> getTeamsWithMembers(Integer generation) {
         return teamRepository.findTeamsWithMembers(generation);
+    }
+
+    /** 팀 단건 조회 (멤버 포함) */
+    public Team getTeamWithMembers(Long teamId) {
+        return teamRepository.findDetailBaseById(teamId)
+                .orElseThrow(TeamNotFoundException::new);
     }
 
 }

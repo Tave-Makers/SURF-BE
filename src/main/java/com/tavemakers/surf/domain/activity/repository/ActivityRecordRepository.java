@@ -33,4 +33,13 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
             "GROUP BY ar.memberId, ar.scoreType")
     List<Object[]> findScoreAggregationByMemberIds(@Param("memberIds") List<Long> memberIds);
 
+    @Query("SELECT ar " +
+            "FROM ActivityRecord ar " +
+            "WHERE ar.memberId = :memberId " +
+            "AND ar.isDeleted = false")
+    Slice<ActivityRecord> findAllActiveByMemberId(
+            @Param("memberId") Long memberId,
+            Pageable pageable
+    );
+
 }

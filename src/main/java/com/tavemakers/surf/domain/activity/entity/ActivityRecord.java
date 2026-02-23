@@ -62,4 +62,23 @@ public class ActivityRecord extends BaseEntity {
                 .build();
     }
 
+    /** 소프트 삭제 처리 */
+    public void softDelete() {
+        this.isDeleted = true;
+    }
+
+    /** 활동 유형 변경 및 점수 차이 반환 */
+    public BigDecimal updateActivityType(ActivityType newActivityType) {
+        BigDecimal oldAppliedScore = this.appliedScore;
+        this.activityType = newActivityType;
+        this.scoreType = newActivityType.getScoreType();
+        this.appliedScore = BigDecimal.valueOf(newActivityType.getDelta());
+        return this.appliedScore.subtract(oldAppliedScore);
+    }
+
+    /** 활동 날짜 변경 */
+    public void updateActivityDate(LocalDate newActivityDate) {
+        this.activityDate = newActivityDate;
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.score.usecase;
 
+import com.tavemakers.surf.domain.activity.dto.response.TeamMemberScoreListResDTO;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.service.ActivityRecordGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -125,6 +126,38 @@ public class ScoreRankingUsecase {
 
         // 6. 수동 Slice 생성
         return TeamScoreRankingSliceResDTO.from(createSlice(dtoList, pageNum, pageSize));
+    }
+
+    /** 특정 팀의 멤버별 점수 현황 조회 */
+    public TeamMemberScoreListResDTO getTeamMemberScores(Long teamId) {
+        Team team = teamGetService.getTeamWithMembers(teamId);
+
+        List<Long> memberIds = team.getTeamMembers().stream()
+                .map(tm -> tm.getMember().getId())
+                .toList();
+
+        if (memberIds.isEmpty()) {
+            return TeamMemberScoreListResDTO.of(team.getId(), team.getName(), List.of());
+        }
+
+        Map<Long, BigDecimal> scoreMap = personalScoreGetService.getPersonalScoreList(memberIds).stream()
+                .collect(Collectors.toMap(s -> s.getMember().getId(), PersonalActivityScore::getScore));
+
+        Map<Long, Map<ScoreType, BigDecimal>> aggregation = activityRecordGetService.getScoreAggregation(memberIds);
+
+        List<MemberScoreRankingResDTO> members = team.getTeamMembers().stream()
+                .map(tm -> {
+                    Member member = tm.getMember();
+                    Part part = extractLatestPart(member);
+                    BigDecimal rewardTotal = getAggregatedScore(aggregation, member.getId(), ScoreType.REWARD);
+                    BigDecimal penaltyTotal = getAggregatedScore(aggregation, member.getId(), ScoreType.PENALTY).abs();
+                    BigDecimal totalScore = scoreMap.getOrDefault(member.getId(), BigDecimal.ZERO);
+                    return MemberScoreRankingResDTO.of(member, part, rewardTotal, penaltyTotal, totalScore);
+                })
+                .sorted(Comparator.comparing(MemberScoreRankingResDTO::totalScore).reversed())
+                .toList();
+
+        return TeamMemberScoreListResDTO.of(team.getId(), team.getName(), members);
     }
 
     /** 멤버의 최신 기수 Track에서 Part 추출 */
