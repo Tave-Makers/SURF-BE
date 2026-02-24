@@ -1,0 +1,98 @@
+name: Sync API Docs
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'src/**/controller/**'
+      - 'src/**/dto/**'
+
+jobs:
+  sync-docs:
+    name: Sync API Documentation
+    runs-on: ubuntu-latest
+    # PR 이벤트가 아닌 push 이벤트에서만 실행
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout SURF-BE
+        uses: actions/checkout@v4
+        with:
+          path: surf-be
+          fetch-depth: 0
+
+      - name: Checkout SURF-docs
+        uses: actions/checkout@v4
+        with:
+          repository: Tave-Makers/SURF-docs
+          token: ${{ secrets.DOCS_SYNC_TOKEN }}
+          path: surf-docs
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run sync script
+        run: python surf-be/scripts/sync-docs.py surf-be surf-docs
+
+      - name: Check for changes
+        id: changes
+        run: |
+          cd surf-docs
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "📝 문서 변경사항 감지됨"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "✅ 변경사항 없음"
+          fi
+
+      - name: Get changed API summary
+        if: steps.changes.outputs.has_changes == 'true'
+        id: summary
+        run: |
+          cd surf-docs
+          FILES=$(git status --porcelain | grep '??' | sed 's/?? //' | head -20)
+          echo "new_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          cd surf-docs
+          BRANCH="docs/auto-sync-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: API 문서 자동 동기화 ($(date +%Y-%m-%d))"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --repo Tave-Makers/SURF-docs \
+            --title "docs: API 문서 자동 동기화 — $(date +%Y-%m-%d)" \
+            --body "$(cat <<'BODY'
+          ## 자동 동기화 알림
+
+          SURF-BE `dev` 브랜치의 컨트롤러/DTO 변경사항이 감지되어 API 문서를 자동 동기화합니다.
+
+          ### 새로 생성된 문서
+          ${{ steps.summary.outputs.new_files }}
+
+          ### 주의사항
+          - 자동 생성된 문서는 **스켈레톤**입니다
+          - 머지 전 아래 항목을 확인해주세요:
+            - [ ] 요청/응답 예시 JSON 보완
+            - [ ] 비즈니스 로직 설명 추가
+            - [ ] 에러 케이스 보완
+            - [ ] SUMMARY.md 목차 순서 확인
+
+          > 🤖 이 PR은 GitHub Actions에 의해 자동 생성되었습니다.
+          BODY
+          )" \
+            --head "$BRANCH" \
+            --base main
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_SYNC_TOKEN }}
