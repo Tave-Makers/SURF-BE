@@ -1,40 +1,48 @@
 package com.tavemakers.surf.domain.badge.entity;
 
-import com.tavemakers.surf.domain.badge.dto.request.MemberBadgeReqDTO;
-import com.tavemakers.surf.global.common.entity.BaseEntity;
+import com.tavemakers.surf.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 
 @Entity
 @Getter
-@SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberBadge extends BaseEntity {
+@Table(
+        name = "member_badge",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"member_id", "badge_id"})
+        }
+)
+
+public class MemberBadge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_badge_id")
     private Long id;
 
-    private Long memberId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "badge_id", nullable = false)
+    private Badge badge;
+
+    @Column(nullable = false)
     private LocalDate awardedAt; //수여일자
 
-    private Integer generation;
-
-    private String badgeName;
-
-    public static MemberBadge of(MemberBadgeReqDTO dto, Long memberId) {
-        return MemberBadge.builder()
-                .badgeName(dto.badgeType().getDisplayName())
-                .generation(dto.generation())
-                .awardedAt(dto.awardedAt())
-                .memberId(memberId).build();
+    private MemberBadge(Member member, Badge badge) {
+        this.member = member;
+        this.badge = badge;
+        this.awardedAt = LocalDate.now();
     }
 
+    public static MemberBadge create(Member member, Badge badge) {
+        return new MemberBadge(member, badge);
+    }
 }
