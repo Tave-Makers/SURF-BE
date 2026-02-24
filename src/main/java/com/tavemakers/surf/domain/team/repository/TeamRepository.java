@@ -28,7 +28,8 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     @Query("select t from Team t where t.id = :id")
     Optional<Team> findDetailBaseById(@Param("id") Long id);
 
+    /** 팀 목록을 멤버와 함께 조회 (기수 필터 선택) */
     @EntityGraph(attributePaths = {"teamMembers", "teamMembers.member"})
-    @Query("select t from Team t where (:generation is null or t.generation = :generation)")
+    @Query("select distinct t from Team t where (:generation is null or t.generation = :generation)")
     List<Team> findTeamsWithMembers(@Param("generation") Integer generation);
 }

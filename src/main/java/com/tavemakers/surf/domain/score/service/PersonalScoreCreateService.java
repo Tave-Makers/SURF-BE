@@ -36,8 +36,11 @@ public class PersonalScoreCreateService {
         }
     }
 
-    /** 팀 활동 점수 초기화 저장 */
+    /** 팀 활동 점수 초기화 저장 (중복 생성 방지) */
     public void saveTeamScore(Team team) {
+        List<PersonalActivityScore> existing = personalScoreRepository.findAllByTeamIdIn(List.of(team.getId()));
+        if (!existing.isEmpty()) return;
+
         PersonalActivityScore score = PersonalActivityScore.from(team);
         personalScoreRepository.save(score);
     }

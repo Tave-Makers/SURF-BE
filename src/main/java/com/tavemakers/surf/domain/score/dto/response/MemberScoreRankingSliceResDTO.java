@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.score.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import org.springframework.data.domain.Slice;
 
@@ -11,7 +12,7 @@ public record MemberScoreRankingSliceResDTO(
         int pageNumber,
         int pageSize,
         int numberOfElements,
-        boolean isLast
+        @JsonProperty("isLast") boolean isLast
 ) {
     /** Slice로부터 래퍼 DTO 생성 */
     public static MemberScoreRankingSliceResDTO from(Slice<MemberScoreRankingResDTO> slice) {

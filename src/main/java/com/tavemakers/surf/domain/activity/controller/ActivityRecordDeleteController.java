@@ -17,6 +17,7 @@ public class ActivityRecordDeleteController {
 
     private final ActivityRecordUsecase activityRecordUsecase;
 
+    /** 활동기록 삭제 (관리자) */
     @Operation(summary = "활동기록 삭제 (관리자)")
     @DeleteMapping("/v1/admin/activity-records/{activityRecordId}")
     public ApiResponse<Void> deleteActivityRecord(

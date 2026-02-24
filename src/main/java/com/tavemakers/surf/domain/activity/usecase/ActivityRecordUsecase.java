@@ -94,6 +94,7 @@ public class ActivityRecordUsecase {
     }
 
     /** 관리자용 회원의 전체 활동기록 페이징 조회 */
+    @Transactional(readOnly = true)
     public AdminActivityRecordSliceResDTO getAdminActivityRecordList(Long memberId, int pageNum, int pageSize) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ActivityRecord> slice = activityRecordGetService.findAllActiveByMemberId(memberId, pageable);
@@ -102,6 +103,7 @@ public class ActivityRecordUsecase {
     }
 
     /** 관리자용 팀의 전체 활동기록 페이징 조회 */
+    @Transactional(readOnly = true)
     public AdminActivityRecordSliceResDTO getAdminTeamActivityRecordList(Long teamId, int pageNum, int pageSize) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ActivityRecord> slice = activityRecordGetService.findAllActiveByTeamId(teamId, pageable);
@@ -117,8 +119,8 @@ public class ActivityRecordUsecase {
 
         if (dto.activityType() != null) {
             BigDecimal scoreDelta = activityRecordPatchService.updateActivityType(record, dto.activityType());
-            PersonalActivityScore personalScore = personalScoreGetService.getPersonalScore(record.getMemberId());
-            personalScore.updateScore(scoreDelta);
+            PersonalActivityScore score = findScoreByRecord(record);
+            score.updateScore(scoreDelta);
         }
 
         if (dto.activityDate() != null) {
@@ -134,8 +136,8 @@ public class ActivityRecordUsecase {
 
         activityRecordDeleteService.softDelete(record);
 
-        PersonalActivityScore personalScore = personalScoreGetService.getPersonalScore(record.getMemberId());
-        personalScore.updateScore(record.getAppliedScore().negate());
+        PersonalActivityScore score = findScoreByRecord(record);
+        score.updateScore(record.getAppliedScore().negate());
     }
 
     /** 모든 활동 종류 조회 */
@@ -152,6 +154,14 @@ public class ActivityRecordUsecase {
     public ActivityCategoryDetailResDTO getActivityTypeInformationByCategory(String category) {
         ActivityCategory activityCategory = ActivityCategory.valueOf(category);
         return ActivityType.getDtoListByCategory(activityCategory);
+    }
+
+    /** 활동기록의 대상(개인/팀)에 해당하는 점수 엔티티 조회 */
+    private PersonalActivityScore findScoreByRecord(ActivityRecord record) {
+        if (record.getTeamId() != null) {
+            return personalScoreGetService.getTeamScoreListByIds(List.of(record.getTeamId())).get(0);
+        }
+        return personalScoreGetService.getPersonalScore(record.getMemberId());
     }
 
     /** 이미 삭제된 활동기록 검증 */

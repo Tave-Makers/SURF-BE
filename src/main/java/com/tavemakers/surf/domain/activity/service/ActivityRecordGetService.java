@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.exception.ActivityRecordNotFoundException;
 import com.tavemakers.surf.domain.activity.repository.ActivityRecordRepository;
+import com.tavemakers.surf.domain.activity.repository.ScoreAggregation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,7 +32,7 @@ public class ActivityRecordGetService {
         return activityRecordRepository.findByMemberIdAndIsDeleted(memberId, false);
     }
 
-    /** 활동기록 단건 조회 */
+    /** 활동기록 단건 조회 (삭제 여부 무관) */
     public ActivityRecord findById(Long activityRecordId) {
         return activityRecordRepository.findById(activityRecordId)
                 .orElseThrow(ActivityRecordNotFoundException::new);
@@ -53,18 +54,17 @@ public class ActivityRecordGetService {
             return Map.of();
         }
 
+        List<ScoreAggregation> rows = activityRecordRepository.findScoreAggregationByMemberIds(memberIds);
+        return buildAggregationMap(rows);
+    }
+
+    /** 집계 결과를 Map으로 변환 */
+    private Map<Long, Map<ScoreType, BigDecimal>> buildAggregationMap(List<ScoreAggregation> rows) {
         Map<Long, Map<ScoreType, BigDecimal>> result = new HashMap<>();
-        List<Object[]> rows = activityRecordRepository.findScoreAggregationByMemberIds(memberIds);
-
-        for (Object[] row : rows) {
-            Long memberId = (Long) row[0];
-            ScoreType scoreType = (ScoreType) row[1];
-            BigDecimal sum = (BigDecimal) row[2];
-
-            result.computeIfAbsent(memberId, k -> new EnumMap<>(ScoreType.class))
-                    .put(scoreType, sum);
+        for (ScoreAggregation row : rows) {
+            result.computeIfAbsent(row.getGroupId(), k -> new EnumMap<>(ScoreType.class))
+                    .put(row.getScoreType(), row.getTotalScore());
         }
-
         return result;
     }
 

@@ -14,7 +14,7 @@ public enum ResponseMessage {
     TEAM_MEMBER_SCORE_READ("[팀 멤버 점수 현황]을 조회했습니다."),
     ALL_ACTIVITY_TYPE_READ("[모든 활동 종류]를 조회합니다."),
     ALL_ACTIVITY_CATEGORY_READ("[모든 활동 카테고리]를 조회합니다."),
-    SPECIFIC_ACTIVITY_CATEGORY_READ("[모든 활동 카테고리]를 조회합니다."),
+    SPECIFIC_ACTIVITY_CATEGORY_READ("[특정 활동 카테고리]를 조회합니다."),
     ;
 
     private final String message;

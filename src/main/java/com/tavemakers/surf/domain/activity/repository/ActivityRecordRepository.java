@@ -27,12 +27,14 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
 
     List<ActivityRecord> findByMemberIdAndIsDeleted(Long memberId,Boolean isDeleted);
 
-    @Query("SELECT ar.memberId, ar.scoreType, SUM(ar.appliedScore) " +
+    /** 다수 회원의 상/벌점 집계 조회 */
+    @Query("SELECT ar.memberId AS groupId, ar.scoreType AS scoreType, SUM(ar.appliedScore) AS totalScore " +
             "FROM ActivityRecord ar " +
             "WHERE ar.memberId IN :memberIds AND ar.isDeleted = false " +
             "GROUP BY ar.memberId, ar.scoreType")
-    List<Object[]> findScoreAggregationByMemberIds(@Param("memberIds") List<Long> memberIds);
+    List<ScoreAggregation> findScoreAggregationByMemberIds(@Param("memberIds") List<Long> memberIds);
 
+    /** 회원의 전체 활동기록 페이징 조회 (삭제되지 않은 기록만) */
     @Query("SELECT ar " +
             "FROM ActivityRecord ar " +
             "WHERE ar.memberId = :memberId " +
@@ -42,6 +44,7 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
             Pageable pageable
     );
 
+    /** 팀의 전체 활동기록 페이징 조회 (삭제되지 않은 기록만) */
     @Query("SELECT ar " +
             "FROM ActivityRecord ar " +
             "WHERE ar.teamId = :teamId " +

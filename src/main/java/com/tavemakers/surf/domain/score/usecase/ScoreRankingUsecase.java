@@ -46,11 +46,11 @@ public class ScoreRankingUsecase {
         // 2. Member 엔티티 목록 조회
         List<Member> members = memberGetService.findMembersByIds(memberIds);
         Map<Long, Member> memberMap = members.stream()
-                .collect(Collectors.toMap(Member::getId, m -> m));
+                .collect(Collectors.toMap(Member::getId, m -> m, (a, b) -> a));
 
         // 3. 누적 점수 조회
         Map<Long, PersonalActivityScore> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
-                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s));
+                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s, (a, b) -> a));
 
         // 4. DTO 조립 후 totalScore DESC 정렬
         List<MemberScoreRankingResDTO> dtoList = memberIds.stream()
@@ -88,7 +88,7 @@ public class ScoreRankingUsecase {
         // 3. 팀 자체 누적 점수 조회
         Map<Long, PersonalActivityScore> teamScoreMap =
                 personalScoreGetService.getTeamScoreListByIds(teamIds).stream()
-                        .collect(Collectors.toMap(s -> s.getTeam().getId(), s -> s));
+                        .collect(Collectors.toMap(s -> s.getTeam().getId(), s -> s, (a, b) -> a));
 
         // 4. DTO 조립 후 totalScore DESC 정렬
         List<TeamScoreRankingResDTO> dtoList = teams.stream()
@@ -119,7 +119,7 @@ public class ScoreRankingUsecase {
         }
 
         Map<Long, PersonalActivityScore> scoreMap = personalScoreGetService.getPersonalScoreListByIds(memberIds).stream()
-                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s));
+                .collect(Collectors.toMap(s -> s.getMember().getId(), s -> s, (a, b) -> a));
 
         List<MemberScoreRankingResDTO> members = team.getTeamMembers().stream()
                 .map(tm -> {
@@ -137,7 +137,7 @@ public class ScoreRankingUsecase {
         return TeamMemberScoreListResDTO.of(team.getId(), team.getName(), members);
     }
 
-    /** 멤버의 최신 기수 Track에서 Part 추출 */
+    /** 멤버의 최신 기수 Track에서 Part를 추출합니다. 조회 가능한 Track이 없으면 null을 반환합니다. */
     private Part extractLatestPart(Member member) {
         return member.getTracks().stream()
                 .max(Comparator.comparing(Track::getGeneration))

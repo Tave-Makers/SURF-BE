@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.activity.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import org.springframework.data.domain.Slice;
 
@@ -11,7 +12,7 @@ public record AdminActivityRecordSliceResDTO(
         int pageNumber,
         int pageSize,
         int numberOfElements,
-        boolean isLast
+        @JsonProperty("isLast") boolean isLast
 ) {
     /** Slice 래퍼 생성 */
     public static AdminActivityRecordSliceResDTO from(Slice<AdminActivityRecordResDTO> slice) {

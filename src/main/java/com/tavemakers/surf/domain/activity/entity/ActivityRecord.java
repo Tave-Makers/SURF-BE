@@ -102,6 +102,7 @@ public class ActivityRecord extends BaseEntity {
     public BigDecimal updateActivityType(ActivityType newActivityType) {
         BigDecimal oldAppliedScore = this.appliedScore;
         this.activityType = newActivityType;
+        this.category = newActivityType.getCategory();
         this.scoreType = newActivityType.getScoreType();
         this.appliedScore = BigDecimal.valueOf(newActivityType.getDelta());
         return this.appliedScore.subtract(oldAppliedScore);
