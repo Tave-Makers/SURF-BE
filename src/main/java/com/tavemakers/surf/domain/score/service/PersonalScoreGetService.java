@@ -4,8 +4,6 @@ import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.exception.PersonalScoreNotFoundException;
 import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,16 +28,6 @@ public class PersonalScoreGetService {
     /** 여러 팀의 활동 점수 목록 조회 */
     public List<PersonalActivityScore> getTeamScoreListByIds(List<Long> teamIdList) {
         return personalScoreRepository.findAllByTeamIdIn(teamIdList);
-    }
-
-    /** 여러 회원의 개인 활동 점수 목록 Slice 조회 */
-    public Slice<PersonalActivityScore> getPersonalScoreSlice(Pageable pageable) {
-        return personalScoreRepository.findPersonalActivityScoreSlice(pageable);
-    }
-
-    /** 여러 팀의 활동 점수 목록 Slice 조회 */
-    public Slice<PersonalActivityScore> getTeamScoreSlice(Pageable pageable) {
-        return personalScoreRepository.findTeamActivityScoreSlice(pageable);
     }
 
 }
