@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MemberBadgeGrantService {
+public class MemberBadgeAssignService {
 
     private final BadgeRepository badgeRepository;
     private final MemberRepository memberRepository;
