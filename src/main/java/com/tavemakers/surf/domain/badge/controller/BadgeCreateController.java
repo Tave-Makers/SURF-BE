@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import static com.tavemakers.surf.domain.badge.controller.ResponseMessage.BADGE_CREATED;
 
@@ -20,7 +21,7 @@ public class BadgeCreateController {
 
     @Operation(summary = "배지 생성", description = "새로운 활동 배지를 생성합니다.")
     @PostMapping("/v1/admin/badges")
-    public ApiResponse<Long> create(@RequestBody BadgeCreateReqDTO dto) {
+    public ApiResponse<Long> create(@Valid @RequestBody BadgeCreateReqDTO dto) {
 
         Long badgeId = badgeUsecase.create(dto);
 
