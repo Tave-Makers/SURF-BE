@@ -58,3 +58,7 @@ src/main/resources/application-local.yml
 .idea
 /src/main/resources/firebase/taveDevFCMKey.json
 /src/main/resources/firebase/tave-surf-dev-firebase-adminsdk.json
+
+### GCP ###
+google-cloud-cli-*.tar.gz
+tave-surf.env.example
