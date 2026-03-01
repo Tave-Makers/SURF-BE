@@ -20,9 +20,14 @@ public class PersonalScoreGetService {
                 .orElseThrow(PersonalScoreNotFoundException::new);
     }
 
-    /** 다수 회원의 개인 활동 점수 목록 조회 */
-    public List<PersonalActivityScore> getPersonalScoreList(List<Long> memberIdList) {
+    /** 여러 회원의 개인 활동 점수 목록 조회 */
+    public List<PersonalActivityScore> getPersonalScoreListByIds(List<Long> memberIdList) {
         return personalScoreRepository.findAllByMemberIdIn(memberIdList);
+    }
+
+    /** 여러 팀의 활동 점수 목록 조회 */
+    public List<PersonalActivityScore> getTeamScoreListByIds(List<Long> teamIdList) {
+        return personalScoreRepository.findAllByTeamIdIn(teamIdList);
     }
 
 }

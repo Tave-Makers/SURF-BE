@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.score.service;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
+import com.tavemakers.surf.domain.team.entity.Team;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,5 +34,14 @@ public class PersonalScoreCreateService {
         if (!toSave.isEmpty()) {
             personalScoreRepository.saveAll(toSave);
         }
+    }
+
+    /** 팀 활동 점수 초기화 저장 (중복 생성 방지) */
+    public void saveTeamScore(Team team) {
+        List<PersonalActivityScore> existing = personalScoreRepository.findAllByTeamIdIn(List.of(team.getId()));
+        if (!existing.isEmpty()) return;
+
+        PersonalActivityScore score = PersonalActivityScore.from(team);
+        personalScoreRepository.save(score);
     }
 }

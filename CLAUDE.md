@@ -30,39 +30,56 @@ com.tavemakers.surf
 │   ├── {domain}/
 │   │   ├── controller/   # API 엔드포인트 (HTTP 메서드별 분리)
 │   │   ├── service/      # 비즈니스 로직 (CRUD별 분리)
+│   │   ├── usecase/      # 복합 비즈니스 로직 조합 (선택)
 │   │   ├── repository/   # 데이터 접근
 │   │   ├── entity/       # JPA 엔티티
 │   │   ├── dto/
 │   │   │   ├── request/  # 요청 DTO
 │   │   │   └── response/ # 응답 DTO
 │   │   ├── exception/    # 도메인 예외
-│   │   └── event/        # 도메인 이벤트 (선택)
+│   │   ├── event/        # 도메인 이벤트 (선택)
+│   │   ├── mapper/       # DTO 매핑 (선택)
+│   │   ├── constants/    # 도메인 상수 (선택)
+│   │   ├── facade/       # 퍼사드 패턴 (선택)
+│   │   ├── validator/    # 도메인 검증 (선택)
+│   │   └── scheduler/    # 스케줄링 작업 (선택)
 │   └── ...
 └── global/           # 공통 기능
-    ├── jwt/          # JWT 인증
-    ├── config/       # 설정
-    ├── exception/    # 전역 예외 처리
-    └── aop/          # AOP
+    ├── common/
+    │   ├── advice/       # 전역 예외 처리 (ControllerAdvice)
+    │   ├── aop/          # AOP (annotations/, aspect/)
+    │   ├── encoder/      # 인코딩 유틸리티
+    │   ├── entity/       # 공통 Base 엔티티
+    │   ├── exception/    # 전역 예외 클래스
+    │   ├── loader/       # 애플리케이션 초기화 로더
+    │   ├── response/     # API 응답 래퍼
+    │   └── s3/           # S3 파일 관리 (controller/, service/, dto/, exception/)
+    ├── config/           # 설정 (Security, Redis, QueryDSL, S3, Firebase, Swagger 등)
+    ├── jwt/              # JWT 인증 필터 및 서비스
+    ├── logging/          # 이벤트 기반 로깅 (AOP 연동, 웹 요청 로깅)
+    └── util/             # 유틸리티 (EmailSender, SecurityUtils)
 ```
 
 ## Core Domains
 
-| 도메인 | 설명 |
-|--------|------|
-| `member` | 회원 가입, 프로필, 탈퇴 |
-| `post` | 게시글 CRUD, 좋아요, 검색 |
-| `comment` | 댓글, 대댓글, 좋아요 |
-| `board` | 게시판/카테고리 관리 |
-| `schedule` | 일정 관리 (캘린더) |
-| `scrap` | 게시글 스크랩 |
-| `letter` | 쪽지 |
-| `score` & `badge` | 활동 점수, 배지 (게이미피케이션) |
-| `notification` | FCM 푸시 알림 |
-| `home` | 홈 화면 배너/콘텐츠 |
-| `login` | 카카오 OAuth2 로그인 |
-| `activity` | 활동 기록 관리 |
-| `feedback` | 사용자 피드백 |
-| `reservation` | 예약 게시글 관리 |
+| 도메인 | 설명 | 특이 구조 |
+|--------|------|-----------|
+| `member` | 회원 가입, 프로필, 탈퇴 | `usecase/`, `validator/`, `util/` |
+| `post` | 게시글 CRUD, 좋아요, 검색 | controller/service 하위 `like/`, `post/`, `search/` 분리, `mapper/`, `scheduler/` |
+| `comment` | 댓글, 대댓글, 좋아요 | `event/` |
+| `board` | 게시판/카테고리 관리 | |
+| `schedule` | 일정 관리 (캘린더) | |
+| `scrap` | 게시글 스크랩 | |
+| `letter` | 쪽지 | `facade/`, `event/` |
+| `score` | 활동 점수 (게이미피케이션) | `usecase/`, `utils/` |
+| `badge` | 배지 시스템 | `usecase/` |
+| `notification` | FCM 푸시 알림 | `event/` |
+| `home` | 홈 화면 배너/콘텐츠 | |
+| `login` | 카카오 OAuth2 로그인 | `auth/`, `kakao/` 하위 구조 |
+| `activity` | 활동 기록 관리 | `usecase/`, `mapper/`, `constants/` |
+| `feedback` | 사용자 피드백 | |
+| `reservation` | 예약 게시글 관리 | `usecase/`, `task/` |
+| `team` | 팀/그룹 관리 | |
 
 ## Authentication
 
@@ -226,8 +243,21 @@ public void handleCommentCreated(CommentCreatedEvent event) {
 }
 ```
 
-### 3. TSID
+### 3. Facade 패턴
+복합 도메인 로직을 단순화하는 퍼사드 계층 (letter 도메인에서 사용)
+
+```
+Controller → Facade → Service → Repository
+```
+
+### 4. Mapper 패턴
+Entity ↔ DTO 변환 로직 분리 (post, activity 도메인에서 사용)
+
+### 5. Scheduler 패턴
+주기적 작업 처리 (post/scheduler, reservation/task에서 사용)
+
+### 6. TSID
 시간순 정렬 가능한 분산 ID 생성
 
-### 4. 환경변수 분리
+### 7. 환경변수 분리
 `.env` 파일로 민감 정보 관리
