@@ -4,12 +4,14 @@ import com.tavemakers.surf.domain.badge.dto.response.MemberOwnedBadgeResDTO;
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
 import com.tavemakers.surf.domain.badge.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
+import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.domain.badge.exception.BadgeNotFoundException;
+import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 
 import java.util.List;
 
@@ -19,6 +21,7 @@ public class MemberBadgeGetService {
 
     private final MemberBadgeRepository memberBadgeRepository;
     private final BadgeRepository badgeRepository;
+    private final MemberRepository memberRepository;
 
     /** 특정 배지를 받은 회원 목록 조회 */
     @Transactional(readOnly = true)
@@ -34,6 +37,10 @@ public class MemberBadgeGetService {
     /** 특정 회원의 배지 전체 조회 */
     @Transactional(readOnly = true)
     public List<MemberOwnedBadgeResDTO> getAllByMemberId(Long memberId) {
+
+        // 회원 존재 여부 확인
+        memberRepository.findById(memberId)
+                .orElseThrow(MemberNotFoundException::new);
 
         // 회원이 보유한 배지 목록을 fetch join으로 조회 (N+1 방지)
         List<MemberBadge> memberBadges =
