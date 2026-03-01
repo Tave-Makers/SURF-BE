@@ -19,6 +19,7 @@ public class BadgeMemberGetController {
 
     private final MemberBadgeUsecase memberBadgeUsecase;
 
+    /** 해당 배지를 받은 회원 목록을 페이지 단위로 조회 */
     @Operation(summary = "해당 배지 받은 회원 조회", description = "해당 배지를 받은 모든 회원의 목록을 조회합니다.")
     @GetMapping("/v1/admin/badges/{badgeId}/members")
     public ApiResponse<MemberBadgeSliceResDTO> getMembers(
