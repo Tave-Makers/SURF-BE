@@ -37,8 +37,7 @@ public class BadgeUsecase {
         );
 
         // 활성 배지 목록을 Slice 형태로 조회
-        Slice<Badge> slice =
-                badgeGetService.getBadgeList(pageNum);
+        Slice<Badge> slice = badgeGetService.getBadgeList(pageable);
 
         return BadgeSliceResDTO.from(slice.map(BadgeResDTO::from));
     }
