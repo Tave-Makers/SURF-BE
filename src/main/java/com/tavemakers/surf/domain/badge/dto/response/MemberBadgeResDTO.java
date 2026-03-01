@@ -1,24 +1,36 @@
 package com.tavemakers.surf.domain.badge.dto.response;
 
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
-import lombok.Builder;
+import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.Track;
 
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.Comparator;
 
-@Builder
 public record MemberBadgeResDTO(
-        String badgeName,
+        Long memberId,
+        String username,
+        String profileImageUrl,
         Integer generation,
-        String awardedAt
+        LocalDate awardedAt
 ) {
-    public static MemberBadgeResDTO from(MemberBadge memberBadge) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy.MM.dd");
-        String formattedDate = memberBadge.getAwardedAt().format(formatter);
 
-        return MemberBadgeResDTO.builder()
-                .badgeName(memberBadge.getBadgeName())
-                .generation(memberBadge.getGeneration())
-                .awardedAt(formattedDate)
-                .build();
+    public static MemberBadgeResDTO from(MemberBadge memberBadge) {
+
+        Member member = memberBadge.getMember();
+
+        Integer firstGeneration = member.getTracks()
+                .stream()
+                .min(Comparator.comparing(Track::getGeneration))
+                .map(Track::getGeneration)
+                .orElse(null);
+
+        return new MemberBadgeResDTO(
+                member.getId(),
+                member.getName(),
+                member.getProfileImageUrl(),
+                firstGeneration,
+                memberBadge.getAwardedAt()
+        );
     }
 }
