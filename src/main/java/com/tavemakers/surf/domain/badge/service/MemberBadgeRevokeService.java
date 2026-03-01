@@ -22,16 +22,19 @@ public class MemberBadgeRevokeService {
     @Transactional
     public void revoke(Long badgeId, List<Long> memberIds) {
 
+        // 중복 제거
+        List<Long> uniqueMemberIds = memberIds.stream().distinct().toList();
+
         // 배지 존재 여부 먼저 확인
         badgeRepository.findById(badgeId)
                 .orElseThrow(BadgeNotFoundException::new);
 
         // 회수 대상 배지-회원 매핑 조회
         List<MemberBadge> memberBadges =
-                memberBadgeRepository.findByBadgeIdAndMemberIdIn(badgeId, memberIds);
+                memberBadgeRepository.findByBadgeIdAndMemberIdIn(badgeId, uniqueMemberIds);
 
         // 요청 수와 조회 결과 수가 다르면 일부는 존재하지 않는 매핑 → 예외
-        if (memberBadges.size() != memberIds.size()) {
+        if (memberBadges.size() != uniqueMemberIds.size()) {
             throw new MemberBadgeNotFoundException();
         }
 
