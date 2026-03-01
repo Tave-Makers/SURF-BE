@@ -14,6 +14,7 @@ public class BadgeUpdateReqDTO {
     private String name;
 
     @Schema(description = "수정할 배지 이미지 URL", example = "https://example.png")
+    @NotBlank
     @Size(max = 255)
     private String imageUrl;
 
