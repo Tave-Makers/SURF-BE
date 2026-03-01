@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.badge.entity.Badge;
 import com.tavemakers.surf.domain.badge.repository.BadgeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +17,7 @@ public class BadgeGetService {
 
     /** 배지 목록 조회 (무한스크롤) */
     @Transactional(readOnly = true)
-    public Slice<Badge> getBadgeList(int page) {
-        return badgeRepository.findAllBy(
-                PageRequest.of(page, 20)
-        );
+    public Slice<Badge> getBadgeList(Pageable pageable) {
+        return badgeRepository.findAllBy(pageable);
     }
 }
