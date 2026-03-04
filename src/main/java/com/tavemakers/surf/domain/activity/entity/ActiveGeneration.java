@@ -22,14 +22,14 @@ public class ActiveGeneration extends BaseEntity {
     private Integer generation;
 
 
-    public static ActiveGeneration init(Integer generation, Long updatedBy) {
+    public static ActiveGeneration init(Integer generation) {
         ActiveGeneration ag = new ActiveGeneration();
         ag.id = ID;
         ag.generation = generation;
         return ag;
     }
 
-    public void updateGeneration(Integer generation, Long updatedBy) {
+    public void updateGeneration(Integer generation) {
         this.generation = generation;
     }
 }
