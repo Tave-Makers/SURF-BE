@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.service;
+package com.tavemakers.surf.domain.activity.service.activityRecord;
 
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;

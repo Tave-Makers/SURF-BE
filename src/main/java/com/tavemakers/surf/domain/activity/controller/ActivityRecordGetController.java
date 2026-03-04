@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.activity.controller;
 
-import com.tavemakers.surf.domain.activity.dto.response.AdminActivityRecordSliceResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.AdminActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

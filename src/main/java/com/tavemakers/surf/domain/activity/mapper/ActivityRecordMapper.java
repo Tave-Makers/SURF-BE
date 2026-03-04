@@ -1,10 +1,10 @@
 package com.tavemakers.surf.domain.activity.mapper;
 
-import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSummaryResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityTypeCountResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityTypeGroupCountResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityPenaltyGroupReqDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityRewardGroupReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityRecordSummaryResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityTypeCountResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityTypeGroupCountResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityPenaltyGroupReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRewardGroupReqDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import org.springframework.stereotype.Component;

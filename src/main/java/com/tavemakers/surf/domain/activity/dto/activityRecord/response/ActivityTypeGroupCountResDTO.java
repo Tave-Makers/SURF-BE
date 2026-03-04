@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.dto.response;
+package com.tavemakers.surf.domain.activity.dto.activityRecord.response;
 
 import lombok.Builder;
 

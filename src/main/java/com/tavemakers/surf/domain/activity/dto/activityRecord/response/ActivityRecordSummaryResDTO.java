@@ -1,5 +1,7 @@
-package com.tavemakers.surf.domain.activity.dto.response;
+package com.tavemakers.surf.domain.activity.dto.activityRecord.response;
 
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityPenaltyGroupReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRewardGroupReqDTO;
 import lombok.Builder;
 
 @Builder

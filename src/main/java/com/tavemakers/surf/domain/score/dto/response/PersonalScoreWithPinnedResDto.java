@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.dto.response;
 
-import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSummaryResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityRecordSummaryResDTO;
 import lombok.Builder;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.dto.response;
+package com.tavemakers.surf.domain.activity.dto.acitveGeneration.response;
 
 public record ActiveGenerationResDTO(
         Integer activeGeneration

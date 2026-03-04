@@ -1,5 +1,6 @@
-package com.tavemakers.surf.domain.activity.dto.response;
+package com.tavemakers.surf.domain.activity.dto.activityRecord.request;
 
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityTypeGroupCountResDTO;
 import lombok.Builder;
 
 @Builder

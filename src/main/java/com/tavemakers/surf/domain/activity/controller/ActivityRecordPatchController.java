@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.activity.controller;
 
-import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordPatchReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRecordPatchReqDTO;
 import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

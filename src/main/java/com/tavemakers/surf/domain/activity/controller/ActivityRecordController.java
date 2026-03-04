@@ -1,10 +1,10 @@
 package com.tavemakers.surf.domain.activity.controller;
 
-import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTO;
-import com.tavemakers.surf.domain.activity.dto.request.ActivityRecordReqDTOV2;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityRecordSliceResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRecordReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRecordReqDTOV2;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityCategoryResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityRecordSliceResDTO;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.usecase.ActivityRecordUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;

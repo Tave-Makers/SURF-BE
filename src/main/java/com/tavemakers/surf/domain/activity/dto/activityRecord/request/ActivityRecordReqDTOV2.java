@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.dto.request;
+package com.tavemakers.surf.domain.activity.dto.activityRecord.request;
 
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
