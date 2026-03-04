@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ActiveGenerationPatchService {
+public class ActiveGenerationPutService {
 
     private final ActiveGenerationRepository activeGenerationRepository;
 

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.controller;
+package com.tavemakers.surf.domain.activity.controller.activityRecord;
 
 import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRecordReqDTO;
 import com.tavemakers.surf.domain.activity.dto.activityRecord.request.ActivityRecordReqDTOV2;
