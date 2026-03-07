@@ -24,8 +24,7 @@ public class ActiveGenerationPutController {
     @PutMapping("/v1/admin/active-generation")
     public ApiResponse<Void> updateActiveGeneration(
             @RequestBody @Valid ActiveGenerationUpdateReqDTO dto) {
-        Long adminId = SecurityUtils.getCurrentMemberId();
-        activeGenerationPutService.updateActiveGeneration(dto.activeGeneration(), adminId);
+        activeGenerationPutService.updateActiveGeneration(dto.activeGeneration());
         return ApiResponse.response(HttpStatus.OK, "현재 활동 기수 변경 성공", null);
     }
 }

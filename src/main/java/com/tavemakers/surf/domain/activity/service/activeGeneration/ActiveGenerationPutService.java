@@ -14,7 +14,7 @@ public class ActiveGenerationPutService {
     private final ActiveGenerationRepository activeGenerationRepository;
 
     @Transactional
-    public void updateActiveGeneration(Integer generation, Long updatedBy) {
+    public void updateActiveGeneration(Integer generation) {
         ActiveGeneration ag = activeGenerationRepository.findById(ActiveGeneration.ID)
                 .orElseThrow(ActiveGenerationNotInitializedException::new);
 
