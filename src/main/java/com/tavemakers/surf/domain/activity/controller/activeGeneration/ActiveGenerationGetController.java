@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.ACTIVE_GENERATION_READ;
+import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.MEMBER_OF_ACTIVE_GENERATION_READ;
+
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "활동기수")
@@ -24,12 +27,13 @@ public class ActiveGenerationGetController {
     @GetMapping("/v1/manager/active-generation")
     public ApiResponse<ActiveGenerationResDTO> getActiveGeneration() {
         Integer generation = activeGenerationGetService.getActiveGeneration();
-        return ApiResponse.response(HttpStatus.OK, "현재 활동 기수 조회 성공", ActiveGenerationResDTO.of(generation));
+        ActiveGenerationResDTO response = ActiveGenerationResDTO.of(generation);
+        return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_READ.getMessage(), response);
     }
 
     @GetMapping("/v1/manager/active-generation/members")
     public ApiResponse<List<ActiveGenerationMemberResDTO>> getActiveGenerationMembers() {
         List<ActiveGenerationMemberResDTO> response = activeGenerationGetService.getActiveGenerationMembers();
-        return ApiResponse.response(HttpStatus.OK, "현재 활동 기수 멤버 조회 성공", response);
+        return ApiResponse.response(HttpStatus.OK, MEMBER_OF_ACTIVE_GENERATION_READ.getMessage(), response);
     }
 }

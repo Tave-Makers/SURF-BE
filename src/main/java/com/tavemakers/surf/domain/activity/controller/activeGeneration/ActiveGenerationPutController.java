@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.ACTIVE_GENERATION_UPDATED;
+
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "활동기수")
@@ -25,6 +27,6 @@ public class ActiveGenerationPutController {
     public ApiResponse<Void> updateActiveGeneration(
             @RequestBody @Valid ActiveGenerationUpdateReqDTO dto) {
         activeGenerationPutService.updateActiveGeneration(dto.activeGeneration());
-        return ApiResponse.response(HttpStatus.OK, "현재 활동 기수 변경 성공", null);
+        return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_UPDATED.getMessage(), null);
     }
 }
