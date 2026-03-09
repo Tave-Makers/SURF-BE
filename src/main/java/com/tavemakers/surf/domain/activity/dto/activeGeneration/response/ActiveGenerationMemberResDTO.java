@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.dto.acitveGeneration.response;
+package com.tavemakers.surf.domain.activity.dto.activeGeneration.response;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 

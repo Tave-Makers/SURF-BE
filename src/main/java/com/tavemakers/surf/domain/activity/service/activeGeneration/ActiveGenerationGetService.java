@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.activity.service.activeGeneration;
 
 
-import com.tavemakers.surf.domain.activity.dto.acitveGeneration.response.ActiveGenerationMemberResDTO;
+import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveGenerationMemberResDTO;
 import com.tavemakers.surf.domain.activity.entity.ActiveGeneration;
 import com.tavemakers.surf.domain.activity.exception.ActiveGenerationNotInitializedException;
 import com.tavemakers.surf.domain.activity.repository.ActiveGenerationRepository;

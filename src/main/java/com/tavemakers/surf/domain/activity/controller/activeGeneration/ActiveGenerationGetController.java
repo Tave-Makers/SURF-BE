@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.activity.controller.activeGeneration;
 
-import com.tavemakers.surf.domain.activity.dto.acitveGeneration.response.ActiveGenerationMemberResDTO;
-import com.tavemakers.surf.domain.activity.dto.acitveGeneration.response.ActiveGenerationResDTO;
+import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveGenerationMemberResDTO;
+import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveGenerationResDTO;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

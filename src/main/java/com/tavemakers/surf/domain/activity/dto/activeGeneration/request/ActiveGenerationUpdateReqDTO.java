@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.activity.dto.acitveGeneration.request;
+package com.tavemakers.surf.domain.activity.dto.activeGeneration.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

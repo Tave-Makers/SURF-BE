@@ -1,9 +1,8 @@
 package com.tavemakers.surf.domain.activity.controller.activeGeneration;
 
-import com.tavemakers.surf.domain.activity.dto.acitveGeneration.request.ActiveGenerationUpdateReqDTO;
+import com.tavemakers.surf.domain.activity.dto.activeGeneration.request.ActiveGenerationUpdateReqDTO;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationPutService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
-import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
