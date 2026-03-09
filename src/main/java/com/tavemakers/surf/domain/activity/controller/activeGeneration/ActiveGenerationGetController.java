@@ -31,6 +31,7 @@ public class ActiveGenerationGetController {
         return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_READ.getMessage(), response);
     }
 
+    @Operation(summary = "현재 활동 기수에 속한 회원 조회")
     @GetMapping("/v1/manager/active-generation/members")
     public ApiResponse<List<ActiveGenerationMemberResDTO>> getActiveGenerationMembers() {
         List<ActiveGenerationMemberResDTO> response = activeGenerationGetService.getActiveGenerationMembers();
