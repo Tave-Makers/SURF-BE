@@ -72,4 +72,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     """)
     List<Member> findMembersByIds(@Param("memberIds") List<Long> memberIds);
 
+    @Query("""
+        select distinct m
+        from Member m
+        join m.tracks t
+        where t.generation = :generation
+          and m.isDeleted = false
+        order by m.name asc
+    """)
+    List<Member> findAllByTrackGeneration(@Param("generation") Integer generation);
 }

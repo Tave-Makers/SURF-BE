@@ -15,6 +15,10 @@ public enum ResponseMessage {
     ALL_ACTIVITY_TYPE_READ("[모든 활동 종류]를 조회합니다."),
     ALL_ACTIVITY_CATEGORY_READ("[모든 활동 카테고리]를 조회합니다."),
     SPECIFIC_ACTIVITY_CATEGORY_READ("[특정 활동 카테고리]를 조회합니다."),
+
+    ACTIVE_GENERATION_READ("[현재 활동 기수]를 조회했습니다."),
+    MEMBER_OF_ACTIVE_GENERATION_READ("[현재 활동 기수의 멤버]를 조회했습니다."),
+    ACTIVE_GENERATION_UPDATED("[현재 활동 기수]를 수정했습니다.")
     ;
 
     private final String message;

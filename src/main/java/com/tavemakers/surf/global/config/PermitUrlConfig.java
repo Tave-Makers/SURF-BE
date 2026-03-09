@@ -27,7 +27,8 @@ public class PermitUrlConfig {
 
     public String[] getAdminUrl(){
         return new String[]{
-                "/v1/admin/**"
+                "/v1/admin/**",
+                "/v1/manager/**"
         };
     }
 

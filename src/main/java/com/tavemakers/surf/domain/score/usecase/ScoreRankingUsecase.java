@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.usecase;
 
-import com.tavemakers.surf.domain.activity.dto.response.TeamMemberScoreListResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.TeamMemberScoreListResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -13,7 +13,6 @@ import com.tavemakers.surf.domain.score.dto.response.TeamScoreRankingSliceResDTO
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.team.entity.Team;
-import com.tavemakers.surf.domain.team.entity.TeamMember;
 import com.tavemakers.surf.domain.team.service.TeamGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

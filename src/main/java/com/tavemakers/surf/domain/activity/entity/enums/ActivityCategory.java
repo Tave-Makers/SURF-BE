@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.activity.entity.enums;
 
-import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryDetailResDTO;
-import com.tavemakers.surf.domain.activity.dto.response.ActivityCategoryResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityCategoryResDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
