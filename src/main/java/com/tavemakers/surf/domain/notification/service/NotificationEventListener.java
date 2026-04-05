@@ -11,11 +11,15 @@ import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
 import java.util.Map;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -27,7 +31,8 @@ public class NotificationEventListener {
     private final NotificationCreateService notificationCreateService;
 
     @Async
-    @EventListener
+    @Transactional
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(PostPublishedEvent event) {
         Post post = postRepository.findById(event.getPostId())
                 .orElseThrow(PostNotFoundException::new);
