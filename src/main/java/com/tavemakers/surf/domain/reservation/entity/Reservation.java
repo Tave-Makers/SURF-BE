@@ -44,4 +44,8 @@ public class Reservation extends BaseEntity {
         status = ReservationStatus.CANCELLED;
     }
 
+    public boolean isCanceled() {
+        return status == ReservationStatus.CANCELLED;
+    }
+
 }
