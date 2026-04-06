@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.feedback.controller;
 
 import com.tavemakers.surf.domain.feedback.dto.response.FeedbackResDTO;
-import com.tavemakers.surf.domain.feedback.service.FeedbackService;
+import com.tavemakers.surf.domain.feedback.usecase.FeedbackUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ import static com.tavemakers.surf.domain.feedback.controller.ResponseMessage.FEE
 @Tag(name = "피드백")
 public class FeedbackGetController {
 
-    private final FeedbackService feedbackService;
+    private final FeedbackUsecase feedbackUsecase;
 
     /** 피드백 조회 (운영진 전용) */
     @Operation(summary = "피드백 조회", description = "운영진이 피드백을 조회합니다.")
@@ -32,7 +32,7 @@ public class FeedbackGetController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable
     ) {
-        Slice<FeedbackResDTO> response = feedbackService.getFeedbacks(pageable);
+        Slice<FeedbackResDTO> response = feedbackUsecase.getFeedbacks(pageable);
         return ApiResponse.response(HttpStatus.OK, FEEDBACK_READ.getMessage(), response);
     }
 }

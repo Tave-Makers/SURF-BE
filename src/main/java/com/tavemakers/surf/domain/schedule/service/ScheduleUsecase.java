@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.schedule.service;
 
 import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
 import com.tavemakers.surf.domain.schedule.dto.request.ScheduleUpdateReqDTO;
+import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
@@ -63,5 +64,17 @@ public class ScheduleUsecase {
     @Transactional(readOnly = true)
     public ScheduleResDTO getScheduleByPost(Long postId) {
            return scheduleGetService.getScheduleSingleDTO(postId);
+    }
+
+    /** 월별 일정 조회 */
+    @Transactional(readOnly = true)
+    public ScheduleMonthlyResDTO getScheduleMonthly(String memberRole, int year, int month) {
+        return scheduleGetService.getScheduleMonthly(memberRole, year, month);
+    }
+
+    /** 특정 일정 단건 조회 (캘린더용) */
+    @Transactional(readOnly = true)
+    public ScheduleResDTO getScheduleSingleAtCalendar(Long scheduleId) {
+        return scheduleGetService.getScheduleSingleAtCalendar(scheduleId);
     }
 }

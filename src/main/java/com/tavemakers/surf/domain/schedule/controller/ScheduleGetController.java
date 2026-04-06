@@ -6,7 +6,6 @@ import static com.tavemakers.surf.domain.schedule.controller.ResponseMessage.SCH
 
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
-import com.tavemakers.surf.domain.schedule.service.ScheduleGetService;
 import com.tavemakers.surf.domain.schedule.service.ScheduleUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "일정", description = "일정 관련 API")
 public class ScheduleGetController {
 
-    private final ScheduleGetService scheduleGetService;
     private final ScheduleUsecase scheduleUseCase;
 
     @Operation(summary = "캘린더에 월별 일정 목록 조회", description = "캘린더 페이지에서 월별 일정을 조회합니다.")
@@ -35,7 +33,7 @@ public class ScheduleGetController {
     public ApiResponse<ScheduleMonthlyResDTO> getMonthlySchedules(
             @RequestParam @Parameter int year, @RequestParam @Parameter int month) {
         String memberRole = SecurityUtils.getCurrentMemberRole();
-        ScheduleMonthlyResDTO dto = scheduleGetService.getScheduleMonthly(memberRole,year, month);
+        ScheduleMonthlyResDTO dto = scheduleUseCase.getScheduleMonthly(memberRole, year, month);
         return ApiResponse.response(HttpStatus.OK, SCHEDULE_CALENDAR_READ.getMessage(),dto);
     }
 
@@ -49,7 +47,7 @@ public class ScheduleGetController {
     @Operation(summary = "특정 일정 조회", description = "특정 일정을 캘린더에서 수정/삭제할 때 조회")
     @GetMapping("/v1/admin/calendar/schedules/{scheduleId}")
     public ApiResponse<ScheduleResDTO> getScheduleByScheduleId(@PathVariable Long scheduleId) {
-        ScheduleResDTO dto = scheduleGetService.getScheduleSingleAtCalendar(scheduleId);
+        ScheduleResDTO dto = scheduleUseCase.getScheduleSingleAtCalendar(scheduleId);
         return ApiResponse.response(HttpStatus.OK, SCHEDULE_READ.getMessage(),dto);
     }
 }
