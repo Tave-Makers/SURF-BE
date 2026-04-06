@@ -24,6 +24,7 @@ import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
 import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import org.springframework.lang.Nullable;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -46,7 +47,6 @@ public class PostPatchService {
     private final BoardCategoryGetService boardCategoryGetService;
     private final ScrapGetService scrapGetService;
     private final PostLikeService postLikeService;
-    private final ReservationUsecase reservationUsecase;
     private final PostImageCreateService imageCreateService;
     private final PostImageGetService imageGetService;
     private final PostImageDeleteService imageDeleteService;
@@ -58,7 +58,8 @@ public class PostPatchService {
     @LogEvent(value = "post.update", message = "게시글 수정 성공")
     public PostDetailResDTO updatePost(
             @LogParam("post_id") Long postId,
-            PostUpdateReqDTO req, Long viewerId) {
+            PostUpdateReqDTO req, Long viewerId,
+            @Nullable ReservationUsecase reservationUsecase) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
         Member member = memberGetService.getMember(SecurityUtils.getCurrentMemberId());

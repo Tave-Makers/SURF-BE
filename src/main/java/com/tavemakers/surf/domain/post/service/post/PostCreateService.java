@@ -19,6 +19,7 @@ import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
 import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
 import com.tavemakers.surf.global.logging.LogEvent;
+import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -39,14 +40,13 @@ public class PostCreateService {
     private final BoardGetService boardGetService;
     private final BoardCategoryGetService boardCategoryGetService;
     private final MemberGetService memberGetService;
-    private final ReservationUsecase reservationUsecase;
     private final PostImageCreateService imageCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 생성 및 저장 */
     @Transactional
     @LogEvent(value = "post.create", message = "게시글 생성 성공")
-    public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
+    public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId, @Nullable ReservationUsecase reservationUsecase) {
         Board board = boardGetService.getBoard(req.boardId());
         Member member = memberGetService.getMember(memberId);
 
