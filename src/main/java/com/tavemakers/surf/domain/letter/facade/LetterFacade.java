@@ -36,7 +36,7 @@ public class LetterFacade {
         Member sender = memberGetService.getMember(senderId);
 
         // 2) 수신자 조회
-        Member receiver = memberGetService.getMember(req.getReceiverId());
+        Member receiver = memberGetService.getMember(req.receiverId());
 
         // 3) 이메일 본문 생성
         String emailBody = """
@@ -49,16 +49,16 @@ public class LetterFacade {
         """
                 .formatted(
                         sender.getName(),
-                        req.getContent(),
-                        req.getReplyEmail(),
-                        req.getSns() != null ? req.getSns() : "-"
+                        req.content(),
+                        req.replyEmail(),
+                        req.sns() != null ? req.sns() : "-"
                 );
 
         // 4) 이메일 전송 (실패 시 예외)
         try {
             emailSender.sendMail(
                     receiver.getEmail(),
-                    req.getTitle(),
+                    req.title(),
                     emailBody
             );
         } catch (MailException e) {
@@ -68,10 +68,10 @@ public class LetterFacade {
 
         // 5) 엔티티 생성
         Letter letter = Letter.create(
-                req.getTitle(),
-                req.getContent(),
-                req.getSns(),
-                req.getReplyEmail(),
+                req.title(),
+                req.content(),
+                req.sns(),
+                req.replyEmail(),
                 sender,
                 receiver
         );
