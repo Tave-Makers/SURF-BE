@@ -40,18 +40,16 @@ public class NotificationUsecase {
             return;
         }
 
-        // 2 Notification 엔티티 생성
-        for (Long memberId : targetIds) {
-            notificationCreateService.createAndSend(
-                    memberId,                   // 알림 받는 사람
-                    NotificationType.NOTICE,            // 공지 알림 타입
-                    Map.of(
-                            "boardName", post.getBoard().getName(),
-                            "boardId", post.getBoard().getId(),
-                            "postId", post.getId()
-                    )
-            );
-        }
+        // 2 Notification 엔티티 일괄 생성 (N+1 방지)
+        notificationCreateService.createAndSendBulk(
+                targetIds,
+                NotificationType.NOTICE,
+                Map.of(
+                        "boardName", post.getBoard().getName(),
+                        "boardId", post.getBoard().getId(),
+                        "postId", post.getId()
+                )
+        );
 
         log.info(
                 "[NoticeNotification] sent to {} members, postId={}",

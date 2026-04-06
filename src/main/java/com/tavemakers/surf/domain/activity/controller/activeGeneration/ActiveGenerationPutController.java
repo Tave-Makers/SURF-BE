@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.activity.controller.activeGeneration;
 
 import com.tavemakers.surf.domain.activity.dto.activeGeneration.request.ActiveGenerationUpdateReqDTO;
-import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationPutService;
+import com.tavemakers.surf.domain.activity.usecase.ActiveGenerationUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,13 +19,13 @@ import static com.tavemakers.surf.domain.activity.controller.ResponseMessage.ACT
 @Tag(name = "활동기수")
 public class ActiveGenerationPutController {
 
-    private final ActiveGenerationPutService activeGenerationPutService;
+    private final ActiveGenerationUsecase activeGenerationUsecase;
 
     @Operation(summary = "현재 활동 기수 변경")
     @PutMapping("/v1/admin/active-generation")
     public ApiResponse<Void> updateActiveGeneration(
             @RequestBody @Valid ActiveGenerationUpdateReqDTO dto) {
-        activeGenerationPutService.updateActiveGeneration(dto.activeGeneration());
+        activeGenerationUsecase.updateActiveGeneration(dto.activeGeneration());
         return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_UPDATED.getMessage(), null);
     }
 }
