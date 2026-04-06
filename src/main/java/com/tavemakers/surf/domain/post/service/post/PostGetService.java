@@ -8,13 +8,15 @@ import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.image.PostImageGetService;
 import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
-import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
+import com.tavemakers.surf.domain.reservation.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +31,7 @@ public class PostGetService {
     private final PostLikeService postLikeService;
     private final PostImageGetService imageGetService;
     private final ViewCountService viewCountService;
-    private final ReservationUsecase reservationUsecase;
+    private final ReservationGetService reservationGetService;
 
     /** 게시글 ID로 엔티티 조회 (없으면 예외 발생) */
     @Transactional
@@ -70,7 +72,13 @@ public class PostGetService {
         int viewCount = viewCountService.increaseViewCount(post, memberId);
         LocalDateTime reservedAt = null;
         if (post.isReserved()) {
-            reservedAt = reservationUsecase.getReservedAt(postId);
+            Reservation reservation = reservationGetService.findByPostIdAndStatus(postId);
+            if (reservation != null) {
+                reservedAt = LocalDateTime.ofInstant(
+                        reservation.getReservedAt(),
+                        ZoneId.of("Asia/Seoul")
+                );
+            }
         }
 
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, reservedAt, viewCount);
