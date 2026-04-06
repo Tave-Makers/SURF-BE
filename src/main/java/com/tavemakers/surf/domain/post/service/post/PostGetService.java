@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +74,11 @@ public class PostGetService {
         }
 
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, reservedAt, viewCount);
+    }
+
+    /** 게시글 예약을 위한 Post 조회 */
+    public Optional<Post> findPost(Long id) {
+        return postRepository.findById(id);
     }
 
     /** 게시글 ID로 엔티티 조회 */
