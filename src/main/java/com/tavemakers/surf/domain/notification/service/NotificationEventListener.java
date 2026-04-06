@@ -7,8 +7,7 @@ import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.event.PostLikedEvent;
-import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
-import com.tavemakers.surf.domain.post.repository.PostRepository;
+import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
 import java.util.Map;
 
@@ -26,7 +25,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class NotificationEventListener {
 
-    private final PostRepository postRepository;
+    private final PostGetService postGetService;
     private final NotificationUsecase notificationUsecase;
     private final NotificationCreateService notificationCreateService;
 
@@ -34,8 +33,7 @@ public class NotificationEventListener {
     @Transactional
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(PostPublishedEvent event) {
-        Post post = postRepository.findById(event.getPostId())
-                .orElseThrow(PostNotFoundException::new);
+        Post post = postGetService.readPost(event.getPostId());
 
         if (!post.getBoard().isNotice()) {
             return;

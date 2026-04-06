@@ -14,8 +14,8 @@ import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
-import com.tavemakers.surf.domain.member.repository.MemberRepository;
-import com.tavemakers.surf.domain.member.repository.TrackRepository;
+import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.service.TrackGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 public class TeamService {
 
     private final TeamRepository teamRepository;
-    private final MemberRepository memberRepository;
-    private final TrackRepository trackRepository;
+    private final MemberGetService memberGetService;
+    private final TrackGetService trackGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
 
     @Transactional(readOnly = true)
@@ -62,7 +62,7 @@ public class TeamService {
         List<Long> memberIds = memberIdSet.stream().toList();
 
         // 2) Track을 한 번에 조회 (N+1 방지)
-        Map<Long, List<Track>> trackMap = trackRepository.findAllByMemberIds(memberIds).stream()
+        Map<Long, List<Track>> trackMap = trackGetService.getTracksByMemberIds(memberIds).stream()
                 .collect(Collectors.groupingBy(t -> t.getMember().getId()));
 
         // 3) 팀장 DTO
@@ -173,7 +173,7 @@ public class TeamService {
         }
 
         // 3) 멤버 조회
-        List<Member> members = memberRepository.findAllById(distinctMemberIds);
+        List<Member> members = memberGetService.getMembersByIds(distinctMemberIds);
         if (members.size() != distinctMemberIds.size()) {
             throw new MemberNotFoundException();
         }

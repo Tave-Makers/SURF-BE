@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.member.controller;
 
 import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +23,7 @@ public class AuthRefreshController {
 
     private final RefreshTokenService refreshTokenService;
     private final JwtService jwtService;
-    private final MemberRepository memberRepository;
+    private final MemberGetService memberGetService;
 
     /**
      * Refresh Token 기반 Access Token 재발급
@@ -53,8 +53,7 @@ public class AuthRefreshController {
             // 2) RTR: 검증 + 회전 (여기서 새 refresh 쿠키 세팅됨)
             Long memberId = refreshTokenService.rotate(response, refreshToken);
 
-            Member member = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new IllegalArgumentException("Member not found: " + memberId));
+            Member member = memberGetService.getMember(memberId);
 
             // 3) 새 access 발급
             String newAccessToken = jwtService.createAccessToken(

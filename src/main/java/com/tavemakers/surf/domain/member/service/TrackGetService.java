@@ -42,4 +42,9 @@ public class TrackGetService {
         return trackRepository.findAllDistinctGenerations();
     }
 
+    /** 회원 ID 목록으로 트랙 전체 조회 */
+    public List<Track> getTracksByMemberIds(List<Long> memberIds) {
+        return trackRepository.findAllByMemberIds(memberIds);
+    }
+
 }
