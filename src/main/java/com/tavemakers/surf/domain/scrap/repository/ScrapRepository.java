@@ -18,8 +18,12 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
 
     @Query(
             value = """
-            select s.post
+            select p
             from Scrap s
+            join s.post p
+            join fetch p.member
+            join fetch p.board
+            left join fetch p.category
             where s.member.id = :memberId
             order by s.createdAt desc
             """
