@@ -8,6 +8,9 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.comment.dto.response.MentionResDTO;
 import com.tavemakers.surf.domain.comment.dto.response.MentionSearchResDTO;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.tavemakers.surf.domain.comment.exception.InvalidMentionSearchKeywordException;
 
 import lombok.RequiredArgsConstructor;
@@ -55,6 +58,16 @@ public class CommentMentionService {
                 .stream()
                 .map(MentionResDTO::from)
                 .toList();
+    }
+
+    /** 댓글 ID 목록으로 멘션 일괄 조회 (N+1 방지) */
+    @Transactional(readOnly = true)
+    public Map<Long, List<MentionResDTO>> getMentionsByCommentIds(List<Long> commentIds) {
+        return commentMentionRepository.findAllByCommentIdIn(commentIds).stream()
+                .collect(Collectors.groupingBy(
+                        cm -> cm.getComment().getId(),
+                        Collectors.mapping(MentionResDTO::from, Collectors.toList())
+                ));
     }
 
     /** 멘션 가능한 회원 검색 (두 글자 이상 입력 시) */

@@ -5,8 +5,8 @@ import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
-import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.like.PostLikeGetService;
+import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.domain.scrap.entity.Scrap;
 import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
@@ -30,8 +30,7 @@ import java.util.Set;
 public class ScrapService {
 
     private final ScrapRepository scrapRepository;
-    // PostGetService와 순환 의존성 방지를 위해 PostRepository 직접 사용 (특수 메서드 포함)
-    private final PostRepository postRepository;
+    private final PostGetService postGetService;
     private final MemberGetService memberGetService;
     private final PostLikeGetService postLikeGetService;
 
@@ -42,15 +41,14 @@ public class ScrapService {
             @LogParam("user_id") Long memberId,
             @LogParam("post_id") Long postId) {
         Member member = memberGetService.getMember(memberId);
-        Post post = postRepository.findById(postId).
-                orElseThrow(PostNotFoundException::new);
+        Post post = postGetService.getPost(postId);
         try {
             scrapRepository.save(Scrap.of(member, post));
             // 버전 기반 단일 UPDATE (+재시도)
             for (int i = 0; i < 3; i++) {
-                Long v = postRepository.findVersionById(postId);
+                Long v = postGetService.findVersionById(postId);
                 if (v == null) throw new PostNotFoundException();
-                if (postRepository.increaseScrapCount(postId, v) > 0) break;
+                if (postGetService.increaseScrapCount(postId, v) > 0) break;
                 if (i == 2) throw new OptimisticLockException("scrapCount 증가 충돌");
             }
         } catch (DataIntegrityViolationException e) {
@@ -67,9 +65,9 @@ public class ScrapService {
         int deleted = scrapRepository.deleteByMemberIdAndPostId(memberId, postId);
         if (deleted > 0) {
             for (int i = 0; i < 3; i++) {
-                Long v = postRepository.findVersionById(postId);
+                Long v = postGetService.findVersionById(postId);
                 if (v == null) throw new PostNotFoundException();
-                if (postRepository.decreaseScrapCount(postId, v) > 0) break;
+                if (postGetService.decreaseScrapCount(postId, v) > 0) break;
                 if (i == 2) throw new OptimisticLockException("scrapCount 감소 충돌");
             }
         }
