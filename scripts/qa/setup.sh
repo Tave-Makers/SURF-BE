@@ -24,25 +24,51 @@ if [ -z "$QA_TOKEN" ]; then
   exit 1
 fi
 
-echo "[1/6] 기존 게시판 조회 중..."
-# 게시판 목록 조회하여 첫 번째 boardId 사용
+echo "[1/6] QA용 게시판 및 카테고리 조회 중..."
+# 관리자 API로 QA용 게시판 생성 (없으면 기존 것 재사용)
 boards_response=$(curl -s -X GET \
   -H "Authorization: Bearer $QA_TOKEN" \
   -H "Content-Type: application/json" \
   "${BASE_URL}/v1/user/boards")
 
-# boardId 추출 (jq가 있으면 사용, 없으면 grep으로 추출)
+# 전체 게시판 중 마지막 id 추출 (QA용 게시판 우선)
 if command -v jq &> /dev/null; then
-  BOARD_ID=$(echo "$boards_response" | jq -r '.data[0].boardId // .data[0].id // 1' 2>/dev/null || echo "1")
-  CATEGORY_ID=$(echo "$boards_response" | jq -r '.data[0].categories[0].categoryId // .data[0].categories[0].id // 1' 2>/dev/null || echo "1")
+  # QA용 게시판 찾기
+  QA_BOARD_ID=$(echo "$boards_response" | jq -r '[.data[] | select(.name == "QA테스트게시판")] | .[0].id // empty' 2>/dev/null)
+
+  if [ -z "$QA_BOARD_ID" ] || [ "$QA_BOARD_ID" = "null" ]; then
+    # QA용 게시판 생성
+    create_board_resp=$(curl -s -X POST \
+      -H "Authorization: Bearer $QA_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"name":"QA테스트게시판","type":"NOTICE"}' \
+      "${BASE_URL}/v1/admin/boards")
+    BOARD_ID=$(echo "$create_board_resp" | jq -r '.data.id // 1' 2>/dev/null || echo "1")
+  else
+    BOARD_ID=$QA_BOARD_ID
+  fi
+
+  # 해당 게시판의 카테고리 조회
+  board_detail=$(curl -s -X GET \
+    -H "Authorization: Bearer $QA_TOKEN" \
+    "${BASE_URL}/v1/admin/boards/${BOARD_ID}")
+  CATEGORY_ID=$(echo "$board_detail" | jq -r '.data.categories[0].id // .data.categories[0].categoryId // empty' 2>/dev/null)
 else
-  # jq가 없으면 기본값 사용
-  BOARD_ID=$(echo "$boards_response" | grep -o '"boardId":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "1")
-  CATEGORY_ID=$(echo "$boards_response" | grep -o '"categoryId":[0-9]*' | head -1 | grep -o '[0-9]*' || echo "1")
+  BOARD_ID=2
+  CATEGORY_ID=1
+fi
+
+# 카테고리가 없으면 DB에 직접 INSERT
+if [ -z "$CATEGORY_ID" ] || [ "$CATEGORY_ID" = "null" ]; then
+  echo "  - 카테고리 없음, DB에 직접 생성..."
+  mysql -u root -ppw930516 SURF2 -e \
+    "INSERT IGNORE INTO board_category (board_id, name, slug, created_at, updated_at) VALUES (${BOARD_ID}, 'QA테스트카테고리', 'qa-test', NOW(), NOW());" 2>/dev/null
+  CATEGORY_ID=$(mysql -u root -ppw930516 SURF2 -se \
+    "SELECT id FROM board_category WHERE board_id=${BOARD_ID} AND slug='qa-test' LIMIT 1;" 2>/dev/null)
 fi
 
 # 기본값 설정
-BOARD_ID=${BOARD_ID:-1}
+BOARD_ID=${BOARD_ID:-2}
 CATEGORY_ID=${CATEGORY_ID:-1}
 
 echo "  - Board ID: $BOARD_ID"
@@ -81,7 +107,7 @@ if [ -z "$POST_ID" ] || [ "$POST_ID" = "null" ]; then
   posts_response=$(curl -s -X GET \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/posts/board/${BOARD_ID}?page=0&size=1")
+    "${BASE_URL}/v1/user/posts?boardId=${BOARD_ID}&page=0&size=1")
 
   if command -v jq &> /dev/null; then
     POST_ID=$(echo "$posts_response" | jq -r '.data.content[0].postId // .data[0].postId // .data[0].id // empty' 2>/dev/null)

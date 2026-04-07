@@ -18,7 +18,7 @@ test_toggle_comment_like() {
   response=$(curl -s -w "\n%{http_code}" -X POST \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/comments/1/like")
+    "${BASE_URL}/v1/user/comments/${TEST_COMMENT_ID:-1}/like")
 
   http_code=$(echo "$response" | tail -n1)
   body=$(echo "$response" | sed '$d')
@@ -41,7 +41,7 @@ test_comment_like_count() {
   response=$(curl -s -w "\n%{http_code}" -X GET \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/comments/1/like/count")
+    "${BASE_URL}/v1/user/comments/${TEST_COMMENT_ID:-1}/like/count")
 
   http_code=$(echo "$response" | tail -n1)
   body=$(echo "$response" | sed '$d')
@@ -64,7 +64,7 @@ test_comment_like_me() {
   response=$(curl -s -w "\n%{http_code}" -X GET \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/comments/1/like/me")
+    "${BASE_URL}/v1/user/comments/${TEST_COMMENT_ID:-1}/like/me")
 
   http_code=$(echo "$response" | tail -n1)
   body=$(echo "$response" | sed '$d')
@@ -87,7 +87,7 @@ test_comment_like_members() {
   response=$(curl -s -w "\n%{http_code}" -X GET \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/comments/1/like/members")
+    "${BASE_URL}/v1/user/comments/${TEST_COMMENT_ID:-1}/like/members")
 
   http_code=$(echo "$response" | tail -n1)
   body=$(echo "$response" | sed '$d')

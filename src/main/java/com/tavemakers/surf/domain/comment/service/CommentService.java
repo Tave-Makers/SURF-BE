@@ -136,6 +136,9 @@ public class CommentService {
         if (!comment.getPost().getId().equals(postId) || !comment.getMember().getId().equals(memberId))
             throw new NotMyCommentException();
 
+        // 삭제 전에 post 참조를 영속성 컨텍스트에 확보
+        Post post = postGetService.getPost(postId);
+
         // 자식 댓글 parent 끊기
         commentRepository.detachChildren(commentId);
 
@@ -147,7 +150,7 @@ public class CommentService {
         commentRepository.delete(comment);
 
         // 게시글 댓글 수 감소
-        comment.getPost().decreaseCommentCount();
+        post.decreaseCommentCount();
     }
 
     /** 댓글 목록 조회 */
