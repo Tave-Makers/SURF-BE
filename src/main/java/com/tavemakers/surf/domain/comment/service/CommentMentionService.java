@@ -5,9 +5,12 @@ import com.tavemakers.surf.domain.comment.entity.CommentMention;
 import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.comment.dto.response.MentionResDTO;
 import com.tavemakers.surf.domain.comment.dto.response.MentionSearchResDTO;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 import com.tavemakers.surf.domain.comment.exception.InvalidMentionSearchKeywordException;
 
 import lombok.RequiredArgsConstructor;
@@ -21,7 +24,7 @@ import java.util.List;
 public class CommentMentionService {
 
     private final CommentMentionRepository commentMentionRepository;
-    private final MemberRepository memberRepository;
+    private final MemberGetService memberGetService;
 
     /** 댓글 생성 시 멘션이 있으면 저장 */
     public List<CommentMention> createMentions(Comment comment, List<Long> mentionMemberIds) {
@@ -34,7 +37,7 @@ public class CommentMentionService {
                 .distinct()
                 .toList();
 
-        List<Member> mentionedMembers = memberRepository.findAllById(filteredIds);
+        List<Member> mentionedMembers = memberGetService.getMembersByIds(filteredIds);
 
         List<CommentMention> mentions = mentionedMembers.stream()
                 .map(member -> CommentMention.of(comment, member))
@@ -57,6 +60,15 @@ public class CommentMentionService {
                 .toList();
     }
 
+    /** 댓글 ID 목록으로 멘션 일괄 조회 (N+1 방지) */
+    public Map<Long, List<MentionResDTO>> getMentionsByCommentIds(List<Long> commentIds) {
+        return commentMentionRepository.findAllByCommentIdIn(commentIds).stream()
+                .collect(Collectors.groupingBy(
+                        cm -> cm.getComment().getId(),
+                        Collectors.mapping(MentionResDTO::from, Collectors.toList())
+                ));
+    }
+
     /** 멘션 가능한 회원 검색 (두 글자 이상 입력 시) */
     @Transactional(readOnly = true)
     public List<MentionSearchResDTO> searchMentionableMembers(String keyword) {
@@ -70,7 +82,7 @@ public class CommentMentionService {
         String namePart = keyword.trim();
 
         // DB 조회 (정렬 없이)
-        List<Member> candidates = memberRepository.findMentionCandidates(namePart, MemberStatus.WITHDRAWN);
+        List<Member> candidates = memberGetService.findMentionCandidates(namePart, MemberStatus.WITHDRAWN);
 
         // 자바에서 정렬: 가장 최근 기수 → 오래된 순
         return candidates.stream()

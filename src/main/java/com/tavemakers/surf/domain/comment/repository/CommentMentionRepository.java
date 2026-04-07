@@ -17,6 +17,10 @@ public interface CommentMentionRepository extends JpaRepository<CommentMention, 
     @Query("SELECT cm FROM CommentMention cm JOIN FETCH cm.mentionedMember WHERE cm.comment.id = :commentId")
     List<CommentMention> findByCommentIdWithMember(@Param("commentId") Long commentId);
 
+    /** 댓글 ID 목록으로 멘션 일괄 조회 (N+1 방지) */
+    @Query("SELECT cm FROM CommentMention cm JOIN FETCH cm.mentionedMember WHERE cm.comment.id IN :commentIds")
+    List<CommentMention> findAllByCommentIdIn(@Param("commentIds") List<Long> commentIds);
+
     /** 특정 회원이 멘션된 CommentMention 목록 조회 */
     List<CommentMention> findAllByMentionedMember(Member member);
 

@@ -6,7 +6,7 @@ import com.tavemakers.surf.domain.badge.exception.MemberBadgeAlreadyExistsExcept
 import com.tavemakers.surf.domain.badge.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.service.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +20,7 @@ import java.util.List;
 public class MemberBadgeAssignService {
 
     private final BadgeRepository badgeRepository;
-    private final MemberRepository memberRepository;
+    private final MemberGetService memberGetService;
     private final MemberBadgeRepository memberBadgeRepository;
 
     /** 다수의 회원에게 배지 부여 */
@@ -30,7 +30,7 @@ public class MemberBadgeAssignService {
                 .orElseThrow(BadgeNotFoundException::new);
 
         // 회원 한 번에 조회
-        List<Member> members = memberRepository.findAllById(memberIds);
+        List<Member> members = memberGetService.getMembersByIds(memberIds);
 
         if (members.size() != memberIds.size()) {
             throw new MemberNotFoundException();

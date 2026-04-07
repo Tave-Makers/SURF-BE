@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.feedback.controller;
 
 import com.tavemakers.surf.domain.feedback.dto.request.FeedbackCreateReqDTO;
 import com.tavemakers.surf.domain.feedback.dto.response.FeedbackResDTO;
-import com.tavemakers.surf.domain.feedback.service.FeedbackService;
+import com.tavemakers.surf.domain.feedback.usecase.FeedbackUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +20,7 @@ import static com.tavemakers.surf.domain.feedback.controller.ResponseMessage.FEE
 @Tag(name = "피드백")
 public class FeedbackCreateController {
 
-    private final FeedbackService feedbackService;
+    private final FeedbackUsecase feedbackUsecase;
 
     /** 피드백 생성 (로그인 사용자) */
     @Operation(summary = "피드백 생성", description = "익명의 피드백을 생성합니다. (하루 3회 제한)")
@@ -29,7 +29,7 @@ public class FeedbackCreateController {
             @Valid @RequestBody FeedbackCreateReqDTO req
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        FeedbackResDTO response = feedbackService.createFeedback(req, memberId);
+        FeedbackResDTO response = feedbackUsecase.createFeedback(req, memberId);
         return ApiResponse.response(HttpStatus.CREATED, FEEDBACK_CREATED.getMessage(), response);
     }
 }

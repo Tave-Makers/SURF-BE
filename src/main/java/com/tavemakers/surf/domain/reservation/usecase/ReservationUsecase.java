@@ -23,6 +23,7 @@ public class ReservationUsecase {
     private final ReservationScheduleService scheduleService;
 
     /** 게시글 예약 발행 등록 */
+    @Transactional
     public void reservePost(Long postId, LocalDateTime reservedAt) {
         Instant publishAt = toInstant(reservedAt);
         Reservation reservation = Reservation.of(postId, publishAt);

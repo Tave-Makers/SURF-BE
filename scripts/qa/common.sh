@@ -51,11 +51,45 @@ load_test_ids() {
 
     return 0
   else
-    # 기본값 (테스트 ID 파일이 없을 때)
-    TEST_BOARD_ID="1"
+    # test-ids.json 없을 때 API로 최신 ID 동적 조회
+    TEST_BOARD_ID="2"
     TEST_CATEGORY_ID="1"
-    TEST_POST_ID=""
-    TEST_COMMENT_ID=""
+
+    # 최신 게시글 ID 조회
+    _posts_resp=$(curl -s -H "Authorization: Bearer $QA_TOKEN" \
+      "${BASE_URL}/v1/user/posts?boardId=${TEST_BOARD_ID}&page=0&size=1" 2>/dev/null)
+    TEST_POST_ID=$(echo "$_posts_resp" | jq -r '.data.content[0].postId // empty' 2>/dev/null)
+
+    # 게시글이 없으면 새로 생성
+    if [ -z "$TEST_POST_ID" ] || [ "$TEST_POST_ID" = "null" ]; then
+      _create_resp=$(curl -s -X POST \
+        -H "Authorization: Bearer $QA_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"boardId\":${TEST_BOARD_ID},\"categoryId\":${TEST_CATEGORY_ID},\"title\":\"[QA Test] 자동화 테스트 게시글\",\"content\":\"QA 테스트용\",\"pinned\":false,\"hasSchedule\":false}" \
+        "${BASE_URL}/v1/user/posts" 2>/dev/null)
+      TEST_POST_ID=$(echo "$_create_resp" | jq -r '.data.postId // empty' 2>/dev/null)
+    fi
+
+    # 최신 댓글 ID 조회
+    if [ -n "$TEST_POST_ID" ] && [ "$TEST_POST_ID" != "null" ]; then
+      _comments_resp=$(curl -s -H "Authorization: Bearer $QA_TOKEN" \
+        "${BASE_URL}/v1/user/posts/${TEST_POST_ID}/comments?page=0&size=1" 2>/dev/null)
+      TEST_COMMENT_ID=$(echo "$_comments_resp" | jq -r '.data.content[0].id // empty' 2>/dev/null)
+
+      # 댓글이 없으면 새로 생성
+      if [ -z "$TEST_COMMENT_ID" ] || [ "$TEST_COMMENT_ID" = "null" ]; then
+        _create_comment=$(curl -s -X POST \
+          -H "Authorization: Bearer $QA_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{"content":"[QA Test] 자동화 테스트 댓글"}' \
+          "${BASE_URL}/v1/user/posts/${TEST_POST_ID}/comments" 2>/dev/null)
+        TEST_COMMENT_ID=$(echo "$_create_comment" | jq -r '.data.id // empty' 2>/dev/null)
+        # 댓글 좋아요 추가
+        curl -s -X POST -H "Authorization: Bearer $QA_TOKEN" \
+          "${BASE_URL}/v1/user/comments/${TEST_COMMENT_ID}/like" > /dev/null 2>&1
+      fi
+    fi
+
     TEST_SCHEDULE_ID=""
     TEST_BANNER_ID=""
     return 1

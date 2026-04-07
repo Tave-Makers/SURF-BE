@@ -16,7 +16,6 @@ import com.tavemakers.surf.domain.comment.repository.CommentRepository;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
@@ -28,13 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CommentService {
 
     private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
     private final PostGetService postGetService;
     private final MemberGetService memberGetService;
     private final CommentMentionService commentMentionService;
@@ -137,6 +136,9 @@ public class CommentService {
         if (!comment.getPost().getId().equals(postId) || !comment.getMember().getId().equals(memberId))
             throw new NotMyCommentException();
 
+        // 삭제 전에 post 참조를 영속성 컨텍스트에 확보
+        Post post = postGetService.getPost(postId);
+
         // 자식 댓글 parent 끊기
         commentRepository.detachChildren(commentId);
 
@@ -148,7 +150,7 @@ public class CommentService {
         commentRepository.delete(comment);
 
         // 게시글 댓글 수 감소
-        postRepository.decreaseCommentCount(postId);
+        post.decreaseCommentCount();
     }
 
     /** 댓글 목록 조회 */
@@ -162,10 +164,14 @@ public class CommentService {
         // 2) 댓글 총 개수 조회
         long totalCount = commentRepository.countByPostId(postId);
 
-        // 3) 각 댓글 → DTO 변환
-        List<CommentResDTO> commentDtoList = commentSlice.getContent().stream()
+        // 3) 각 댓글 → DTO 변환 (멘션 일괄 조회로 N+1 방지)
+        List<Comment> comments = commentSlice.getContent();
+        List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+        Map<Long, List<MentionResDTO>> mentionMap = commentMentionService.getMentionsByCommentIds(commentIds);
+
+        List<CommentResDTO> commentDtoList = comments.stream()
                 .map(comment -> {
-                    List<MentionResDTO> mentions = commentMentionService.getMentions(comment.getId());
+                    List<MentionResDTO> mentions = mentionMap.getOrDefault(comment.getId(), List.of());
                     boolean liked = memberId != null && commentLikeService.isLikedByMe(comment.getId(), memberId);
                     return CommentResDTO.from(comment, postId, mentions, liked);
                 })

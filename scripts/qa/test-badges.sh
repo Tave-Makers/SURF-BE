@@ -46,7 +46,7 @@ test_get_badges() {
   response=$(curl -s -w "\n%{http_code}" -X GET \
     -H "Authorization: Bearer $QA_TOKEN" \
     -H "Content-Type: application/json" \
-    "${BASE_URL}/v1/user/members/badges?memberId=1&pageSize=10&pageNum=0")
+    "${BASE_URL}/v1/user/members/1/badges")
 
   http_code=$(echo "$response" | tail -n1)
   body=$(echo "$response" | sed '$d')

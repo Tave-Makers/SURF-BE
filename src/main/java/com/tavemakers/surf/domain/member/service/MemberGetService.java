@@ -133,4 +133,19 @@ public class MemberGetService {
         return memberRepository.findMembersByIds(memberIds);
     }
 
+    /** ID 목록으로 회원 전체 조회 */
+    public List<Member> getMembersByIds(List<Long> memberIds) {
+        return memberRepository.findAllById(memberIds);
+    }
+
+    /** 멘션 후보 회원 검색 */
+    public List<Member> findMentionCandidates(String keyword, MemberStatus excludeStatus) {
+        return memberRepository.findMentionCandidates(keyword, excludeStatus);
+    }
+
+    /** 특정 기수에 속한 회원 목록 조회 */
+    public List<Member> getMembersByTrackGeneration(Integer generation) {
+        return memberRepository.findAllByTrackGeneration(generation);
+    }
+
 }

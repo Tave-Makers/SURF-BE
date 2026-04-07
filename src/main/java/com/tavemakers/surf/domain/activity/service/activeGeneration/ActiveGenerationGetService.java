@@ -5,7 +5,7 @@ import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveG
 import com.tavemakers.surf.domain.activity.entity.ActiveGeneration;
 import com.tavemakers.surf.domain.activity.exception.ActiveGenerationNotInitializedException;
 import com.tavemakers.surf.domain.activity.repository.ActiveGenerationRepository;
-import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.service.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ import java.util.List;
 public class ActiveGenerationGetService {
 
     private final ActiveGenerationRepository activeGenerationRepository;
-    private final MemberRepository memberRepository;
+    private final MemberGetService memberGetService;
 
     @Transactional(readOnly = true)
     public Integer getActiveGeneration() {
@@ -30,7 +30,7 @@ public class ActiveGenerationGetService {
     public List<ActiveGenerationMemberResDTO> getActiveGenerationMembers() {
         Integer activeGeneration = getActiveGeneration();
 
-        return memberRepository.findAllByTrackGeneration(activeGeneration).stream()
+        return memberGetService.getMembersByTrackGeneration(activeGeneration).stream()
                 .map(ActiveGenerationMemberResDTO::from)
                 .toList();
     }
