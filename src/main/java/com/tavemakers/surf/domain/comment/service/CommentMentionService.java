@@ -61,7 +61,6 @@ public class CommentMentionService {
     }
 
     /** 댓글 ID 목록으로 멘션 일괄 조회 (N+1 방지) */
-    @Transactional(readOnly = true)
     public Map<Long, List<MentionResDTO>> getMentionsByCommentIds(List<Long> commentIds) {
         return commentMentionRepository.findAllByCommentIdIn(commentIds).stream()
                 .collect(Collectors.groupingBy(

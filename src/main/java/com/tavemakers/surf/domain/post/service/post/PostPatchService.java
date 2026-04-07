@@ -22,9 +22,9 @@ import com.tavemakers.surf.domain.post.service.image.PostImageGetService;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
-import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
+import com.tavemakers.surf.domain.reservation.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
-import org.springframework.lang.Nullable;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 
@@ -47,19 +48,19 @@ public class PostPatchService {
     private final BoardCategoryGetService boardCategoryGetService;
     private final ScrapGetService scrapGetService;
     private final PostLikeService postLikeService;
+    private final ReservationGetService reservationGetService;
     private final PostImageCreateService imageCreateService;
     private final PostImageGetService imageGetService;
     private final PostImageDeleteService imageDeleteService;
     private final MemberGetService memberGetService;
     private final ViewCountService viewCountService;
 
-    /** 게시글 수정 */
+    /** 게시글 수정 (예약 변경 처리는 Usecase에서 담당) */
     @Transactional
     @LogEvent(value = "post.update", message = "게시글 수정 성공")
     public PostDetailResDTO updatePost(
             @LogParam("post_id") Long postId,
-            PostUpdateReqDTO req, Long viewerId,
-            @Nullable ReservationUsecase reservationUsecase) {
+            PostUpdateReqDTO req, Long viewerId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
         Member member = memberGetService.getMember(SecurityUtils.getCurrentMemberId());
@@ -75,14 +76,12 @@ public class PostPatchService {
         boolean likedByMe = postLikeService.isLikedByMe(viewerId, postId);
         int viewCount = viewCountService.increaseViewCount(post, viewerId);
 
-        // 예약 시간 변경 시 -> 기존의 예약 시간 조회 -> 기존의 예약 시간을 CANCELD로 수정하고 schedule 호출하면 끝.
-        if (Boolean.TRUE.equals(req.isReservationChanged())) {
-            reservationUsecase.updateReservationPost(post.getId(), req.reservedAt());
-        }
-
         LocalDateTime reservedAt = null;
         if (post.isReserved()) {
-            reservedAt = reservationUsecase.getReservedAt(postId);
+            Reservation reservation = reservationGetService.findByPostIdAndStatus(postId);
+            if (reservation != null) {
+                reservedAt = LocalDateTime.ofInstant(reservation.getReservedAt(), ZoneId.of("Asia/Seoul"));
+            }
         }
 
         // 이미지 변경

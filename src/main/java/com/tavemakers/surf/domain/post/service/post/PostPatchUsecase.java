@@ -18,6 +18,9 @@ public class PostPatchUsecase {
     /** 게시글 수정 (예약 시간 변경 포함) */
     @Transactional
     public PostDetailResDTO updatePost(Long postId, PostUpdateReqDTO req, Long memberId) {
-        return postPatchService.updatePost(postId, req, memberId, reservationUsecase);
+        if (Boolean.TRUE.equals(req.isReservationChanged())) {
+            reservationUsecase.updateReservationPost(postId, req.reservedAt());
+        }
+        return postPatchService.updatePost(postId, req, memberId);
     }
 }

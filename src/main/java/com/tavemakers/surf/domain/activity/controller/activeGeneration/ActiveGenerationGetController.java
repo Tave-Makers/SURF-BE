@@ -23,6 +23,7 @@ public class ActiveGenerationGetController {
 
     private final ActiveGenerationUsecase activeGenerationUsecase;
 
+    /** 현재 활동 기수 조회 */
     @Operation(summary = "현재 활동 기수 조회")
     @GetMapping("/v1/manager/active-generation")
     public ApiResponse<ActiveGenerationResDTO> getActiveGeneration() {
@@ -31,6 +32,7 @@ public class ActiveGenerationGetController {
         return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_READ.getMessage(), response);
     }
 
+    /** 현재 활동 기수에 속한 회원 목록 조회 */
     @Operation(summary = "현재 활동 기수에 속한 회원 조회")
     @GetMapping("/v1/manager/active-generation/members")
     public ApiResponse<List<ActiveGenerationMemberResDTO>> getActiveGenerationMembers() {

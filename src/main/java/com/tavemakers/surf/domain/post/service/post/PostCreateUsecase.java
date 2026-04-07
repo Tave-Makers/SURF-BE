@@ -18,6 +18,10 @@ public class PostCreateUsecase {
     /** 게시글 생성 (예약 포함) */
     @Transactional
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
-        return postCreateService.createPost(req, memberId, reservationUsecase);
+        PostDetailResDTO result = postCreateService.createPost(req, memberId);
+        if (req.isReserved()) {
+            reservationUsecase.reservePost(result.postId(), req.reservedAt());
+        }
+        return result;
     }
 }

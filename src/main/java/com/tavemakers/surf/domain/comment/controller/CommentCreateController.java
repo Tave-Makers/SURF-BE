@@ -22,6 +22,7 @@ public class CommentCreateController {
 
     private final CommentUsecase commentUsecase;
 
+    /** 댓글 생성 (루트 댓글 또는 대댓글) */
     @Operation(summary = "댓글 생성 (루트/대댓글)", description = "rootId가 null이면 루트 댓글")
     @PostMapping("/v1/user/posts/{postId}/comments")
     public ApiResponse<CommentResDTO> createComment(

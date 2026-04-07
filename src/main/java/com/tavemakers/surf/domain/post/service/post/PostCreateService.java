@@ -17,9 +17,7 @@ import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
-import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
 import com.tavemakers.surf.global.logging.LogEvent;
-import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -43,10 +41,10 @@ public class PostCreateService {
     private final PostImageCreateService imageCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 게시글 생성 및 저장 */
+    /** 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당) */
     @Transactional
     @LogEvent(value = "post.create", message = "게시글 생성 성공")
-    public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId, @Nullable ReservationUsecase reservationUsecase) {
+    public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         Board board = boardGetService.getBoard(req.boardId());
         Member member = memberGetService.getMember(memberId);
 
@@ -55,14 +53,8 @@ public class PostCreateService {
         Post post = Post.of(req, board, category, member);
         Post saved = postRepository.save(post);
 
-        LocalDateTime reservedAt = null;
-        if (req.isReserved()) {
-            reservationUsecase.reservePost(saved.getId(), req.reservedAt());
-            reservedAt = req.reservedAt();
-        } else{
-            eventPublisher.publishEvent(
-                    new PostPublishedEvent(saved.getId())
-            );
+        if (!req.isReserved()) {
+            eventPublisher.publishEvent(new PostPublishedEvent(saved.getId()));
         }
 
         List<PostImageResDTO> imageUrlResponseList = null;
@@ -72,7 +64,8 @@ public class PostCreateService {
             imageUrlResponseList = imageCreateService.saveAll(saved, imageUrlList);
         }
 
-        return PostDetailResDTO.of(saved, false, false,true,imageUrlResponseList, reservedAt,0);
+        LocalDateTime reservedAt = req.isReserved() ? req.reservedAt() : null;
+        return PostDetailResDTO.of(saved, false, false, true, imageUrlResponseList, reservedAt, 0);
     }
 
     /** 이미지 목록에서 첫 번째 이미지 URL 추출 */

@@ -28,6 +28,7 @@ public class ScheduleGetController {
 
     private final ScheduleUsecase scheduleUseCase;
 
+    /** 월별 일정 목록 조회 */
     @Operation(summary = "캘린더에 월별 일정 목록 조회", description = "캘린더 페이지에서 월별 일정을 조회합니다.")
     @GetMapping("/v1/user/calendar/schedules")
     public ApiResponse<ScheduleMonthlyResDTO> getMonthlySchedules(
@@ -44,6 +45,7 @@ public class ScheduleGetController {
         return ApiResponse.response(HttpStatus.OK, SCHEDULE_POST_READ.getMessage(),dto);
     }
 
+    /** 특정 일정 단건 조회 (캘린더 수정/삭제용) */
     @Operation(summary = "특정 일정 조회", description = "특정 일정을 캘린더에서 수정/삭제할 때 조회")
     @GetMapping("/v1/admin/calendar/schedules/{scheduleId}")
     public ApiResponse<ScheduleResDTO> getScheduleByScheduleId(@PathVariable Long scheduleId) {
