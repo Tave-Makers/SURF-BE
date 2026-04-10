@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.login.kakao.service;
 
 import com.tavemakers.surf.domain.login.kakao.config.KakaoOAuthProps;
 import com.tavemakers.surf.domain.login.kakao.dto.KakaoTokenResDTO;
-import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDto;
+import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDTO;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
@@ -103,7 +103,7 @@ public class KakaoAuthService {
     }
 
     /** AccessToken으로 사용자 정보 요청 */
-    public KakaoUserInfoDto getUserInfo(String accessToken) {
+    public KakaoUserInfoDTO getUserInfo(String accessToken) {
         log.info("[KAKAO][USER] get user info start");
         try {
             String url = "https://kapi.kakao.com/v2/user/me";
@@ -113,11 +113,11 @@ public class KakaoAuthService {
 
             HttpEntity<Void> request = new HttpEntity<>(headers);
 
-            ResponseEntity<KakaoUserInfoDto> response = restTemplate.exchange(
+            ResponseEntity<KakaoUserInfoDTO> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     request,
-                    KakaoUserInfoDto.class
+                    KakaoUserInfoDTO.class
             );
 
             log.info("[KAKAO][USER] response status={}", response.getStatusCode());

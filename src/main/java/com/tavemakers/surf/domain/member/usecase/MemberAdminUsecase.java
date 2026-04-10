@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.member.usecase;
 
 import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
-import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDto;
-import com.tavemakers.surf.domain.member.dto.request.PasswordReqDto;
+import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDTO;
+import com.tavemakers.surf.domain.member.dto.request.PasswordReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
 import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -85,13 +85,13 @@ public class MemberAdminUsecase {
 
     /** 관리자 비밀번호 설정 */
     @Transactional
-    public void setUpPassword(PasswordReqDto dto) {
+    public void setUpPassword(PasswordReqDTO dto) {
         Member member = memberGetService.getMember(SecurityUtils.getCurrentMemberId());
         member.updatePassword(dto.password());
     }
 
     /** 관리자 페이지 로그인 처리 */
-    public AdminPageLoginResDto loginAdminHomePage(AdminPageLoginReqDto dto, HttpServletResponse response) {
+    public AdminPageLoginResDTO loginAdminHomePage(AdminPageLoginReqDTO dto, HttpServletResponse response) {
         Member member = memberGetService.getMemberByEmail(dto.email());
         member.checkPassword(dto.password());
         //validateLoginMemberRole(member);
@@ -100,7 +100,7 @@ public class MemberAdminUsecase {
         String deviceId = UUID.randomUUID().toString();
         refreshTokenService.issue(response, member.getId(), deviceId);
 
-        return AdminPageLoginResDto.of(accessToken, member);
+        return AdminPageLoginResDTO.of(accessToken, member);
     }
 
     /** 가입 대기 회원 목록 조회 */

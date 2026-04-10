@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "로그인 성공 시 사용자 기본 정보 응답 DTO")
 @Builder
-public record LoginResDto(
+public record LoginResDTO(
 
         @Schema(description = "사용자 닉네임", example = "홍길동")
         String nickname,
@@ -26,13 +26,13 @@ public record LoginResDto(
         String profileImageUrl
 )  {
 
-    public static LoginResDto of(
+    public static LoginResDTO of(
             String nickname,
             String email,
             String accessToken,
             String profileImageUrl
     ) {
-        return LoginResDto.builder()
+        return LoginResDTO.builder()
                 .nickname(nickname)
                 .email(email)
                 .accessToken(accessToken)

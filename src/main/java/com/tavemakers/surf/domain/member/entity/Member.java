@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.entity;
 
-import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDto;
+import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
@@ -131,7 +131,7 @@ public class Member extends BaseEntity {
         this.tracks = new ArrayList<>();
     }
 
-    public static Member createRegisteringFromKakao(KakaoUserInfoDto info) {
+    public static Member createRegisteringFromKakao(KakaoUserInfoDTO info) {
         var acc = info.kakaoAccount();
 
         if (acc == null || acc.email() == null || acc.email().isBlank()) {

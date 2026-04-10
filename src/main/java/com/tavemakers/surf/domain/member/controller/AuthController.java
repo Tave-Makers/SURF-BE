@@ -1,10 +1,10 @@
 package com.tavemakers.surf.domain.member.controller;
 
-import com.tavemakers.surf.domain.login.LoginResDto;
+import com.tavemakers.surf.domain.login.LoginResDTO;
 import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.login.kakao.config.KakaoOAuthProps;
 import com.tavemakers.surf.domain.login.kakao.dto.KakaoTokenResDTO;
-import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDto;
+import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.login.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
@@ -76,7 +76,7 @@ public class AuthController {
             description = "인가 코드(code)를 받아 JWT AccessToken과 사용자 정보를 반환합니다."
     )
     @GetMapping("/login/oauth2/code/kakao")
-    public ApiResponse<LoginResDto> kakaoCallback(
+    public ApiResponse<LoginResDTO> kakaoCallback(
             @RequestParam("code") String code,
             HttpServletResponse response
     ) {
@@ -96,7 +96,7 @@ public class AuthController {
                     token.accessToken() != null ? token.accessToken().length() : null);
 
             // 3. 사용자 정보 조회
-            KakaoUserInfoDto userInfo = kakaoAuthService.getUserInfo(token.accessToken());
+            KakaoUserInfoDTO userInfo = kakaoAuthService.getUserInfo(token.accessToken());
 
             // 4. 회원 upsert
             Member member = memberUpsertService.upsertRegisteringFromKakao(userInfo);
@@ -124,7 +124,7 @@ public class AuthController {
             kakaoAuthService.logLoginSuccess(member.getId(), accessToken.substring(0, 10) + "...");
 
             var account = userInfo.kakaoAccount();
-            LoginResDto loginRes = LoginResDto.of(
+            LoginResDTO loginRes = LoginResDTO.of(
                     account.profile().nickname(),
                     account.email(),
                     accessToken,
