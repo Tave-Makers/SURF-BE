@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.board.entity;
 
+import com.tavemakers.surf.domain.board.dto.request.BoardCategoryCreateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -37,5 +38,13 @@ public class BoardCategory extends BaseEntity {
     public void update(String name, String slug) {
         if (name != null) this.name = name;
         if (slug != null) this.slug = slug;
+    }
+
+    public static BoardCategory of(Board board, BoardCategoryCreateReqDTO req) {
+        return BoardCategory.builder()
+                .board(board)
+                .name(req.name())
+                .slug(req.slug())
+                .build();
     }
 }
