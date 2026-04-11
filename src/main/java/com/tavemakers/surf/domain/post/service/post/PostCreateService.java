@@ -13,6 +13,7 @@ import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostDetailResDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.exception.BoardWriteNotAllowedException;
 import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
@@ -47,6 +48,13 @@ public class PostCreateService {
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         Board board = boardGetService.getBoard(req.boardId());
         Member member = memberGetService.getMember(memberId);
+
+        // BoardType.NOTICE인 경우 관리자인지 검증
+        if(board.isNotice()){
+            if(!member.hasDeleteRole()){
+                throw new BoardWriteNotAllowedException();
+            }
+        }
 
         BoardCategory category = resolveCategory(board, req.categoryId());
 
