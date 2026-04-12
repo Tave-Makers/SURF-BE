@@ -2,7 +2,6 @@ package com.tavemakers.surf.domain.member.controller;
 
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
-import com.tavemakers.surf.domain.member.dto.response.GenerationInfoListResDTO;
 import com.tavemakers.surf.domain.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberInformationResDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationSliceResDTO;
