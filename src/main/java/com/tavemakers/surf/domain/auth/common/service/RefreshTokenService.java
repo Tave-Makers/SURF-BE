@@ -41,8 +41,10 @@ public class RefreshTokenService {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_INVALID.getMessage());
         }
 
-        Long memberId = jwtService.extractMemberId(refreshToken).orElseThrow();
-        String deviceId = jwtService.extractDeviceId(refreshToken).orElseThrow();
+        Long memberId = jwtService.extractMemberId(refreshToken)
+                .orElseThrow(()-> new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_INVALID.getMessage()));
+        String deviceId = jwtService.extractDeviceId(refreshToken)
+                .orElseThrow(() -> new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_INVALID.getMessage()));
 
         log.info("[RTR][ROTATE] extracted memberId={}", memberId);
 
@@ -108,7 +110,7 @@ public class RefreshTokenService {
         Long memberId = jwtService.extractMemberId(refreshToken).orElseThrow();
         String deviceId = jwtService.extractDeviceId(refreshToken).orElseThrow();
 
-        log.info("[RTR][INVALIDATE] start memberId={} deviceId={}", memberId, deviceId);
+        log.info("[RTR][SAVE] start memberId={} deviceId={}", memberId, deviceId);
 
         long ttlMs = jwtService.getExpiration(refreshToken) - System.currentTimeMillis();
         if (ttlMs <= 0) {

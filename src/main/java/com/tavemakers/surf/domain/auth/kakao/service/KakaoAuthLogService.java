@@ -34,6 +34,6 @@ public class KakaoAuthLogService {
             @LogParam("error_code") int errorCode,
             @LogParam("error_msg") String errorMsg
     ) {
-        throw new IllegalStateException(errorMsg);
+        // @LogEvent로 로깅만 수행하고 예외 전파는 호출자에서 처리
     }
 }
