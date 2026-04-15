@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.usecase;
 
-import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
@@ -98,7 +98,7 @@ public class MemberAdminUsecase {
 
         String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
         String deviceId = UUID.randomUUID().toString();
-        refreshTokenService.issue(response, member.getId(), deviceId);
+        response.addHeader("Set-Cookie", refreshTokenService.issue(member.getId(), deviceId).toString());
 
         return AdminPageLoginResDTO.of(accessToken, member);
     }

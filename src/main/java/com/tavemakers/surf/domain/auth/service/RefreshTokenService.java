@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.auth.service;
 
 import com.tavemakers.surf.global.jwt.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.ResponseCookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -21,13 +22,12 @@ public class RefreshTokenService {
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
 
-    /** 로그인 시 refresh 발급 + 저장 + 쿠키 세팅 */
-    public void issue(HttpServletResponse response, Long memberId, String deviceId) {
+    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 */
+    public ResponseCookie issue(Long memberId, String deviceId) {
         String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
         save(refreshToken);
-        jwtService.sendRefreshToken(response, refreshToken);
-
-        log.info("[RTR][ISSUE] refresh token sent to response");
+        log.info("[RTR][ISSUE] refresh token cookie built");
+        return jwtService.buildRefreshTokenCookie(refreshToken);
     }
 
     /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation) */
