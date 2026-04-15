@@ -1,5 +1,7 @@
 package com.tavemakers.surf.domain.auth.service;
 
+import com.tavemakers.surf.domain.auth.exception.AuthErrorMessage;
+import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.jwt.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseCookie;
@@ -36,7 +38,7 @@ public class RefreshTokenService {
         log.info("[RTR][ROTATE] isTokenValid={}", valid);
 
         if (!valid) {
-            throw new IllegalStateException("Invalid refresh token");
+            throw new UnauthorizedException(AuthErrorMessage.REFRESH_TOKEN_INVALID.getMessage());
         }
 
         Long memberId = jwtService.extractMemberId(refreshToken).orElseThrow();
@@ -50,14 +52,14 @@ public class RefreshTokenService {
         String stored = redisTemplate.opsForValue().get(key);
 
         if (stored == null) {
-            throw new IllegalStateException("No stored refresh token");
+            throw new UnauthorizedException(AuthErrorMessage.REFRESH_TOKEN_NOT_FOUND.getMessage());
         }
 
         // refresh reuse detection
         if (!refreshToken.equals(stored)) {
             log.error("[RTR][ROTATE] refresh reuse detected memberId={}", memberId);
             invalidateAll(memberId);
-            throw new IllegalStateException("Refresh token reuse detected");
+            throw new UnauthorizedException(AuthErrorMessage.REFRESH_TOKEN_REUSE_DETECTED.getMessage());
         }
 
         // ROTATION

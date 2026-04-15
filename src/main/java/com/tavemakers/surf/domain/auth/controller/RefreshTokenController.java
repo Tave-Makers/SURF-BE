@@ -1,8 +1,10 @@
 package com.tavemakers.surf.domain.auth.controller;
 
+import com.tavemakers.surf.domain.auth.exception.AuthErrorMessage;
 import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,41 +41,24 @@ public class RefreshTokenController {
     ) {
         // 1) refresh 쿠키 추출
         String refreshToken = jwtService.extractRefreshToken(request)
-                .orElse(null);
+                .orElseThrow(() -> new UnauthorizedException(AuthErrorMessage.REFRESH_TOKEN_MISSING.getMessage()));
 
-        if (refreshToken == null) {
-            return ApiResponse.response(
-                    HttpStatus.UNAUTHORIZED,
-                    "Refresh token이 없습니다.",
-                    null
-            );
-        }
+        // 2) RTR: 검증 + 회전 (여기서 새 refresh 쿠키 세팅됨)
+        Long memberId = refreshTokenService.rotate(response, refreshToken);
 
-        try {
-            // 2) RTR: 검증 + 회전 (여기서 새 refresh 쿠키 세팅됨)
-            Long memberId = refreshTokenService.rotate(response, refreshToken);
+        Member member = memberGetService.getMember(memberId);
 
-            Member member = memberGetService.getMember(memberId);
+        // 3) 새 access 발급
+        String newAccessToken = jwtService.createAccessToken(
+                member.getId(),
+                member.getRole().name()
+        );
 
-            // 3) 새 access 발급
-            String newAccessToken = jwtService.createAccessToken(
-                    member.getId(),
-                    member.getRole().name()
-            );
-
-            // 4) access 반환
-            return ApiResponse.response(
-                    HttpStatus.OK,
-                    "Access token 재발급 성공",
-                    Map.of("accessToken", newAccessToken)
-            );
-
-        } catch (Exception e) {
-            return ApiResponse.response(
-                    HttpStatus.UNAUTHORIZED,
-                    "Refresh token이 유효하지 않습니다.",
-                    null
-            );
-        }
+        // 4) access 반환
+        return ApiResponse.response(
+                HttpStatus.OK,
+                "Access token 재발급 성공",
+                Map.of("accessToken", newAccessToken)
+        );
     }
 }
