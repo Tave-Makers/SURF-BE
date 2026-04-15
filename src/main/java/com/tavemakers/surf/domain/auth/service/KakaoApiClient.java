@@ -5,8 +5,8 @@ import com.tavemakers.surf.domain.auth.dto.response.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.auth.exception.AuthErrorMessage;
 import com.tavemakers.surf.domain.auth.exception.KakaoAuthException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,11 +19,15 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class KakaoApiClient {
 
     private final RestTemplate restTemplate;
     private final KakaoOAuthProps props;
+
+    public KakaoApiClient(@Qualifier("kakaoRestTemplate") RestTemplate restTemplate, KakaoOAuthProps props) {
+        this.restTemplate = restTemplate;
+        this.props = props;
+    }
 
     /** 인가 코드로 카카오 토큰 교환 */
     public KakaoTokenResDTO exchangeCodeForToken(String code) {
