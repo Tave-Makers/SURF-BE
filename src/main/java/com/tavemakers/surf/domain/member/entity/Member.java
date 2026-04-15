@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.entity;
 
-import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDTO;
+import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;

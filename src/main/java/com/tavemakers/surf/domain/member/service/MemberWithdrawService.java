@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.login.kakao.dto.KakaoUserInfoDTO;
+import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
