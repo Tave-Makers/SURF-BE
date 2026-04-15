@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.auth.service;
+package com.tavemakers.surf.domain.auth.kakao.service;
 
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,13 +15,14 @@ public class MemberUpsertService {
 
     /** 카카오 정보로 회원 생성 또는 기존 회원 반환 */
     @Transactional
-    public Member upsertRegisteringFromKakao(KakaoUserInfoDTO info) {
-        return memberRepository.findByKakaoId(info.id()).orElseGet(() -> {
+    public Member upsertRegisteringFromKakao(OAuthUserInfo info) {
+        Long kakaoId = Long.parseLong(info.oauthId());
+        return memberRepository.findByKakaoId(kakaoId).orElseGet(() -> {
             Member toSave = Member.createRegisteringFromKakao(info);
             try {
                 return memberRepository.saveAndFlush(toSave);
             } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                return memberRepository.findByKakaoId(info.id())
+                return memberRepository.findByKakaoId(kakaoId)
                         .orElseThrow(() -> e);
             }
         });

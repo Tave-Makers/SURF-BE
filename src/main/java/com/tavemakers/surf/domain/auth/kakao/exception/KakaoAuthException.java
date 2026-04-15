@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.auth.exception;
+package com.tavemakers.surf.domain.auth.kakao.exception;
 
 import com.tavemakers.surf.global.common.exception.BaseException;
 import org.springframework.http.HttpStatus;

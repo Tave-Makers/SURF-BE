@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.auth.service;
+package com.tavemakers.surf.domain.auth.kakao.service;
 
-import com.tavemakers.surf.domain.auth.config.KakaoOAuthProps;
-import com.tavemakers.surf.domain.auth.dto.response.KakaoTokenResDTO;
-import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.kakao.config.KakaoOAuthProps;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,9 +41,9 @@ public class KakaoAuthService {
         return kakaoApiClient.exchangeCodeForToken(code);
     }
 
-    /** AccessToken으로 사용자 정보 요청 */
-    public KakaoUserInfoDTO getUserInfo(String accessToken) {
-        return kakaoApiClient.getUserInfo(accessToken);
+    /** AccessToken으로 공통 사용자 정보 요청 */
+    public OAuthUserInfo getUserInfo(String accessToken) {
+        return kakaoApiClient.fetchUserInfo(accessToken);
     }
 
     /** 로그인 성공 로그 */

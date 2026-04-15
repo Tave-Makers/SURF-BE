@@ -1,11 +1,11 @@
-package com.tavemakers.surf.domain.auth.usecase;
+package com.tavemakers.surf.domain.auth.kakao.usecase;
 
-import com.tavemakers.surf.domain.auth.dto.response.KakaoLoginResult;
-import com.tavemakers.surf.domain.auth.dto.response.KakaoTokenResDTO;
-import com.tavemakers.surf.domain.auth.dto.response.KakaoUserInfoDTO;
-import com.tavemakers.surf.domain.auth.dto.response.LoginResDTO;
-import com.tavemakers.surf.domain.auth.service.KakaoAuthService;
-import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResult;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
+import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
 import com.tavemakers.surf.global.jwt.JwtService;
@@ -35,8 +35,8 @@ public class KakaoLoginUsecase {
         // 2. 인가 코드 → 카카오 토큰
         KakaoTokenResDTO token = kakaoAuthService.exchangeCodeForToken(code);
 
-        // 3. 카카오 사용자 정보 조회
-        KakaoUserInfoDTO userInfo = kakaoAuthService.getUserInfo(token.accessToken());
+        // 3. 카카오 사용자 정보 조회 (OAuthUserInfo로 반환)
+        OAuthUserInfo userInfo = kakaoAuthService.getUserInfo(token.accessToken());
 
         // 4. 회원 upsert
         Member member = memberUpsertService.upsertRegisteringFromKakao(userInfo);
@@ -54,12 +54,11 @@ public class KakaoLoginUsecase {
         kakaoAuthService.logLoginSuccess(member.getId(), accessToken.substring(0, Math.min(accessToken.length(), 10)) + "...");
 
         // 9. 응답 DTO 조립
-        var account = userInfo.kakaoAccount();
         LoginResDTO loginRes = LoginResDTO.of(
-                account.profile().nickname(),
-                account.email(),
+                userInfo.nickname(),
+                userInfo.email(),
                 accessToken,
-                account.profile().profileImageUrl()
+                userInfo.profileImageUrl()
         );
 
         return new KakaoLoginResult(loginRes, refreshCookie);

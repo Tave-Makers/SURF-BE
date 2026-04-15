@@ -1,5 +1,6 @@
-package com.tavemakers.surf.domain.auth.dto.response;
+package com.tavemakers.surf.domain.auth.kakao.dto;
 
+import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
 import org.springframework.http.ResponseCookie;
 
 /**

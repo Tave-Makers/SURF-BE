@@ -1,9 +1,10 @@
-package com.tavemakers.surf.domain.auth.config;
+package com.tavemakers.surf.domain.auth.kakao.config;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+
 import java.time.Duration;
 
 @Configuration

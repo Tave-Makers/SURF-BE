@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.controller;
 
-import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;
 import io.swagger.v3.oas.annotations.Operation;

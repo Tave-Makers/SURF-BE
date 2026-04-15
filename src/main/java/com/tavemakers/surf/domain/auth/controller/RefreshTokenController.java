@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.auth.controller;
 
-import com.tavemakers.surf.domain.auth.exception.AuthErrorMessage;
-import com.tavemakers.surf.domain.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.common.exception.TokenErrorMessage;
+import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.global.common.exception.UnauthorizedException;
@@ -41,7 +41,7 @@ public class RefreshTokenController {
     ) {
         // 1) refresh 쿠키 추출
         String refreshToken = jwtService.extractRefreshToken(request)
-                .orElseThrow(() -> new UnauthorizedException(AuthErrorMessage.REFRESH_TOKEN_MISSING.getMessage()));
+                .orElseThrow(() -> new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_MISSING.getMessage()));
 
         // 2) RTR: 검증 + 회전 (여기서 새 refresh 쿠키 세팅됨)
         Long memberId = refreshTokenService.rotate(response, refreshToken);

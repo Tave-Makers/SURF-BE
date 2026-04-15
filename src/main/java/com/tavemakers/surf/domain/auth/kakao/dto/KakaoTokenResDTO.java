@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.auth.dto.response;
+package com.tavemakers.surf.domain.auth.kakao.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 /**
  * Kakao OAuth 토큰 응답 DTO (불변 record 타입)

@@ -1,9 +1,9 @@
-package com.tavemakers.surf.domain.auth.controller;
+package com.tavemakers.surf.domain.auth.kakao.controller;
 
-import com.tavemakers.surf.domain.auth.dto.response.KakaoLoginResult;
-import com.tavemakers.surf.domain.auth.dto.response.LoginResDTO;
-import com.tavemakers.surf.domain.auth.service.KakaoAuthService;
-import com.tavemakers.surf.domain.auth.usecase.KakaoLoginUsecase;
+import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResult;
+import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
+import com.tavemakers.surf.domain.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "인증/인가", description = "로그인/토큰 발급 관련 API")
-public class AuthController {
+public class KakaoLoginController {
 
     private final KakaoAuthService kakaoAuthService;
     private final KakaoLoginUsecase kakaoLoginUsecase;
