@@ -13,6 +13,13 @@ public class KakaoOAuthProps {
     private final String clientSecret; // optional
     @NotBlank private final String redirectUri;
 
+    /**
+     * Creates a KakaoOAuthProps with the specified OAuth client configuration.
+     *
+     * @param clientId     the OAuth client identifier; must be non-blank when bound from configuration
+     * @param clientSecret the OAuth client secret; may be null or blank if not used
+     * @param redirectUri  the redirect URI to receive the authorization response; must be non-blank when bound from configuration
+     */
     public KakaoOAuthProps(String clientId, String clientSecret, String redirectUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;

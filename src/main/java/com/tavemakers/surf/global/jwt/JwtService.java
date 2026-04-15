@@ -128,11 +128,25 @@ public class JwtService {
         return Arrays.asList(environment.getActiveProfiles()).contains("dev");
     }
 
+    /**
+     * Checks whether the application is running with the "test" Spring profile active.
+     *
+     * @return `true` if the "test" profile is active, `false` otherwise.
+     */
     private boolean isTest() {
         return Arrays.asList(environment.getActiveProfiles()).contains("test");
     }
 
-    /** Refresh Token 쿠키 생성 */
+    /**
+     * Build a refresh-token cookie configured for the current environment.
+     *
+     * The cookie is HTTP-only, scoped to path "/", and has a max age equal to the refresh-token expiration.
+     * In the "dev" profile the cookie is marked secure, SameSite=None, and set for domain ".tavesurf.site";
+     * in the "test" profile it is SameSite=None and not secure; otherwise it is SameSite=Lax and not secure.
+     *
+     * @param refreshToken the refresh token value to store in the cookie
+     * @return the configured ResponseCookie for the refresh token
+     */
     public ResponseCookie buildRefreshTokenCookie(String refreshToken) {
         ResponseCookie.ResponseCookieBuilder builder =
                 ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)
@@ -151,7 +165,16 @@ public class JwtService {
         return builder.build();
     }
 
-    /** Refresh Token 쿠키 전송 */
+    /**
+     * Adds a refresh-token cookie to the given HTTP response.
+     *
+     * The cookie is built with environment-dependent attributes (e.g., HttpOnly, path, max-age,
+     * and profile-specific secure/sameSite/domain settings) and added to the response's
+     * Set-Cookie header.
+     *
+     * @param res the HTTP response to which the refresh-token cookie will be added
+     * @param refreshToken the refresh token value to store in the cookie
+     */
     public void sendRefreshToken(HttpServletResponse res, String refreshToken) {
         ResponseCookie refreshCookie = buildRefreshTokenCookie(refreshToken);
         res.addHeader("Set-Cookie", refreshCookie.toString());

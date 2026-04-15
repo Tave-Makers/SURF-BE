@@ -27,12 +27,24 @@ public class KakaoApiClient implements OAuthApiClient {
     private final RestTemplate restTemplate;
     private final KakaoOAuthProps props;
 
+    /**
+     * Creates a KakaoApiClient with the HTTP client and Kakao OAuth configuration it will use for API calls.
+     *
+     * @param restTemplate RestTemplate configured for Kakao API requests (bean qualified as "kakaoRestTemplate")
+     * @param props        Kakao OAuth configuration (client id, redirect URI, optional client secret)
+     */
     public KakaoApiClient(@Qualifier("kakaoRestTemplate") RestTemplate restTemplate, KakaoOAuthProps props) {
         this.restTemplate = restTemplate;
         this.props = props;
     }
 
-    /** 인가 코드로 카카오 토큰 교환 */
+    /**
+     * Exchange an authorization code for a Kakao access token.
+     *
+     * @param code the authorization code received from Kakao after user consent
+     * @return a KakaoTokenResDTO containing the access token, refresh token, and related token metadata
+     * @throws KakaoAuthException if the token exchange fails (e.g., Kakao returns an error or an unexpected error occurs)
+     */
     public KakaoTokenResDTO exchangeCodeForToken(String code) {
         log.info("[KAKAO][TOKEN] exchange start codeLength={}", code.length());
         try {
@@ -84,8 +96,10 @@ public class KakaoApiClient implements OAuthApiClient {
     }
 
     /**
-     * OAuthApiClient 구현 — Kakao AccessToken으로 공통 사용자 정보 반환
-     * 내부적으로 카카오 응답을 OAuthUserInfo로 변환한다.
+     * Retrieves user information from Kakao using the provided access token and maps it to a common OAuthUserInfo.
+     *
+     * @param accessToken the Kakao access token used for authentication
+     * @return an OAuthUserInfo containing the user's id (as a string), email, nickname, and profile image URL
      */
     @Override
     public OAuthUserInfo fetchUserInfo(String accessToken) {
@@ -98,7 +112,12 @@ public class KakaoApiClient implements OAuthApiClient {
         );
     }
 
-    /** AccessToken 유효성 검증 */
+    /**
+     * Validate a Kakao access token and retrieve its token information.
+     *
+     * @param accessToken the Kakao access token to validate
+     * @return a Map<String, Object> containing token metadata returned by Kakao (for example `id`, `expires_in`, `client_id`)
+     */
     public Map<String, Object> getAccessTokenInfo(String accessToken) {
         log.info("[KAKAO][TOKEN-INFO] validate start");
         try {
@@ -124,7 +143,13 @@ public class KakaoApiClient implements OAuthApiClient {
         }
     }
 
-    /** 카카오 사용자 정보 API 호출 (내부용) */
+    /**
+     * Retrieve the Kakao user profile associated with the provided access token.
+     *
+     * @param accessToken the Bearer access token to authenticate the request
+     * @return a {@link KakaoUserInfoDTO} containing the user's Kakao profile data, or `null` if the response has no body
+     * @throws KakaoAuthException if the Kakao API call fails or an unexpected error occurs while fetching user info
+     */
     private KakaoUserInfoDTO callKakaoUserInfo(String accessToken) {
         log.info("[KAKAO][USER] get user info start");
         try {
@@ -150,7 +175,13 @@ public class KakaoApiClient implements OAuthApiClient {
         }
     }
 
-    /** 카카오 API 오류 처리 공통 로직 */
+    /**
+     * Logs the original exception and constructs a KakaoAuthException based on the provided Kakao error message.
+     *
+     * @param ex the original exception encountered during a Kakao API call
+     * @param errorMessage the Kakao-specific error descriptor used to populate the returned exception
+     * @return a KakaoAuthException with the status and message from {@code errorMessage}
+     */
     private KakaoAuthException handleError(Exception ex, KakaoAuthErrorMessage errorMessage) {
         log.error("[KAKAO][API] {}: {}", errorMessage.getMessage(), ex.getMessage(), ex);
         return new KakaoAuthException(errorMessage.getStatus(), errorMessage.getMessage());

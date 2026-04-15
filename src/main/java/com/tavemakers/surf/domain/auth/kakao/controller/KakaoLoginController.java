@@ -26,7 +26,9 @@ public class KakaoLoginController {
     private final KakaoLoginUsecase kakaoLoginUsecase;
 
     /**
-     * 카카오 인가 화면으로 리다이렉트
+     * Redirects the client to Kakao's authorization page to initiate OAuth login.
+     *
+     * @return a ResponseEntity with HTTP status 302 (Found) and the `Location` header set to the Kakao authorization URL.
      */
     @Operation(
             summary = "카카오 로그인 요청",
@@ -41,7 +43,13 @@ public class KakaoLoginController {
     }
 
     /**
-     * 카카오 콜백 — 인가 코드 수신 후 로그인 처리
+     * Handles Kakao OAuth callback and completes user login using the received authorization code.
+     *
+     * Processes the provided authorization `code`, issues authentication tokens, sets a refresh cookie,
+     * and returns user login information wrapped in an ApiResponse.
+     *
+     * @param code the authorization code received from Kakao after user consent
+     * @return a ResponseEntity containing an ApiResponse with LoginResDTO; includes a Set-Cookie header for the refresh token
      */
     @Operation(
             summary = "카카오 로그인 콜백",

@@ -24,7 +24,13 @@ public class RefreshTokenService {
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
 
-    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 */
+    /**
+     * Issue and persist a refresh token for the given member and device, and return it as an HTTP cookie.
+     *
+     * @param memberId the unique identifier of the member
+     * @param deviceId the identifier of the device (used to scope the refresh token)
+     * @return a ResponseCookie containing the newly issued refresh token
+     */
     public ResponseCookie issue(Long memberId, String deviceId) {
         String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
         save(refreshToken);
@@ -32,7 +38,14 @@ public class RefreshTokenService {
         return jwtService.buildRefreshTokenCookie(refreshToken);
     }
 
-    /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation) */
+    /**
+     * Performs refresh-token rotation: validates the provided refresh token, detects reuse, issues and stores a new refresh token, and returns the associated member id.
+     *
+     * @param response the HTTP response to which the new refresh token cookie will be written
+     * @param refreshToken the refresh token presented by the client
+     * @return the member id extracted from the validated refresh token
+     * @throws UnauthorizedException if the refresh token is invalid, not found in storage, or reuse is detected
+     */
     public Long rotate(HttpServletResponse response, String refreshToken) {
         boolean valid = jwtService.isTokenValid(refreshToken);
         log.info("[RTR][ROTATE] isTokenValid={}", valid);
@@ -74,7 +87,12 @@ public class RefreshTokenService {
         return memberId;
     }
 
-    /** 특정 디바이스 refresh 무효화 (로그아웃) */
+    /**
+     * Invalidates the refresh token for a specific device of a member by removing its Redis entry.
+     *
+     * @param memberId the member's identifier whose device refresh token will be removed
+     * @param deviceId the device identifier used to locate the refresh token in Redis
+     */
     public void invalidate(Long memberId, String deviceId) {
         redisTemplate.delete(key(memberId, deviceId));
     }
@@ -83,7 +101,17 @@ public class RefreshTokenService {
      * refresh 재사용 탐지 시 전체 세션 폐기
      */
     // TODO: redisTemplate.keys()는 O(N) 블로킹 명령으로 프로덕션 Redis에서 서비스 장애를 유발할 수 있음.
-    // TODO: SCAN 커서 기반 명령(redisTemplate.scan())으로 교체 필요.
+    /**
+     * Invalidates all refresh tokens for the given member across all devices.
+     *
+     * <p>Finds Redis keys matching the pattern "refresh:{memberId}:*" and deletes them; if none are found,
+     * no keys are deleted.</p>
+     *
+     * <p>Note: this implementation uses a pattern-based key lookup that can be blocking/O(N) on the Redis
+     * keyspace and may need to be replaced with a cursor-based SCAN approach for production scale.</p>
+     *
+     * @param memberId the identifier of the member whose refresh tokens should be revoked
+     */
     public void invalidateAll(Long memberId) {
         log.warn("[RTR][INVALIDATE-ALL] start memberId={}", memberId);
 
@@ -102,7 +130,13 @@ public class RefreshTokenService {
         }
     }
 
-    /* ================= 내부 유틸 ================= */
+    /**
+     * Stores the given refresh token in Redis under the key for its member and device, setting the entry TTL to match the token's remaining lifetime.
+     *
+     * The method derives the memberId and deviceId from the token, computes the remaining time until token expiration, and saves the token value with that TTL.
+     *
+     * @throws IllegalStateException if the token is already expired (remaining TTL is zero or negative)
+     */
 
     private void save(String refreshToken) {
         Long memberId = jwtService.extractMemberId(refreshToken).orElseThrow();
@@ -121,6 +155,13 @@ public class RefreshTokenService {
         log.info("[RTR] refresh token saved. key={}, ttlMs={}", redisKey, ttlMs);
     }
 
+    /**
+     * Builds the Redis key for a member's device refresh token.
+     *
+     * @param memberId the member's id
+     * @param deviceId the device identifier
+     * @return the Redis key in the form "refresh:{memberId}:{deviceId}"
+     */
     private String key(Long memberId, String deviceId) {
         return KEY_PREFIX + memberId + ":" + deviceId;
     }

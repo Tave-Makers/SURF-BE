@@ -103,6 +103,28 @@ public class Member extends BaseEntity {
         return status == MemberStatus.REGISTERING;
     }
 
+    /**
+     * Constructs a Member with the provided profile and account properties.
+     *
+     * Defaults applied:
+     * - `status` defaults to {@link MemberStatus#WAITING} when `null`.
+     * - `role` defaults to {@link MemberRole#MEMBER} when `null`.
+     * - `memberType` defaults to {@link MemberType#YB} when `null`.
+     * The member's `tracks` collection is initialized to an empty list.
+     *
+     * @param kakaoId            external OAuth provider identifier (may be null)
+     * @param name               member's display name
+     * @param profileImageUrl    URL of the member's profile image (may be null)
+     * @param university         member's university (may be null)
+     * @param graduateSchool     member's graduate school (may be null)
+     * @param email              member's email address
+     * @param phoneNumber        member's phone number (may be null)
+     * @param phoneNumberPublic  whether the phone number is public (may be null)
+     * @param status             membership approval status; if null, defaults to WAITING
+     * @param role               member role; if null, defaults to MEMBER
+     * @param memberType         member type; if null, defaults to YB
+     * @param activityStatus     whether the member is currently active
+     */
     @Builder
     public Member(Long kakaoId,
                   String name,
@@ -131,6 +153,13 @@ public class Member extends BaseEntity {
         this.tracks = new ArrayList<>();
     }
 
+    /**
+     * Creates a new Member initialized from the provided OAuth user information in the REGISTERING state.
+     *
+     * @param info OAuth user info providing the external id, nickname, email, and profile image URL used to populate the Member
+     * @return a Member populated from the OAuth info with status set to REGISTERING, role MEMBER, memberType YB, and activityStatus true
+     * @throws IllegalStateException if the OAuth info does not contain a present, non-blank email
+     */
     public static Member createRegisteringFromKakao(OAuthUserInfo info) {
         if (info.email() == null || info.email().isBlank()) {
             throw new IllegalStateException("카카오 계정 이메일 권한이 필요합니다.");

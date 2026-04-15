@@ -13,7 +13,13 @@ public class MemberUpsertService {
 
     private final MemberRepository memberRepository;
 
-    /** 카카오 정보로 회원 생성 또는 기존 회원 반환 */
+    /**
+     * Finds a Member by the Kakao OAuth ID from the provided info, or creates and persists a new registering Member using that info.
+     *
+     * @param info OAuth user information whose `oauthId()` is used to identify the member
+     * @return the existing or newly persisted Member corresponding to the Kakao ID
+     * @throws org.springframework.dao.DataIntegrityViolationException if a data integrity conflict occurs during save and no Member can be found afterward
+     */
     @Transactional
     public Member upsertRegisteringFromKakao(OAuthUserInfo info) {
         Long kakaoId = Long.parseLong(info.oauthId());

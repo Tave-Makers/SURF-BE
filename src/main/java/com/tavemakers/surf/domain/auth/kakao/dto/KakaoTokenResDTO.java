@@ -21,6 +21,13 @@ public record KakaoTokenResDTO(
         Long refreshTokenExpiresIn,
         String idToken // OIDC 켰을 때만 채워짐
 ) {
+    /**
+     * Return a string representation of this DTO with sensitive token fields masked.
+     *
+     * @return a string representation of this object where `accessToken`, `refreshToken`,
+     *         and `idToken` are masked to avoid exposing sensitive values; other fields
+     *         (`tokenType`, `expiresIn`, `scope`, `refreshTokenExpiresIn`) are included verbatim.
+     */
     @Override
     public String toString() {
         return "KakaoTokenResDTO[" +
@@ -34,6 +41,15 @@ public record KakaoTokenResDTO(
                 ']';
     }
 
+    /**
+     * Produces a masked representation of a sensitive string.
+     *
+     * If the input is null, blank, or shorter than 8 characters, returns "*****".
+     * Otherwise returns the first four characters, three dots, and the last four characters.
+     *
+     * @param s the string to mask
+     * @return `"*****"` for null/blank/short inputs; otherwise the string in the form `first4...last4`
+     */
     private static String mask(String s) {
         if (s == null || s.isBlank()) return "*****";
         int len = s.length();

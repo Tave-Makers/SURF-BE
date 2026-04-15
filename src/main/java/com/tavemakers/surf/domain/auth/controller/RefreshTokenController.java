@@ -28,7 +28,12 @@ public class RefreshTokenController {
     private final MemberGetService memberGetService;
 
     /**
-     * Refresh Token 기반 Access Token 재발급
+     * HttpOnly Refresh Token 쿠키로부터 새 Access Token을 발급하고 응답에 Refresh Token 회전 결과를 반영합니다.
+     *
+     * @param request  HTTP 요청 (Refresh Token 쿠키를 포함한 요청)
+     * @param response HTTP 응답 (회전된 Refresh Token 쿠키를 설정함)
+     * @return ApiResponse containing the newly issued access token under the key "accessToken".
+     * @throws UnauthorizedException if the Refresh Token 쿠키가 요청에 존재하지 않을 경우
      */
     @Operation(
             summary = "Access Token 재발급",

@@ -25,6 +25,15 @@ public record LoginResDTO(
         String profileImageUrl
 ) {
 
+    /**
+     * Create a LoginResDTO populated with the provided user information and access token.
+     *
+     * @param nickname         the user's display name
+     * @param email            the user's email address
+     * @param accessToken      the issued access token for authenticated requests
+     * @param profileImageUrl  the URL of the user's profile image (may be null or empty)
+     * @return                 a LoginResDTO containing the given nickname, email, access token, and profile image URL
+     */
     public static LoginResDTO of(
             String nickname,
             String email,

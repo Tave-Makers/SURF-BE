@@ -8,6 +8,11 @@ import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
  */
 public interface OAuthApiClient {
 
-    /** OAuth 사용자 정보 조회 */
+    /**
+ * Fetches the OAuth user's information associated with the provided access token.
+ *
+ * @param accessToken the OAuth access token issued by the provider
+ * @return an OAuthUserInfo populated with the provider's user data
+ */
     OAuthUserInfo fetchUserInfo(String accessToken);
 }

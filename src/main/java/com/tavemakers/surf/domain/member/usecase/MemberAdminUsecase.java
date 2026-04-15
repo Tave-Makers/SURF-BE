@@ -83,14 +83,27 @@ public class MemberAdminUsecase {
         members.forEach(Member::reject);
     }
 
-    /** 관리자 비밀번호 설정 */
+    /**
+     * Sets the current authenticated member's password to the value provided in the request.
+     *
+     * @param dto request DTO containing the new password
+     */
     @Transactional
     public void setUpPassword(PasswordReqDTO dto) {
         Member member = memberGetService.getMember(SecurityUtils.getCurrentMemberId());
         member.updatePassword(dto.password());
     }
 
-    /** 관리자 페이지 로그인 처리 */
+    /**
+     * Authenticate an admin user and produce credentials for admin UI access.
+     *
+     * Sets a refresh-token cookie on the provided HTTP response and returns an object
+     * containing an access token and basic member information.
+     *
+     * @param dto      the login credentials (email and password) for the admin page
+     * @param response the HTTP response used to attach the refresh-token cookie
+     * @return         an AdminPageLoginResDTO containing the access token and the authenticated member
+     */
     public AdminPageLoginResDTO loginAdminHomePage(AdminPageLoginReqDTO dto, HttpServletResponse response) {
         Member member = memberGetService.getMemberByEmail(dto.email());
         member.checkPassword(dto.password());

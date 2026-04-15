@@ -26,7 +26,12 @@ public class KakaoLoginUsecase {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
-    /** 카카오 인가 코드로 로그인 처리 후 결과 반환 */
+    /**
+     * Processes a Kakao authorization code to authenticate or register a member, issues access and refresh tokens, and returns the login response together with the refresh-token cookie.
+     *
+     * @param code the Kakao authorization code received from the client callback
+     * @return a {@code KakaoLoginResult} containing the login response DTO and the refresh-token {@code ResponseCookie}
+     */
     public KakaoLoginResult execute(String code) {
 
         // 1. 콜백 진입 로그
