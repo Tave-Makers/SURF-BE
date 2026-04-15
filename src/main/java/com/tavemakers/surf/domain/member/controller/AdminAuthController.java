@@ -22,6 +22,7 @@ public class AdminAuthController {
 
     private final MemberAdminUsecase memberAdminUsecase;
 
+    /** 관리자 비밀번호를 설정한다. */
     @Operation(summary = "비밀번호 설정", description = "관리자의 비밀번호를 설정합니다.")
     @PatchMapping("/v1/manager/password")
     public ApiResponse<Void> setUpPassword(@RequestBody PasswordReqDTO dto) {
@@ -29,6 +30,7 @@ public class AdminAuthController {
         return ApiResponse.response(HttpStatus.OK, MANAGER_PASSWORD_SET_UP_SUCCESS.getMessage(),null);
     }
 
+    /** 관리자 페이지에 로그인한다. */
     @Operation(summary = "관리자 페이지 로그인", description = "관리자 페이지에 로그인합니다.")
     @PostMapping("/v1/manager/sign-in")
     public ApiResponse<AdminPageLoginResDTO> loginAdminPage(

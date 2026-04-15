@@ -84,7 +84,7 @@ public class KakaoApiClient implements OAuthApiClient {
     }
 
     /**
-     * OAuthApiClient 구현 — Kakao AccessToken으로 공통 사용자 정보 반환
+     * OAuthApiClient 구현 — Kakao AccessToken으로 공통 사용자 정보 반환 <br>
      * 내부적으로 카카오 응답을 OAuthUserInfo로 변환한다.
      */
     @Override

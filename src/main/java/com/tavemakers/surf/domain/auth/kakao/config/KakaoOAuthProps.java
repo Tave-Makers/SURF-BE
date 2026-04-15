@@ -13,6 +13,7 @@ public class KakaoOAuthProps {
     private final String clientSecret; // optional
     @NotBlank private final String redirectUri;
 
+    /** 카카오 OAuth 설정 값을 생성한다. */
     public KakaoOAuthProps(String clientId, String clientSecret, String redirectUri) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
