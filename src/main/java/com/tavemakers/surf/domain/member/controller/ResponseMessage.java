@@ -27,6 +27,9 @@ public enum ResponseMessage {
     MYPAGE_MY_PROFILE_READ("본인 마이페이지에서 [프로필 정보]를 조회합니다."),
     MYPAGE_OTHERS_PROFILE_READ("타인 마이페이지에서 [프로필 정보]를 조회합니다."),
 
+    // 약관 동의
+    TERMS_AGREEMENT_SUCCESS("[약관 동의]를 완료했습니다."),
+
     // 프로필 수정
     MYPAGE_PROFILE_UPDATE_SUCCESS("마이페이지에서 [프로필 정보]를 수정했습니다."),
 

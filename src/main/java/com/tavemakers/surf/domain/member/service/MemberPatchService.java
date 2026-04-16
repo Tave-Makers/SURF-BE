@@ -25,6 +25,12 @@ public class MemberPatchService {
         member.exchangeRole(role);
     }
 
+    /** 약관 동의 처리 */
+    @Transactional
+    public void agreeTerms(Member member) {
+        member.agreeTerms();
+    }
+
     /** 여러 회원의 권한을 일괄 변경 version 2*/
     @Transactional
     public void grantRoleV2(List<Member> members, MemberRole role) {
