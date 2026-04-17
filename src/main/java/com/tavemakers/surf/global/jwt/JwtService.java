@@ -143,9 +143,9 @@ public class JwtService {
         if (isDev()) {
             builder.secure(true).sameSite("None").domain(".tavesurf.site");
         } else if (isTest()) {
-            builder.secure(false).sameSite("None");
-        } else {
             builder.secure(false).sameSite("Lax");
+        } else {
+            builder.secure(true).sameSite("Lax");
         }
 
         return builder.build();
@@ -198,14 +198,11 @@ public class JwtService {
                         .maxAge(Duration.ZERO);
 
         if (isDev()) {
-            builder
-                    .secure(true)
-                    .domain(".tavesurf.site")
-                    .sameSite("None");
+            builder.secure(true).domain(".tavesurf.site").sameSite("None");
         } else if (isTest()) {
-            builder
-                    .secure(false)
-                    .sameSite("None");
+            builder.secure(false).sameSite("Lax");
+        } else {
+            builder.secure(true).sameSite("Lax");
         }
 
         ResponseCookie refreshCookie = builder.build();

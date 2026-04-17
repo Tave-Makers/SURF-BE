@@ -92,15 +92,17 @@ public class MemberAdminUsecase {
 
     /** 관리자 페이지 로그인 처리 */
     public AdminPageLoginResDTO loginAdminHomePage(AdminPageLoginReqDTO dto, HttpServletResponse response) {
-        Member member = memberGetService.getMemberByEmail(dto.email());
-        member.checkPassword(dto.password());
-        //validateLoginMemberRole(member);
+        // 관리자 페이지는 MANAGER 이상만 접근 가능하므로, 이메일로 회원 조회 후 권한 검증
+        // 회원 조회 후, 권한 검증, 비밀번호 검증 순으로 진행하여 불필요한 DB 조회 방지
+        Member manager = memberGetService.getMemberByEmail(dto.email());
+        validateLoginMemberRole(manager);
+        manager.checkPassword(dto.password());
 
-        String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
+        String accessToken = jwtService.createAccessToken(manager.getId(), manager.getRole().name());
         String deviceId = UUID.randomUUID().toString();
-        response.addHeader("Set-Cookie", refreshTokenService.issue(member.getId(), deviceId).toString());
+        response.addHeader("Set-Cookie", refreshTokenService.issue(manager.getId(), deviceId).toString());
 
-        return AdminPageLoginResDTO.of(accessToken, member);
+        return AdminPageLoginResDTO.of(accessToken, manager);
     }
 
     /** 가입 대기 회원 목록 조회 */

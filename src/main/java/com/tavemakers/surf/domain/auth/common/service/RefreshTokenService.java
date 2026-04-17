@@ -81,9 +81,7 @@ public class RefreshTokenService {
         redisTemplate.delete(key(memberId, deviceId));
     }
 
-    /**
-     * refresh 재사용 탐지 시 전체 세션 폐기
-     */
+    /** refresh 재사용 탐지 시 전체 세션 폐기 */
     // TODO: redisTemplate.keys()는 O(N) 블로킹 명령으로 프로덕션 Redis에서 서비스 장애를 유발할 수 있음.
     // TODO: SCAN 커서 기반 명령(redisTemplate.scan())으로 교체 필요.
     public void invalidateAll(Long memberId) {
