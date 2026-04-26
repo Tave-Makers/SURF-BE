@@ -15,6 +15,7 @@ public class BoardCategoryUsecase {
     private final BoardGetService boardGetService;
     private final BoardCategoryService boardCategoryService;
 
+    /** 게시판 카테고리를 생성합니다. */
     @Transactional
     public BoardCategoryResDTO createCategory(Long boardId, BoardCategoryCreateReqDTO req) {
         Board board = boardGetService.getBoard(boardId);
