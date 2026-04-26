@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.board.controller.ResponseMessage.CATEGORY_CREATED;
+import static com.tavemakers.surf.domain.board.controller.ResponseMessage.BOARD_CATEGORY_CREATED;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,13 +22,14 @@ public class BoardCategoryCreateController {
 
     private final BoardCategoryUsecase  boardCategoryUsecase;
 
+    /** 게시판 카테고리를 생성합니다. */
     @Operation(summary = "게시판 카테고리 생성", description = "특정 게시판에 하위 카테고리를 생성합니다.")
     @PostMapping("/v1/admin/boards/{boardId}/categories")
     public ApiResponse<BoardCategoryResDTO> createCategory(
             @PathVariable Long boardId,
             @Valid @RequestBody BoardCategoryCreateReqDTO req) {
         BoardCategoryResDTO response = boardCategoryUsecase.createCategory(boardId, req);
-        return ApiResponse.response(HttpStatus.CREATED, CATEGORY_CREATED.getMessage(), response);
+        return ApiResponse.response(HttpStatus.CREATED, BOARD_CATEGORY_CREATED.getMessage(), response);
     }
 
 }
