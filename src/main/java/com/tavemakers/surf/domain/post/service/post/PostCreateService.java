@@ -28,7 +28,9 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-/** 게시글 생성 관련 서비스 */
+/**
+ * 게시글 생성 관련 서비스
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,23 +44,21 @@ public class PostCreateService {
     private final PostImageCreateService imageCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당) */
+    /**
+     * 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당)
+     */
     @Transactional
     @LogEvent(value = "post.create", message = "게시글 생성 성공")
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         Board board = boardGetService.getBoard(req.boardId());
-        Member member = memberGetService.getMember(memberId);
+        Member writer = memberGetService.getMember(memberId);
 
         // BoardType.NOTICE인 경우 관리자인지 검증
-        if(board.isNotice()){
-            if(!member.hasDeleteRole()){
-                throw new BoardWriteNotAllowedException();
-            }
-        }
+        validateWritePermission(board, writer);
 
         BoardCategory category = resolveCategory(board, req.categoryId());
 
-        Post post = Post.of(req, board, category, member);
+        Post post = Post.of(req, board, category, writer);
         Post saved = postRepository.save(post);
 
         if (!req.isReserved()) {
@@ -76,7 +76,9 @@ public class PostCreateService {
         return PostDetailResDTO.of(saved, false, false, true, imageUrlResponseList, reservedAt, 0);
     }
 
-    /** 이미지 목록에서 첫 번째 이미지 URL 추출 */
+    /**
+     * 이미지 목록에서 첫 번째 이미지 URL 추출
+     */
     private String findFirstImage(List<PostImageCreateReqDTO> dto) {
         if (dto == null || dto.isEmpty()) {
             throw new PostImageListEmptyException();
@@ -88,7 +90,9 @@ public class PostCreateService {
         return postImageCreateReqDTO.originalUrl();
     }
 
-    /** 카테고리 유효성 검증 및 조회 */
+    /**
+     * 카테고리 유효성 검증 및 조회
+     */
     private BoardCategory resolveCategory(Board board, Long categoryId) {
         if (categoryId == null) {
             throw new CategoryRequiredException();
@@ -98,5 +102,11 @@ public class PostCreateService {
             throw new InvalidCategoryMappingException();
         }
         return category;
+    }
+
+    private void validateWritePermission(Board board, Member writer) {
+        if (board.isNotice() && !writer.hasDeleteRole()) {
+            throw new BoardWriteNotAllowedException();
+        }
     }
 }
