@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.board.repository;
 
+import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,4 +14,6 @@ public interface BoardCategoryRepository extends JpaRepository<BoardCategory, Lo
 
     // 보드 내 슬러그로 조회 (URL 접근용)
     Optional<BoardCategory> findByBoardIdAndSlug(Long boardId, String slug);
+
+    boolean existsByBoardAndSlug(Board board, String slug);
 }
