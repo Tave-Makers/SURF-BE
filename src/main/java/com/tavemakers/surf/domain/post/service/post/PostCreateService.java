@@ -11,10 +11,12 @@ import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.post.dto.request.PostCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostDetailResDTO;
+import com.tavemakers.surf.domain.post.dto.response.PostFileResDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
+import com.tavemakers.surf.domain.post.service.file.PostFileCreateService;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
 import com.tavemakers.surf.global.logging.LogEvent;
@@ -39,6 +41,7 @@ public class PostCreateService {
     private final BoardCategoryGetService boardCategoryGetService;
     private final MemberGetService memberGetService;
     private final PostImageCreateService imageCreateService;
+    private final PostFileCreateService fileCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당) */
@@ -64,8 +67,13 @@ public class PostCreateService {
             imageUrlResponseList = imageCreateService.saveAll(saved, imageUrlList);
         }
 
+        List<PostFileResDTO> fileResponseList = null;
+        if (req.hasFile()) {
+            fileResponseList = fileCreateService.saveAll(saved, req.fileList());
+        }
+
         LocalDateTime reservedAt = req.isReserved() ? req.reservedAt() : null;
-        return PostDetailResDTO.of(saved, false, false, true, imageUrlResponseList, reservedAt, 0);
+        return PostDetailResDTO.of(saved, false, false, true, imageUrlResponseList, fileResponseList, reservedAt, 0);
     }
 
     /** 이미지 목록에서 첫 번째 이미지 URL 추출 */
