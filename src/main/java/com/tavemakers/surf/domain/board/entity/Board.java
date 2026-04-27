@@ -47,4 +47,8 @@ public class Board extends BaseEntity {
     public boolean isNotice() {
         return type == BoardType.NOTICE;
     }
+
+    public boolean isGeneral() {
+        return type == BoardType.GENERAL;
+    }
 }
