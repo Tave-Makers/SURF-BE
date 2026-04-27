@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.entity;
 
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
@@ -131,7 +131,7 @@ public class Member extends BaseEntity {
         this.tracks = new ArrayList<>();
     }
 
-    public static Member createRegisteringFromKakao(OAuthUserInfo info) {
+    public static Member createRegisteringFromKakao(OAuthUserInfoDTO info) {
         if (info.email() == null || info.email().isBlank()) {
             throw new IllegalStateException("카카오 계정 이메일 권한이 필요합니다.");
         }

@@ -1,9 +1,9 @@
 package com.tavemakers.surf.domain.auth.kakao.usecase;
 
 import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResult;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -29,7 +29,7 @@ public class KakaoLoginUsecase {
 
     /** 카카오 인가 코드로 로그인 처리 후 결과 반환 */
     @Transactional
-    public KakaoLoginResult execute(String code) {
+    public KakaoLoginResDTO execute(String code) {
 
         // 1. 콜백 진입 로그
         kakaoAuthService.logCallback("kakao", code.length());
@@ -37,8 +37,8 @@ public class KakaoLoginUsecase {
         // 2. 인가 코드 → 카카오 토큰
         KakaoTokenResDTO token = kakaoAuthService.exchangeCodeForToken(code);
 
-        // 3. 카카오 사용자 정보 조회 (OAuthUserInfo로 반환)
-        OAuthUserInfo userInfo = kakaoAuthService.getUserInfo(token.accessToken());
+        // 3. 카카오 사용자 정보 조회 (OAuthUserInfoDTO로 반환)
+        OAuthUserInfoDTO userInfo = kakaoAuthService.getUserInfo(token.accessToken());
 
         // 4. 회원 upsert
         Member member = memberUpsertService.upsertRegisteringFromKakao(userInfo);
@@ -63,6 +63,6 @@ public class KakaoLoginUsecase {
                 userInfo.profileImageUrl()
         );
 
-        return new KakaoLoginResult(loginRes, refreshCookie);
+        return new KakaoLoginResDTO(loginRes, refreshCookie);
     }
 }

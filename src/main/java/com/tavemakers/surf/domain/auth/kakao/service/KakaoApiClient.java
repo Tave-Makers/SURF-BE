@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.kakao.service;
 
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.service.OAuthApiClient;
 import com.tavemakers.surf.domain.auth.kakao.config.KakaoOAuthProps;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
@@ -85,12 +85,12 @@ public class KakaoApiClient implements OAuthApiClient {
 
     /**
      * OAuthApiClient 구현 — Kakao AccessToken으로 공통 사용자 정보 반환 <br>
-     * 내부적으로 카카오 응답을 OAuthUserInfo로 변환한다.
+     * 내부적으로 카카오 응답을 OAuthUserInfoDTO로 변환한다.
      */
     @Override
-    public OAuthUserInfo fetchUserInfo(String accessToken) {
+    public OAuthUserInfoDTO fetchUserInfo(String accessToken) {
         KakaoUserInfoDTO raw = callKakaoUserInfo(accessToken);
-        return new OAuthUserInfo(
+        return new OAuthUserInfoDTO(
                 String.valueOf(raw.id()),
                 raw.kakaoAccount().email(),
                 raw.kakaoAccount().profile().nickname(),

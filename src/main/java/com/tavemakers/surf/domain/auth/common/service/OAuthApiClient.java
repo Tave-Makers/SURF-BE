@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.common.service;
 
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 
 /**
  * OAuth provider별 사용자 정보 조회 인터페이스
@@ -9,5 +9,5 @@ import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
 public interface OAuthApiClient {
 
     /** OAuth 사용자 정보 조회 */
-    OAuthUserInfo fetchUserInfo(String accessToken);
+    OAuthUserInfoDTO fetchUserInfo(String accessToken);
 }

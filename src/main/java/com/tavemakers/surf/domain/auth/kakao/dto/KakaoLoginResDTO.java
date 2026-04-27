@@ -8,7 +8,7 @@ import org.springframework.http.ResponseCookie;
  * - loginRes: 프론트엔드로 전달할 사용자 정보 및 AccessToken
  * - refreshCookie: HttpOnly 쿠키로 전달할 RefreshToken
  */
-public record KakaoLoginResult(
+public record KakaoLoginResDTO(
         LoginResDTO loginRes,
         ResponseCookie refreshCookie
 ) {}

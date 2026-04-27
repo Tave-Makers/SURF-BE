@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.kakao.service;
 
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfo;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.kakao.config.KakaoOAuthProps;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class KakaoAuthService {
     }
 
     /** AccessToken으로 공통 사용자 정보 요청 */
-    public OAuthUserInfo getUserInfo(String accessToken) {
+    public OAuthUserInfoDTO getUserInfo(String accessToken) {
         return kakaoApiClient.fetchUserInfo(accessToken);
     }
 

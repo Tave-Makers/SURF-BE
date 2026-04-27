@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.auth.kakao.controller;
 
 import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResult;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -53,7 +53,7 @@ public class KakaoLoginController {
     ) {
         log.info("[LOGIN][KAKAO][CALLBACK] start codeLength={}", code.length());
 
-        KakaoLoginResult result = kakaoLoginUsecase.execute(code);
+        KakaoLoginResDTO result = kakaoLoginUsecase.execute(code);
 
         log.info("[LOGIN][KAKAO][CALLBACK] success");
         return ResponseEntity.ok()
