@@ -20,7 +20,6 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class KakaoLoginUsecase {
 
     private final KakaoAuthService kakaoAuthService;
@@ -29,6 +28,7 @@ public class KakaoLoginUsecase {
     private final RefreshTokenService refreshTokenService;
 
     /** 카카오 인가 코드로 로그인 처리 후 결과 반환 */
+    @Transactional
     public KakaoLoginResult execute(String code) {
 
         // 1. 콜백 진입 로그
