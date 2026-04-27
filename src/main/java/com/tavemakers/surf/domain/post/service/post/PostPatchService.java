@@ -7,16 +7,22 @@ import com.tavemakers.surf.domain.board.exception.InvalidCategoryMappingExceptio
 import com.tavemakers.surf.domain.board.service.BoardCategoryGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.post.dto.request.PostFileCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
 import com.tavemakers.surf.domain.post.dto.request.PostUpdateReqDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostDetailResDTO;
+import com.tavemakers.surf.domain.post.dto.response.PostFileResDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.entity.PostFileUrl;
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
 import com.tavemakers.surf.domain.post.exception.PostDeleteAccessDeniedException;
 import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
+import com.tavemakers.surf.domain.post.service.file.PostFileCreateService;
+import com.tavemakers.surf.domain.post.service.file.PostFileDeleteService;
+import com.tavemakers.surf.domain.post.service.file.PostFileGetService;
 import com.tavemakers.surf.domain.post.service.image.PostImageDeleteService;
 import com.tavemakers.surf.domain.post.service.image.PostImageGetService;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
@@ -52,6 +58,9 @@ public class PostPatchService {
     private final PostImageCreateService imageCreateService;
     private final PostImageGetService imageGetService;
     private final PostImageDeleteService imageDeleteService;
+    private final PostFileCreateService fileCreateService;
+    private final PostFileGetService fileGetService;
+    private final PostFileDeleteService fileDeleteService;
     private final MemberGetService memberGetService;
     private final ViewCountService viewCountService;
 
@@ -85,28 +94,49 @@ public class PostPatchService {
         }
 
         // 이미지 변경
+        // TODO Spring Event로 PostImageUrl 삭제 로직 분리.
+        List<PostImageResDTO> imageDtoList;
         if (Boolean.TRUE.equals(req.isImageChanged())) {
-            deleteExistingImage(post);
-            List<PostImageCreateReqDTO> changeImage = req.imageUrlList();
-            if(changeImage.isEmpty()){
+            deleteExistingImages(post);
+            List<PostImageCreateReqDTO> changeImages = req.imageUrlList();
+            if (changeImages == null || changeImages.isEmpty()) {
                 post.addThumbnailUrl(null);
-                // TODO Spring Event로 PostImageUrl 삭제 로직 분리.
-                return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, null, reservedAt, viewCount);
+                imageDtoList = null;
+            } else {
+                post.addThumbnailUrl(findFirstImage(changeImages));
+                imageDtoList = imageCreateService.saveAll(post, changeImages);
             }
-
-            post.addThumbnailUrl(findFirstImage(changeImage));
-            List<PostImageResDTO> savedChangedImage = imageCreateService.saveAll(post, changeImage);
-            return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, savedChangedImage, reservedAt, viewCount);
+        } else {
+            imageDtoList = getImageUrlList(post);
         }
 
-        List<PostImageResDTO> imageDtoList = getImageUrlList(post);
-        return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, imageDtoList, reservedAt, viewCount);
+        // 파일 변경
+        List<PostFileResDTO> fileDtoList;
+        if (Boolean.TRUE.equals(req.isFileChanged())) {
+            deleteExistingFiles(post);
+            List<PostFileCreateReqDTO> changeFiles = req.fileList();
+            if (changeFiles == null || changeFiles.isEmpty()) {
+                fileDtoList = null;
+            } else {
+                fileDtoList = fileCreateService.saveAll(post, changeFiles);
+            }
+        } else {
+            fileDtoList = getPostFileList(post);
+        }
+
+        return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, imageDtoList, fileDtoList, reservedAt, viewCount);
     }
 
     /** 기존 이미지 삭제 */
-    private void deleteExistingImage(Post post) {
-        List<PostImageUrl> beforeImage = imageGetService.getPostImageUrls(post.getId());
-        imageDeleteService.deleteAll(beforeImage);
+    private void deleteExistingImages(Post post) {
+        List<PostImageUrl> beforeImages = imageGetService.getPostImageUrls(post.getId());
+        imageDeleteService.deleteAll(beforeImages);
+    }
+
+    /** 기존 첨부파일 삭제 */
+    private void deleteExistingFiles(Post post) {
+        List<PostFileUrl> beforeFiles = fileGetService.getPostFileUrls(post.getId());
+        fileDeleteService.deleteAll(beforeFiles);
     }
 
     /** 카테고리 유효성 검증 및 조회 */
@@ -126,6 +156,14 @@ public class PostPatchService {
         return imageGetService.getPostImageUrls(post.getId()).stream()
                 .map(PostImageResDTO::from)
                 .sorted(Comparator.comparing(PostImageResDTO::sequence))
+                .toList();
+    }
+
+    /** 첨부파일 목록 조회 */
+    private List<PostFileResDTO> getPostFileList(Post post) {
+        return fileGetService.getPostFileUrls(post.getId()).stream()
+                .map(PostFileResDTO::from)
+                .sorted(Comparator.comparing(PostFileResDTO::sequence))
                 .toList();
     }
 
