@@ -62,6 +62,9 @@ public record PostDetailResDTO(
         @Schema(description = "게시글 이미지 링크")
         List<PostImageResDTO> imageUrlList,
 
+        @Schema(description = "게시글 첨부파일 목록")
+        List<PostFileResDTO> fileList,
+
         @Schema(description = "예약된 게시글 여부", example = "true")
         boolean isReserved,
 
@@ -83,6 +86,7 @@ public record PostDetailResDTO(
             boolean likedByMe,
             boolean isMine,
             List<PostImageResDTO> imageUrlList,
+            List<PostFileResDTO> fileList,
             LocalDateTime reservedAt,
             int viewCount
     ){
@@ -106,6 +110,7 @@ public record PostDetailResDTO(
                     .profileImageUrl(writer.getProfileImageUrl())
                     .isMine(isMine)
                     .imageUrlList(imageUrlList)
+                    .fileList(fileList)
                     .isReserved(post.isReserved())
                     .reservedAt(reservedAt)
                     .viewCount(viewCount)
