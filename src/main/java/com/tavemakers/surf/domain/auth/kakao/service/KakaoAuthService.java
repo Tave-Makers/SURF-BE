@@ -17,8 +17,8 @@ public class KakaoAuthService {
     private final KakaoAuthLogService kakaoAuthLogService;
     private final KakaoOAuthProps props;
 
-    /** 인가 URL 생성 */
-    public String buildAuthorizeUrl() {
+    /** state 파라미터를 포함한 인가 URL 생성 */
+    public String buildAuthorizeUrl(String state) {
         kakaoAuthLogService.logAuthorize("kakao", props.getRedirectUri());
         log.info("[KAKAO][AUTHORIZE] start redirectUri={}", props.getRedirectUri());
         return UriComponentsBuilder
@@ -27,6 +27,7 @@ public class KakaoAuthService {
                 .queryParam("client_id", props.getClientId())
                 .queryParam("redirect_uri", props.getRedirectUri())
                 .queryParam("scope", "account_email profile_nickname profile_image")
+                .queryParam("state", state)
                 .build()
                 .toUriString();
     }
