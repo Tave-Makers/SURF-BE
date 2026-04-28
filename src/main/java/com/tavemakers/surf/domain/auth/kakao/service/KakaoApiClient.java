@@ -113,8 +113,17 @@ public class KakaoApiClient implements OAuthApiClient {
                             KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getMessage()
                     );
                 });
+        Long kakaoId = Optional.ofNullable(raw.id())
+                .orElseThrow(() -> {
+                    log.error("[KAKAO][USER] id is null");
+                    return new KakaoAuthException(
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getStatus(),
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getMessage()
+                    );
+                });
+
         return new OAuthUserInfoDTO(
-                String.valueOf(raw.id()),
+                String.valueOf(kakaoId),
                 account.email(),
                 profile.nickname(),
                 profile.profileImageUrl()
