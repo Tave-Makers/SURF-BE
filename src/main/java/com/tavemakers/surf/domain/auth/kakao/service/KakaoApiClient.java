@@ -89,12 +89,35 @@ public class KakaoApiClient implements OAuthApiClient {
      */
     @Override
     public OAuthUserInfoDTO fetchUserInfo(String accessToken) {
-        KakaoUserInfoDTO raw = callKakaoUserInfo(accessToken);
+        KakaoUserInfoDTO raw = Optional.ofNullable(callKakaoUserInfo(accessToken))
+                .orElseThrow(() -> {
+                    log.error("[KAKAO][USER] response body is null");
+                    return new KakaoAuthException(
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getStatus(),
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getMessage()
+                    );
+                });
+        KakaoUserInfoDTO.KakaoAccount account = Optional.ofNullable(raw.kakaoAccount())
+                .orElseThrow(() -> {
+                    log.error("[KAKAO][USER] kakao_account is null — scope may be missing");
+                    return new KakaoAuthException(
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getStatus(),
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getMessage()
+                    );
+                });
+        KakaoUserInfoDTO.Profile profile = Optional.ofNullable(account.profile())
+                .orElseThrow(() -> {
+                    log.error("[KAKAO][USER] profile is null — profile scope may be missing");
+                    return new KakaoAuthException(
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getStatus(),
+                            KakaoAuthErrorMessage.KAKAO_USER_INFO_FAILED.getMessage()
+                    );
+                });
         return new OAuthUserInfoDTO(
                 String.valueOf(raw.id()),
-                raw.kakaoAccount().email(),
-                raw.kakaoAccount().profile().nickname(),
-                raw.kakaoAccount().profile().profileImageUrl()
+                account.email(),
+                profile.nickname(),
+                profile.profileImageUrl()
         );
     }
 
