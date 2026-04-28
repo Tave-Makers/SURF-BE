@@ -25,9 +25,7 @@ public class KakaoLoginController {
     private final KakaoAuthService kakaoAuthService;
     private final KakaoLoginUsecase kakaoLoginUsecase;
 
-    /**
-     * 카카오 인가 화면으로 리다이렉트
-     */
+    /** 카카오 인가 화면으로 리다이렉트 */
     @Operation(
             summary = "카카오 로그인 요청",
             description = "카카오 로그인 시작 시 카카오 인가 화면으로 리다이렉트(302) 합니다."
@@ -40,9 +38,7 @@ public class KakaoLoginController {
                 .build();
     }
 
-    /**
-     * 카카오 콜백 — 인가 코드 수신 후 로그인 처리
-     */
+    /** 카카오 콜백 — 인가 코드 수신 후 로그인 처리 */
     @Operation(
             summary = "카카오 로그인 콜백",
             description = "인가 코드(code)를 받아 JWT AccessToken과 사용자 정보를 반환합니다."
