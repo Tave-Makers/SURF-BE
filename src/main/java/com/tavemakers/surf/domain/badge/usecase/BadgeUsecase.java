@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.badge.usecase;
 
 import com.tavemakers.surf.domain.badge.dto.request.BadgeCreateReqDTO;
 import com.tavemakers.surf.domain.badge.dto.request.BadgeUpdateReqDTO;
+import com.tavemakers.surf.domain.badge.dto.response.BadgeDetailResDTO;
 import com.tavemakers.surf.domain.badge.dto.response.BadgeResDTO;
 import com.tavemakers.surf.domain.badge.dto.response.BadgeSliceResDTO;
 import com.tavemakers.surf.domain.badge.entity.Badge;
@@ -26,7 +27,7 @@ public class BadgeUsecase {
         return badgeCreateService.create(dto);
     }
 
-    /** 활성 배지 목록 조회 */
+    /** 배지 리스트 조회 */
     public BadgeSliceResDTO getBadgeList(int pageSize, int pageNum) {
 
         // 페이지 번호, 사이즈, 정렬조건(id 내림차순) 기반 Pageable 생성
@@ -40,6 +41,12 @@ public class BadgeUsecase {
         Slice<Badge> slice = badgeGetService.getBadgeList(pageable);
 
         return BadgeSliceResDTO.from(slice.map(BadgeResDTO::from));
+    }
+
+    /** 배지 단건 조회 */
+    public BadgeDetailResDTO getBadge(Long badgeId) {
+        Badge badge = badgeGetService.getBadgeDetail(badgeId);
+        return BadgeDetailResDTO.from(badge);
     }
 
     /** 배지 수정 */
