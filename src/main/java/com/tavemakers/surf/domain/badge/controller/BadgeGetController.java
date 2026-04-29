@@ -20,6 +20,7 @@ public class BadgeGetController {
 
     private final BadgeUsecase badgeUsecase;
 
+    /** 배지 목록 조회 */
     @Operation(summary = "배지 목록 조회", description = "활성화된 배지를 무한스크롤로 조회합니다.")
     @GetMapping("/v1/admin/badges")
     public ApiResponse<BadgeSliceResDTO> getBadgeList(
@@ -37,6 +38,7 @@ public class BadgeGetController {
         );
     }
 
+    /** 배지 단건 조회 */
     @Operation(summary = "배지 단건 조회", description = "특정 배지의 상세 정보를 조회합니다.")
     @GetMapping("/v1/admin/badges/{badgeId}")
     public ApiResponse<BadgeDetailResDTO> getBadge(
