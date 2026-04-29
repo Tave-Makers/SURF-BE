@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.badge.controller;
 
+import com.tavemakers.surf.domain.badge.dto.response.BadgeDetailResDTO;
 import com.tavemakers.surf.domain.badge.dto.response.BadgeSliceResDTO;
 import com.tavemakers.surf.domain.badge.usecase.BadgeUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import static com.tavemakers.surf.domain.badge.controller.ResponseMessage.BADGE_LIST_READ;
+import static com.tavemakers.surf.domain.badge.controller.ResponseMessage.BADGE_SINGLE_READ;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +33,22 @@ public class BadgeGetController {
         return ApiResponse.response(
                 HttpStatus.OK,
                 BADGE_LIST_READ.getMessage(),
+                response
+        );
+    }
+
+    @Operation(summary = "배지 단건 조회", description = "특정 배지의 상세 정보를 조회합니다.")
+    @GetMapping("/v1/admin/badges/{badgeId}")
+    public ApiResponse<BadgeDetailResDTO> getBadge(
+            @PathVariable Long badgeId
+    ) {
+
+        BadgeDetailResDTO response =
+                badgeUsecase.getBadge(badgeId);
+
+        return ApiResponse.response(
+                HttpStatus.OK,
+                BADGE_SINGLE_READ.getMessage(), // 필요하면 메시지 따로 분리
                 response
         );
     }
