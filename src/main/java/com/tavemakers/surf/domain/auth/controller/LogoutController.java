@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.login.controller;
+package com.tavemakers.surf.domain.auth.controller;
 
-import com.tavemakers.surf.domain.login.auth.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,9 +13,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "인증", description = "로그인/로그아웃")
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "인증/인가", description = "로그인/토큰 발급 관련 API")
 public class LogoutController {
 
     private final JwtService jwtService;

@@ -132,13 +132,8 @@ public class JwtService {
         return Arrays.asList(environment.getActiveProfiles()).contains("test");
     }
 
-    /** Refresh Token 쿠키 전송 */
-    public void sendRefreshToken(
-            HttpServletResponse res,
-            String refreshToken
-    ) {
-        String sameSite = "Lax";
-
+    /** Refresh Token 쿠키 생성 */
+    public ResponseCookie buildRefreshTokenCookie(String refreshToken) {
         ResponseCookie.ResponseCookieBuilder builder =
                 ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)
                         .httpOnly(true)
@@ -146,22 +141,19 @@ public class JwtService {
                         .maxAge(Duration.ofMillis(refreshTokenExpireMs));
 
         if (isDev()) {
-            builder
-                    .secure(true)
-                    .sameSite("None")
-                    .domain(".tavesurf.site");
-
+            builder.secure(true).sameSite("None").domain(".tavesurf.site");
         } else if (isTest()) {
-            builder
-                    .secure(false)
-                    .sameSite("None");
+            builder.secure(false).sameSite("Lax");
         } else {
-            builder
-                    .secure(false)
-                    .sameSite("Lax");
+            builder.secure(true).sameSite("Lax");
         }
 
-        ResponseCookie refreshCookie = builder.build();
+        return builder.build();
+    }
+
+    /** Refresh Token 쿠키 전송 */
+    public void sendRefreshToken(HttpServletResponse res, String refreshToken) {
+        ResponseCookie refreshCookie = buildRefreshTokenCookie(refreshToken);
         res.addHeader("Set-Cookie", refreshCookie.toString());
     }
 
@@ -206,14 +198,11 @@ public class JwtService {
                         .maxAge(Duration.ZERO);
 
         if (isDev()) {
-            builder
-                    .secure(true)
-                    .domain(".tavesurf.site")
-                    .sameSite("None");
+            builder.secure(true).domain(".tavesurf.site").sameSite("None");
         } else if (isTest()) {
-            builder
-                    .secure(false)
-                    .sameSite("None");
+            builder.secure(false).sameSite("Lax");
+        } else {
+            builder.secure(true).sameSite("Lax");
         }
 
         ResponseCookie refreshCookie = builder.build();

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.dto.request;
 
-public record PasswordReqDto(
+public record PasswordReqDTO(
         String password
 ) {
 }
