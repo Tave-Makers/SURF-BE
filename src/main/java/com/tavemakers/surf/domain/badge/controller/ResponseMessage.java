@@ -9,7 +9,8 @@ public enum ResponseMessage {
 
     // 배지 관리
     BADGE_CREATED("[활동 배지]가 성공적으로 생성되었습니다."),
-    BADGE_LIST_READ("[활동 배지] 목록이 성공적으로 조회되었습니다."),
+    BADGE_LIST_READ("[활동 배지] 리스트가 성공적으로 조회되었습니다."),
+    BADGE_SINGLE_READ("[활동 배지] 상세 정보가 성공적으로 조회되었습니다."),
     BADGE_UPDATED("[활동 배지]가 성공적으로 수정되었습니다."),
     BADGE_DELETED("[활동 배지]가 성공적으로 삭제되었습니다."),
 
