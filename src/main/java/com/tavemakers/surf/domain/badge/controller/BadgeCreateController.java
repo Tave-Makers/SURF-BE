@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.badge.controller;
 
 import com.tavemakers.surf.domain.badge.dto.request.BadgeCreateReqDTO;
+import com.tavemakers.surf.domain.badge.dto.response.BadgeCreateResDTO;
 import com.tavemakers.surf.domain.badge.usecase.BadgeUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,14 +23,14 @@ public class BadgeCreateController {
     /** 새로운 활동 배지 생성 */
     @Operation(summary = "배지 생성", description = "새로운 활동 배지를 생성합니다.")
     @PostMapping("/v1/admin/badges")
-    public ApiResponse<Void> create(@Valid @RequestBody BadgeCreateReqDTO dto) {
+    public ApiResponse<BadgeCreateResDTO> create(@Valid @RequestBody BadgeCreateReqDTO dto) {
 
-        badgeUsecase.create(dto);
+        Long badgeId = badgeUsecase.create(dto);
 
         return ApiResponse.response(
                 HttpStatus.CREATED,
                 BADGE_CREATED.getMessage(),
-                null
+                BadgeCreateResDTO.of(badgeId)
         );
     }
 }
