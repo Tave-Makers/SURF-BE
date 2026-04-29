@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class BadgeUsecase {
 
     private final BadgeCreateService badgeCreateService;
@@ -23,11 +22,13 @@ public class BadgeUsecase {
     private final BadgeGetService badgeGetService;
 
     /** 배지 생성 */
+    @Transactional
     public Long create(BadgeCreateReqDTO dto) {
         return badgeCreateService.create(dto);
     }
 
     /** 배지 리스트 조회 */
+    @Transactional(readOnly = true)
     public BadgeSliceResDTO getBadgeList(int pageSize, int pageNum) {
 
         // 페이지 번호, 사이즈, 정렬조건(id 내림차순) 기반 Pageable 생성
@@ -44,17 +45,20 @@ public class BadgeUsecase {
     }
 
     /** 배지 단건 조회 */
+    @Transactional(readOnly = true)
     public BadgeDetailResDTO getBadge(Long badgeId) {
         Badge badge = badgeGetService.getBadgeDetail(badgeId);
         return BadgeDetailResDTO.from(badge);
     }
 
     /** 배지 수정 */
+    @Transactional
     public void update(Long badgeId, BadgeUpdateReqDTO dto) {
         badgeUpdateService.update(badgeId, dto);
     }
 
     /** 배지 삭제 */
+    @Transactional
     public void delete(Long badgeId) {
         badgeDeleteService.delete(badgeId);
     }

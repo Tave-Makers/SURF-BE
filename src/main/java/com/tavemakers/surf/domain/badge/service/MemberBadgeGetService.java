@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.domain.badge.exception.BadgeNotFoundException;
 
 import java.util.List;
@@ -23,7 +22,6 @@ public class MemberBadgeGetService {
     private final MemberGetService memberGetService;
 
     /** 특정 배지를 받은 회원 목록 조회 */
-    @Transactional(readOnly = true)
     public Slice<MemberBadge> getMembersByBadge(Long badgeId, Pageable pageable) {
 
         // 배지 존재 여부 확인
@@ -34,7 +32,6 @@ public class MemberBadgeGetService {
     }
 
     /** 특정 회원의 배지 전체 조회 */
-    @Transactional(readOnly = true)
     public List<MemberOwnedBadgeResDTO> getAllByMemberId(Long memberId) {
 
         // 회원 존재 여부 확인
