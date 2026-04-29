@@ -1,17 +1,17 @@
 package com.tavemakers.surf.domain.badge.dto.response;
 
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
+import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.Track;
 
 import java.time.LocalDate;
-import java.util.Comparator;
+import java.util.List;
 
 public record MemberBadgeResDTO(
         Long memberId,
         String username,
         String profileImageUrl,
-        Integer generation,
+        List<TrackResDTO> trackList,
         LocalDate awardedAt
 ) {
 
@@ -19,17 +19,16 @@ public record MemberBadgeResDTO(
 
         Member member = memberBadge.getMember();
 
-        Integer firstGeneration = member.getTracks()
+        List<TrackResDTO> trackList = member.getTracks()
                 .stream()
-                .min(Comparator.comparing(Track::getGeneration))
-                .map(Track::getGeneration)
-                .orElse(null);
+                .map(TrackResDTO::from)
+                .toList();
 
         return new MemberBadgeResDTO(
                 member.getId(),
                 member.getName(),
                 member.getProfileImageUrl(),
-                firstGeneration,
+                trackList,
                 memberBadge.getAwardedAt()
         );
     }
