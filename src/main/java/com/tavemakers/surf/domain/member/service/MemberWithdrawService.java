@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -40,7 +41,10 @@ public class MemberWithdrawService {
 
         refreshTokenService.invalidateAll(memberId);
 
-        unlinkKakao(member.getKakaoId());
+        // provider 별 외부 연결 해제. 현재는 KAKAO 만 unlink 호출, APPLE 등은 해당 없음.
+        if (member.getProvider() == Provider.KAKAO) {
+            unlinkKakao(member.getKakaoId());
+        }
 
         if (member.getStatus() != MemberStatus.WITHDRAWN) {
             member.withdraw();

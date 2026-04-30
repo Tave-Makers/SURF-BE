@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.auth.kakao.usecase;
 
 import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
@@ -41,7 +42,7 @@ public class KakaoLoginUsecase {
         OAuthUserInfoDTO userInfo = kakaoAuthService.getUserInfo(token.accessToken());
 
         // 4. 회원 upsert
-        Member member = memberUpsertService.upsertRegisteringFromKakao(userInfo);
+        Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.KAKAO, userInfo);
 
         // 5. deviceId 생성
         String deviceId = UUID.randomUUID().toString();
