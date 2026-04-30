@@ -23,9 +23,9 @@ public class BadgeCreateController {
     /** 새로운 활동 배지 생성 */
     @Operation(summary = "배지 생성", description = "새로운 활동 배지를 생성합니다.")
     @PostMapping("/v1/admin/badges")
-    public ApiResponse<BadgeCreateResDTO> create(@Valid @RequestBody BadgeCreateReqDTO dto) {
+    public ApiResponse<BadgeCreateResDTO> createBadge(@Valid @RequestBody BadgeCreateReqDTO dto) {
 
-        Long badgeId = badgeUsecase.create(dto);
+        Long badgeId = badgeUsecase.createBadge(dto);
 
         return ApiResponse.response(
                 HttpStatus.CREATED,

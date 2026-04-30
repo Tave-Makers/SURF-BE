@@ -19,9 +19,9 @@ public class BadgeDeleteController {
 
     @Operation(summary = "배지 삭제", description = "배지를 삭제합니다.")
     @DeleteMapping("/v1/admin/badges/{badgeId}")
-    public ApiResponse<Void> delete(@PathVariable Long badgeId) {
+    public ApiResponse<Void> deleteBadge(@PathVariable Long badgeId) {
 
-        badgeUsecase.delete(badgeId);
+        badgeUsecase.deleteBadge(badgeId);
 
         return ApiResponse.response(
                 HttpStatus.OK,

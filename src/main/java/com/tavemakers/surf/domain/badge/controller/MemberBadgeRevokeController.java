@@ -22,12 +22,12 @@ public class MemberBadgeRevokeController {
     /** 회원들을 선택히여 활동 배지 회수 */
     @Operation(summary = "배지 회수", description = "활동 배지를 선택된 회원들에게서 회수합니다.")
     @DeleteMapping("/v1/admin/badges/{badgeId}/members")
-    public ApiResponse<Void> remove(
+    public ApiResponse<Void> revokeBadge(
             @PathVariable Long badgeId,
             @Valid @RequestBody MemberBadgeReqDTO dto
     ) {
 
-        memberBadgeUsecase.revoke(badgeId, dto);
+        memberBadgeUsecase.revokeBadge(badgeId, dto);
 
         return ApiResponse.response(
                 HttpStatus.OK,

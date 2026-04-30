@@ -22,12 +22,12 @@ public class MemberBadgeAssignController {
     /** 회원들을 선택히여 활동 배지 부여 */
     @Operation(summary = "배지 부여", description = "활동 배지를 선택된 회원들에게 부여합니다.")
     @PostMapping("/v1/admin/badges/{badgeId}/members")
-    public ApiResponse<Void> assign(
+    public ApiResponse<Void> assignBadge(
             @PathVariable Long badgeId,
             @Valid @RequestBody MemberBadgeReqDTO dto
     ) {
 
-        memberBadgeUsecase.assign(badgeId, dto);
+        memberBadgeUsecase.assignBadge(badgeId, dto);
 
         return ApiResponse.response(
                 HttpStatus.CREATED,

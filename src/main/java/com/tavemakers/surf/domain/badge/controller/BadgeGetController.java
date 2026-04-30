@@ -41,16 +41,16 @@ public class BadgeGetController {
     /** 배지 단건 조회 */
     @Operation(summary = "배지 단건 조회", description = "특정 배지의 상세 정보를 조회합니다.")
     @GetMapping("/v1/admin/badges/{badgeId}")
-    public ApiResponse<BadgeDetailResDTO> getBadge(
+    public ApiResponse<BadgeDetailResDTO> getBadgeSingle(
             @PathVariable Long badgeId
     ) {
 
         BadgeDetailResDTO response =
-                badgeUsecase.getBadge(badgeId);
+                badgeUsecase.getBadgeSingle(badgeId);
 
         return ApiResponse.response(
                 HttpStatus.OK,
-                BADGE_SINGLE_READ.getMessage(), // 필요하면 메시지 따로 분리
+                BADGE_SINGLE_READ.getMessage(),
                 response
         );
     }
