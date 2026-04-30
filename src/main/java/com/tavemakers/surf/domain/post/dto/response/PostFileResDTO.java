@@ -16,9 +16,6 @@ public record PostFileResDTO(
         @Schema(description = "원본 파일명")
         String originalFileName,
 
-        @Schema(description = "게시물 ID")
-        Long postId,
-
         @Schema(description = "파일 순서")
         Integer sequence
 ) {
@@ -27,7 +24,6 @@ public record PostFileResDTO(
                 .fileId(fileURL.getId())
                 .fileUrl(fileURL.getFileUrl())
                 .originalFileName(fileURL.getOriginalFileName())
-                .postId(fileURL.getPost().getId())
                 .sequence(fileURL.getSequence())
                 .build();
     }
