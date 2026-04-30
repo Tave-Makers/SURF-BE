@@ -64,16 +64,4 @@ public record PostUpdateReqDTO(
                 );
         }
 
-        public Boolean isImageChanged() {
-                return isImageChanged;
-        }
-
-        public Boolean isFileChanged() {
-                return isFileChanged;
-        }
-
-        public Boolean isReservationChanged() {
-                return isReservationChanged;
-        }
-
 }
