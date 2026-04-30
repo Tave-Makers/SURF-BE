@@ -31,6 +31,7 @@ public class PostImageUrl extends BaseEntity {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @Column(nullable = false)
     private Integer sequence;
 
     public static PostImageUrl of(Post post, PostImageCreateReqDTO dto) {
