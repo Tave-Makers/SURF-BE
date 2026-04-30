@@ -3,8 +3,10 @@ package com.tavemakers.surf.domain.badge.dto.response;
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
 import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.Track;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 public record MemberBadgeResDTO(
@@ -21,6 +23,7 @@ public record MemberBadgeResDTO(
 
         List<TrackResDTO> trackList = member.getTracks()
                 .stream()
+                .sorted(Comparator.comparing(Track::getGeneration)) // 기수 기준
                 .map(TrackResDTO::from)
                 .toList();
 
