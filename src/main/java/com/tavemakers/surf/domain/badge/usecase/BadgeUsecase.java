@@ -23,8 +23,8 @@ public class BadgeUsecase {
 
     /** 배지 생성 */
     @Transactional
-    public Long create(BadgeCreateReqDTO dto) {
-        return badgeCreateService.create(dto);
+    public Long createBadge(BadgeCreateReqDTO dto) {
+        return badgeCreateService.createBadge(dto);
     }
 
     /** 배지 리스트 조회 */
@@ -46,20 +46,20 @@ public class BadgeUsecase {
 
     /** 배지 단건 조회 */
     @Transactional(readOnly = true)
-    public BadgeDetailResDTO getBadge(Long badgeId) {
+    public BadgeDetailResDTO getBadgeSingle(Long badgeId) {
         Badge badge = badgeGetService.getBadgeDetail(badgeId);
         return BadgeDetailResDTO.from(badge);
     }
 
     /** 배지 수정 */
     @Transactional
-    public void update(Long badgeId, BadgeUpdateReqDTO dto) {
-        badgeUpdateService.update(badgeId, dto);
+    public void updateBadge(Long badgeId, BadgeUpdateReqDTO dto) {
+        badgeUpdateService.updateBadge(badgeId, dto);
     }
 
     /** 배지 삭제 */
     @Transactional
-    public void delete(Long badgeId) {
-        badgeDeleteService.delete(badgeId);
+    public void deleteBadge(Long badgeId) {
+        badgeDeleteService.deleteBadge(badgeId);
     }
 }
