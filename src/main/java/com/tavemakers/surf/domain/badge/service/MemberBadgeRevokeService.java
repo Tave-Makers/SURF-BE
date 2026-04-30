@@ -18,7 +18,7 @@ public class MemberBadgeRevokeService {
     private final BadgeRepository badgeRepository;
 
     /** 배지 회수 */
-    public void revoke(Long badgeId, List<Long> memberIds) {
+    public void revokeBadge(Long badgeId, List<Long> memberIds) {
 
         // 중복 제거
         List<Long> uniqueMemberIds = memberIds.stream().distinct().toList();

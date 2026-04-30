@@ -24,7 +24,7 @@ public class MemberBadgeAssignService {
     private final MemberBadgeRepository memberBadgeRepository;
 
     /** 다수의 회원에게 배지 부여 */
-    public void assign(Long badgeId, List<Long> memberIds) {
+    public void assignBadge(Long badgeId, List<Long> memberIds) {
 
         Badge badge = badgeRepository.findById(badgeId)
                 .orElseThrow(BadgeNotFoundException::new);

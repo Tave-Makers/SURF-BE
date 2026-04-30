@@ -14,7 +14,7 @@ public class BadgeUpdateService {
     private final BadgeRepository badgeRepository;
 
     /** 배지 정보 수정 */
-    public void update(Long badgeId, BadgeUpdateReqDTO request) {
+    public void updateBadge(Long badgeId, BadgeUpdateReqDTO request) {
 
         // 수정 대상 배지 조회 (없으면 예외)
         Badge badge = badgeRepository.findById(badgeId)

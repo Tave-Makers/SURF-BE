@@ -13,7 +13,7 @@ public class BadgeCreateService {
     private final BadgeRepository badgeRepository;
 
     /** 배지 생성 */
-    public Long create(BadgeCreateReqDTO request) {
+    public Long createBadge(BadgeCreateReqDTO request) {
 
         // 요청 DTO 값을 기반으로 배지 엔티티 생성
         Badge badge = new Badge(
