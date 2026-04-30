@@ -6,16 +6,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class PostImageGetService {
 
-    private final PostImageUrlRepository repository;
+    private final PostImageUrlRepository postImageUrlRepository;
 
     /** 게시글 이미지 URL 목록 조회 */
+    @Transactional(readOnly = true)
     public List<PostImageUrl> getPostImageUrls(Long postId) {
-        return repository.findByPostId(postId);
+        return postImageUrlRepository.findByPostId(postId);
     }
 
 }

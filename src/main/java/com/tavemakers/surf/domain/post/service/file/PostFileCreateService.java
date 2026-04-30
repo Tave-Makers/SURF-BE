@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostFileCreateService {
 
-    private final PostFileUrlRepository repository;
+    private final PostFileUrlRepository postFileUrlRepository;
 
     /** 게시글 첨부파일 일괄 저장 */
     @Transactional
@@ -27,7 +27,7 @@ public class PostFileCreateService {
         List<PostFileUrl> filesUrlList = dto.stream()
                 .map(f -> PostFileUrl.of(post, f))
                 .toList();
-        return repository.saveAll(filesUrlList).stream()
+        return postFileUrlRepository.saveAll(filesUrlList).stream()
                 .map(PostFileResDTO::from)
                 .toList();
     }

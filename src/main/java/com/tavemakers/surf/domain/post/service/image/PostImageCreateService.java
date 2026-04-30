@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostImageCreateService {
 
-    private final PostImageUrlRepository repository;
+    private final PostImageUrlRepository postImageUrlRepository;
 
     /** 게시글 이미지 일괄 저장 */
     @Transactional
@@ -28,7 +28,7 @@ public class PostImageCreateService {
         List<PostImageUrl> imageUrlList = dto.stream()
                 .map(url -> PostImageUrl.of(post, url))
                 .toList();
-        return repository.saveAll(imageUrlList)
+        return postImageUrlRepository.saveAll(imageUrlList)
                 .stream()
                 .map(PostImageResDTO::from)
                 .sorted(Comparator.comparing(PostImageResDTO::sequence))
