@@ -53,6 +53,7 @@ public class PostPatchService {
 
     private final BoardCategoryGetService boardCategoryGetService;
     private final ScrapGetService scrapGetService;
+    private final PostGetService postGetService;
     private final PostLikeService postLikeService;
     private final ReservationGetService reservationGetService;
     private final PostImageCreateService imageCreateService;
@@ -107,7 +108,7 @@ public class PostPatchService {
                 imageDtoList = imageCreateService.saveAll(post, changeImages);
             }
         } else {
-            imageDtoList = getImageUrlList(post);
+            imageDtoList = postGetService.getImageUrlList(post);
         }
 
         // 파일 변경
@@ -121,7 +122,7 @@ public class PostPatchService {
                 fileDtoList = fileCreateService.saveAll(post, changeFiles);
             }
         } else {
-            fileDtoList = getPostFileList(post);
+            fileDtoList = postGetService.getPostFileList(post);
         }
 
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, imageDtoList, fileDtoList, reservedAt, viewCount);
@@ -149,22 +150,6 @@ public class PostPatchService {
             throw new InvalidCategoryMappingException();
         }
         return category;
-    }
-
-    /** 이미지 URL 목록 조회 */
-    private List<PostImageResDTO> getImageUrlList(Post post) {
-        return imageGetService.getPostImageUrls(post.getId()).stream()
-                .map(PostImageResDTO::from)
-                .sorted(Comparator.comparing(PostImageResDTO::sequence))
-                .toList();
-    }
-
-    /** 첨부파일 목록 조회 */
-    private List<PostFileResDTO> getPostFileList(Post post) {
-        return fileGetService.getPostFileUrls(post.getId()).stream()
-                .map(PostFileResDTO::from)
-                .sorted(Comparator.comparing(PostFileResDTO::sequence))
-                .toList();
     }
 
     /** 이미지 목록에서 첫 번째 이미지 URL 추출 */

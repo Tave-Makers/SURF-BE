@@ -115,7 +115,7 @@ public class PostGetService {
                 .orElseThrow(PostNotFoundException::new);
     }
 
-    private List<PostImageResDTO> getImageUrlList(Post post) {
+    public List<PostImageResDTO> getImageUrlList(Post post) {
         return imageGetService.getPostImageUrls(post.getId()).stream()
                 .map(PostImageResDTO::from)
                 .sorted(Comparator.comparing(PostImageResDTO::sequence))
