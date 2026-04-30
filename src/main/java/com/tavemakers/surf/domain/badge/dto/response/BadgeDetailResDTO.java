@@ -12,12 +12,12 @@ public record BadgeDetailResDTO(
         String requirement
 ) {
     public static BadgeDetailResDTO from(Badge badge) {
-        return BadgeDetailResDTO.builder()
-                        .badgeId(badge.getId())
-                        .name(badge.getName())
-                        .imageUrl(badge.getImageUrl())
-                        .description(badge.getDescription())
-                        .requirement(badge.getRequirement())
-                        .build();
+        return new BadgeDetailResDTO(
+                badge.getId(),
+                badge.getName(),
+                badge.getImageUrl(),
+                badge.getDescription(),
+                badge.getRequirement()
+        );
     }
 }
