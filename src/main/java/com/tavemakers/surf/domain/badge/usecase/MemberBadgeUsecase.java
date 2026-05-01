@@ -15,7 +15,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MemberBadgeUsecase {
 
     private final MemberBadgeAssignService memberBadgeAssignService;
@@ -23,8 +22,9 @@ public class MemberBadgeUsecase {
     private final MemberBadgeGetService memberBadgeGetService;
 
     /** 배지 부여 */
-    public void assign(Long badgeId, MemberBadgeReqDTO dto) {
-        memberBadgeAssignService.assign(badgeId, dto.getMemberIds());
+    @Transactional
+    public void assignBadge(Long badgeId, MemberBadgeReqDTO dto) {
+        memberBadgeAssignService.assignBadge(badgeId, dto.getMemberIds());
     }
 
     /** 특정 배지 받은 회원 목록 조회 */
@@ -50,8 +50,9 @@ public class MemberBadgeUsecase {
     }
 
     /** 배지 회수 */
-    public void revoke(Long badgeId, MemberBadgeReqDTO dto) {
-        memberBadgeRevokeService.revoke(badgeId, dto.getMemberIds());
+    @Transactional
+    public void revokeBadge(Long badgeId, MemberBadgeReqDTO dto) {
+        memberBadgeRevokeService.revokeBadge(badgeId, dto.getMemberIds());
     }
 
     /** 특정 회원의 배지 전체 조회 */

@@ -5,7 +5,6 @@ import com.tavemakers.surf.domain.badge.exception.MemberBadgeNotFoundException;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.domain.badge.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.exception.BadgeNotFoundException;
 
@@ -19,8 +18,7 @@ public class MemberBadgeRevokeService {
     private final BadgeRepository badgeRepository;
 
     /** 배지 회수 */
-    @Transactional
-    public void revoke(Long badgeId, List<Long> memberIds) {
+    public void revokeBadge(Long badgeId, List<Long> memberIds) {
 
         // 중복 제거
         List<Long> uniqueMemberIds = memberIds.stream().distinct().toList();

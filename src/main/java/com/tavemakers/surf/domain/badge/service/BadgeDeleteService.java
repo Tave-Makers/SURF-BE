@@ -5,7 +5,6 @@ import com.tavemakers.surf.domain.badge.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.domain.badge.exception.BadgeNotFoundException;
 
 @Service
@@ -16,8 +15,7 @@ public class BadgeDeleteService {
     private final MemberBadgeRepository memberBadgeRepository;
 
     /** 배지 하드 삭제 */
-    @Transactional
-    public void delete(Long badgeId) {
+    public void deleteBadge(Long badgeId) {
 
         // 삭제 대상 배지 조회
         Badge badge = badgeRepository.findById(badgeId)

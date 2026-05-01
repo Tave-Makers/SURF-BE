@@ -21,12 +21,12 @@ public class BadgeUpdateController {
 
     @Operation(summary = "배지 수정", description = "기존 배지 정보를 수정합니다.")
     @PatchMapping("/v1/admin/badges/{badgeId}")
-    public ApiResponse<Void> update(
+    public ApiResponse<Void> updateBadge(
             @PathVariable Long badgeId,
             @Valid @RequestBody BadgeUpdateReqDTO dto
     ) {
 
-        badgeUsecase.update(badgeId, dto);
+        badgeUsecase.updateBadge(badgeId, dto);
 
         return ApiResponse.response(
                 HttpStatus.OK,
