@@ -24,12 +24,20 @@ public class RefreshTokenService {
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
 
-    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 */
+    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 (WEB 흐름) */
     public ResponseCookie issue(Long memberId, String deviceId) {
         String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
         save(refreshToken);
         log.info("[RTR][ISSUE] refresh token cookie built");
         return jwtService.buildRefreshTokenCookie(refreshToken);
+    }
+
+    /** 로그인 시 refresh 발급 + 저장 + 토큰 문자열 반환 (APP 본문 전달용) */
+    public String issueRaw(Long memberId, String deviceId) {
+        String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
+        save(refreshToken);
+        log.info("[RTR][ISSUE] refresh token raw issued (app body)");
+        return refreshToken;
     }
 
     /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation) */

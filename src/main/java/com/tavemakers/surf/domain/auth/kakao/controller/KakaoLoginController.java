@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.auth.kakao.controller;
 
+import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthErrorMessage;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthException;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
@@ -80,12 +80,12 @@ public class KakaoLoginController {
 
         log.info("[LOGIN][KAKAO][CALLBACK] start codeLength={}", code.length());
 
-        KakaoLoginResDTO result = kakaoLoginUsecase.execute(code);
+        LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code);
 
         log.info("[LOGIN][KAKAO][CALLBACK] success");
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, result.refreshCookie().toString())
-                .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", result.loginRes()));
+                .header(HttpHeaders.SET_COOKIE, payload.refreshCookie().toString())
+                .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
     }
 
     private String generateState() {

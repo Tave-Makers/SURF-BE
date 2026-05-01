@@ -1,22 +1,18 @@
 package com.tavemakers.surf.domain.auth.kakao.usecase;
 
-import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
+import com.tavemakers.surf.domain.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
+import com.tavemakers.surf.domain.auth.common.service.LoginTokenIssuer;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
-import com.tavemakers.surf.global.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -25,12 +21,11 @@ public class KakaoLoginUsecase {
 
     private final KakaoAuthService kakaoAuthService;
     private final MemberUpsertService memberUpsertService;
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
+    private final LoginTokenIssuer loginTokenIssuer;
 
-    /** 카카오 인가 코드로 로그인 처리 후 결과 반환 */
+    /** 카카오 인가 코드로 Web 로그인 처리 후 응답 payload 반환. App SDK 흐름은 별도 메서드로 추가될 예정(Step 4). */
     @Transactional
-    public KakaoLoginResDTO execute(String code) {
+    public LoginPayloadResDTO execute(String code) {
 
         // 1. 콜백 진입 로그
         kakaoAuthService.logCallback("kakao", code.length());
@@ -44,26 +39,16 @@ public class KakaoLoginUsecase {
         // 4. 회원 upsert
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.KAKAO, userInfo);
 
-        // 5. deviceId 생성
-        String deviceId = UUID.randomUUID().toString();
+        // 5. JWT 발급 + 응답 wrapper 조립 (Web=쿠키)
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, ClientType.WEB);
 
-        // 6. AccessToken 발급
-        String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
-
-        // 7. RefreshToken 발급 및 쿠키 반환
-        ResponseCookie refreshCookie = refreshTokenService.issue(member.getId(), deviceId);
-
-        // 8. 로그인 성공 로그
-        kakaoAuthService.logLoginSuccess(member.getId(), accessToken.substring(0, Math.min(accessToken.length(), 10)) + "...");
-
-        // 9. 응답 DTO 조립
-        LoginResDTO loginRes = LoginResDTO.of(
-                userInfo.nickname(),
-                userInfo.email(),
-                accessToken,
-                userInfo.profileImageUrl()
+        // 6. 로그인 성공 로그
+        String accessToken = payload.loginRes().accessToken();
+        kakaoAuthService.logLoginSuccess(
+                member.getId(),
+                accessToken.substring(0, Math.min(accessToken.length(), 10)) + "..."
         );
 
-        return new KakaoLoginResDTO(loginRes, refreshCookie);
+        return payload;
     }
 }
