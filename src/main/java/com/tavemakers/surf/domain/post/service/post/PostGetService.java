@@ -1,10 +1,12 @@
 package com.tavemakers.surf.domain.post.service.post;
 
 import com.tavemakers.surf.domain.post.dto.response.PostDetailResDTO;
+import com.tavemakers.surf.domain.post.dto.response.PostFileResDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
+import com.tavemakers.surf.domain.post.service.file.PostFileGetService;
 import com.tavemakers.surf.domain.post.service.image.PostImageGetService;
 import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
@@ -30,6 +32,7 @@ public class PostGetService {
     private final ScrapGetService scrapGetService;
     private final PostLikeService postLikeService;
     private final PostImageGetService imageGetService;
+    private final PostFileGetService fileGetService;
     private final ViewCountService viewCountService;
     private final ReservationGetService reservationGetService;
 
@@ -69,6 +72,7 @@ public class PostGetService {
         boolean likedByMe = postLikeService.isLikedByMe(memberId, postId);
         boolean isMine = post.isOwner(memberId);
         List<PostImageResDTO> imageUrlList = getImageUrlList(post);
+        List<PostFileResDTO> fileUrlList = getPostFileList(post);
         int viewCount = viewCountService.increaseViewCount(post, memberId);
         LocalDateTime reservedAt = null;
         if (post.isReserved()) {
@@ -81,7 +85,7 @@ public class PostGetService {
             }
         }
 
-        return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, reservedAt, viewCount);
+        return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, fileUrlList, reservedAt, viewCount);
     }
 
     /** 게시글 버전 조회 (낙관적 락용) */
@@ -111,10 +115,17 @@ public class PostGetService {
                 .orElseThrow(PostNotFoundException::new);
     }
 
-    private List<PostImageResDTO> getImageUrlList(Post post) {
+    public List<PostImageResDTO> getImageUrlList(Post post) {
         return imageGetService.getPostImageUrls(post.getId()).stream()
                 .map(PostImageResDTO::from)
                 .sorted(Comparator.comparing(PostImageResDTO::sequence))
+                .toList();
+    }
+
+    public List<PostFileResDTO> getPostFileList(Post post) {
+        return fileGetService.getPostFileUrls(post.getId()).stream()
+                .map(PostFileResDTO::from)
+                .sorted(Comparator.comparing(PostFileResDTO::sequence))
                 .toList();
     }
 }

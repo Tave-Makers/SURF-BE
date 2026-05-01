@@ -35,6 +35,9 @@ public record PostCreateReqDTO(
         @Schema(description = "게시글 이미지 목록")
         List<PostImageCreateReqDTO> imageUrlList,
 
+        @Schema(description = "게시글 첨부파일 목록")
+        List<PostFileCreateReqDTO> fileList,
+
         @Schema(description = "일정 매핑 유무", example = "true")
         Boolean hasSchedule
 
@@ -54,6 +57,10 @@ public record PostCreateReqDTO(
 
         public boolean hasImage() {
                 return imageUrlList != null && !imageUrlList.isEmpty();
+        }
+
+        public boolean hasFile() {
+                return fileList != null && !fileList.isEmpty();
         }
 
 }

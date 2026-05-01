@@ -1,14 +1,9 @@
 package com.tavemakers.surf.domain.post.entity;
 
-import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
+import com.tavemakers.surf.domain.post.dto.request.PostFileCreateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import io.hypersistence.utils.hibernate.id.Tsid;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,14 +13,17 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostImageUrl extends BaseEntity {
+public class PostFileUrl extends BaseEntity {
 
     @Id @Tsid
-    @Column(name = "post_image_url_id")
+    @Column(name = "post_file_url_id")
     private Long id;
 
     @Column(nullable = false, length = 500)
-    private String originalUrl;
+    private String fileUrl;
+
+    @Column(nullable = false, length = 255)
+    private String originalFileName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
@@ -34,12 +32,12 @@ public class PostImageUrl extends BaseEntity {
     @Column(nullable = false)
     private Integer sequence;
 
-    public static PostImageUrl of(Post post, PostImageCreateReqDTO dto) {
-        return PostImageUrl.builder()
+    public static PostFileUrl of(Post post, PostFileCreateReqDTO dto) {
+        return PostFileUrl.builder()
                 .post(post)
-                .originalUrl(dto.originalUrl())
+                .fileUrl(dto.fileUrl())
+                .originalFileName(dto.originalFileName())
                 .sequence(dto.sequence())
                 .build();
     }
-
 }

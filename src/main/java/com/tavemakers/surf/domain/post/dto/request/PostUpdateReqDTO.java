@@ -39,6 +39,12 @@ public record PostUpdateReqDTO(
         @Schema(description = "게시글 이미지")
         List<PostImageCreateReqDTO> imageUrlList,
 
+        @Schema(description = "파일 변경 여부", example = "true")
+        Boolean isFileChanged,
+
+        @Schema(description = "게시글 첨부파일")
+        List<PostFileCreateReqDTO> fileList,
+
         @Schema(description = "일정 매핑 유무", example = "true")
         Boolean hasSchedule
 
@@ -56,14 +62,6 @@ public record PostUpdateReqDTO(
                         "changed_fields", changedFields,
                         "edit_length", isContentChanged ? String.valueOf(Objects.requireNonNull(content).length()) : "notChanged"
                 );
-        }
-
-        public Boolean isImageChanged() {
-                return isImageChanged;
-        }
-
-        public Boolean isReservationChanged() {
-                return isReservationChanged;
         }
 
 }
