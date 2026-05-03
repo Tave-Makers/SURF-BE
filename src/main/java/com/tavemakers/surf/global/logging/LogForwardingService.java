@@ -34,6 +34,7 @@ public class LogForwardingService {
     @Async("logForwardExecutor")
     public void forward(List<String> jsonLines) {
         String body = "[" + String.join(",", jsonLines) + "]";
+        int totalAttempts = props.getMaxRetries() + 1;
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(props.getUrl()))
@@ -42,18 +43,20 @@ public class LogForwardingService {
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
-        for (int attempt = 0; attempt <= props.getMaxRetries(); attempt++) {
+        for (int attempt = 1; attempt <= totalAttempts; attempt++) {
             try {
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() >= 200 && response.statusCode() < 300) {
                     return;
                 }
                 log.warn("[LogForward] 전송 실패 (status={}, attempt={}/{})",
-                        response.statusCode(), attempt, props.getMaxRetries());
+                        response.statusCode(), attempt, totalAttempts);
             } catch (Exception e) {
                 log.warn("[LogForward] 전송 예외 (attempt={}/{}): {}",
-                        attempt, props.getMaxRetries(), e.getMessage());
+                        attempt, totalAttempts, e.getMessage());
             }
         }
+
+        log.error("[LogForward] 분석 서버 전송 최종 실패 - {}건 미전달", jsonLines.size());
     }
 }

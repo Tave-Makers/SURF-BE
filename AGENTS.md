@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-이 파일은 Claude Code가 이 프로젝트에서 작업할 때 참조하는 설정입니다.
+이 파일은 Codex가 이 프로젝트에서 작업할 때 참조하는 설정입니다.
 
 ## Role
 
