@@ -31,4 +31,6 @@ public interface MemberBadgeRepository extends JpaRepository<MemberBadge, Long> 
 
     // 배지 삭제 전 해당 배지 부여 기록 먼저 삭제
     void deleteByBadgeId(Long badgeId);
+
+    void deleteByMemberId(Long memberId);
 }

@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.comment.repository;
 
 import com.tavemakers.surf.domain.comment.entity.Comment;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+    List<Comment> findAllByMemberId(Long memberId);
 
     /** 게시글 내 모든 댓글 + 대댓글 조회 (작성 시간순) */
     Slice<Comment> findByPostIdOrderByCreatedAtAsc(Long postId, Pageable pageable);

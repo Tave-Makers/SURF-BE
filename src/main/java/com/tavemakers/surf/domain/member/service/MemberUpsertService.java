@@ -12,11 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberUpsertService {
 
     private final MemberRepository memberRepository;
+    private final MemberBlacklistGetService memberBlacklistGetService;
 
     /** 카카오 정보로 회원 생성 또는 기존 회원 반환 */
     @Transactional
     public Member upsertRegisteringFromKakao(OAuthUserInfoDTO info) {
         Long kakaoId = Long.parseLong(info.oauthId());
+        memberBlacklistGetService.validateNotBlacklisted(kakaoId, info.email(), null);
+
         return memberRepository.findByKakaoId(kakaoId).orElseGet(() -> {
             Member toSave = Member.createRegisteringFromKakao(info);
             try {

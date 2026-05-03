@@ -92,6 +92,17 @@ public class CommentLikeService {
                 .toList();
     }
 
+    /** 특정 회원이 누른 댓글 좋아요 전체 제거 */
+    @Transactional
+    public void removeAllByMemberId(Long memberId) {
+        for (CommentLike commentLike : commentLikeRepository.findAllByMemberId(memberId)) {
+            Comment comment = commentLike.getComment();
+            comment.decreaseLikeCount();
+            commentLikeRepository.delete(commentLike);
+            commentRepository.save(comment);
+        }
+    }
+
     /** 좋아요 생성시 알림 - 댓글 작성자에게 */
     protected void createNotificationAtCommentLike(
             Member member,

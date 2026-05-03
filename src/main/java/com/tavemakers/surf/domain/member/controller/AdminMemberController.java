@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.member.dto.response.MemberRegistrationSliceRes
 import com.tavemakers.surf.domain.member.usecase.MemberAdminUsecase;
 import io.swagger.v3.oas.annotations.Operation;
 import com.tavemakers.surf.global.common.response.ApiResponse;
+import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,22 @@ public class AdminMemberController {
     ) {
         memberAdminUsecase.changeMembersRole(dto);
         return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
+    }
+
+    @Operation(summary = "회원 제명", description = "가입 단계 회원을 하드 딜리트하고 블랙리스트에 등록합니다.")
+    @PatchMapping("/v1/admin/members/{memberId}/dismiss")
+    public ApiResponse<Void> dismissMember(@PathVariable Long memberId) {
+        Long actorId = SecurityUtils.getCurrentMemberId();
+        memberAdminUsecase.dismissMember(memberId, actorId);
+        return ApiResponse.response(HttpStatus.OK, MEMBER_DISMISS_SUCCESS.getMessage(), null);
+    }
+
+    @Operation(summary = "회원 퇴출", description = "회원을 소프트 딜리트하고 블랙리스트에 등록합니다.")
+    @PatchMapping("/v1/admin/members/{memberId}/expel")
+    public ApiResponse<Void> expelMember(@PathVariable Long memberId) {
+        Long actorId = SecurityUtils.getCurrentMemberId();
+        memberAdminUsecase.expelMember(memberId, actorId);
+        return ApiResponse.response(HttpStatus.OK, MEMBER_EXPEL_SUCCESS.getMessage(), null);
     }
 
     @Operation(summary = "가입신청 목록", description = "가입신청 목록을 조회합니다.")

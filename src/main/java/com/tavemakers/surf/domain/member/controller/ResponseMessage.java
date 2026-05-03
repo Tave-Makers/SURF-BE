@@ -30,6 +30,10 @@ public enum ResponseMessage {
     // 약관 동의
     TERMS_AGREEMENT_SUCCESS("[약관 동의]를 완료했습니다."),
 
+    // 관리자 제재
+    MEMBER_DISMISS_SUCCESS("[회원 제명]을 완료했습니다."),
+    MEMBER_EXPEL_SUCCESS("[회원 퇴출]을 완료했습니다."),
+
     // 프로필 수정
     MYPAGE_PROFILE_UPDATE_SUCCESS("마이페이지에서 [프로필 정보]를 수정했습니다."),
 

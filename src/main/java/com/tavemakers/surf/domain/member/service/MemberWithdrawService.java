@@ -37,14 +37,20 @@ public class MemberWithdrawService {
     @Transactional
     public void withdraw(Long memberId) {
         Member member = memberGetService.getMember(memberId);
+        expel(member);
+    }
 
-        refreshTokenService.invalidateAll(memberId);
-
-        unlinkKakao(member.getKakaoId());
-
+    @Transactional
+    public void expel(Member member) {
+        disconnectMember(member);
         if (member.getStatus() != MemberStatus.WITHDRAWN) {
             member.withdraw();
         }
+    }
+
+    public void disconnectMember(Member member) {
+        refreshTokenService.invalidateAll(member.getId());
+        unlinkKakao(member.getKakaoId());
     }
 
     private void unlinkKakao(Long kakaoId) {

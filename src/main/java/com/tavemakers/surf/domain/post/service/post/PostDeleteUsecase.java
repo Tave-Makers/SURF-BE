@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.post.service.post;
 
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
 import com.tavemakers.surf.domain.schedule.service.ScheduleDeleteService;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class PostDeleteUsecase {
     private final CommentDeleteService commentDeleteService;
     private final ScheduleDeleteService scheduleDeleteService;
     private final ScrapGetService scrapGetService;
+    private final ReservationRepository reservationRepository;
 
     /** 게시글 및 연관 데이터 삭제 */
     @Transactional
@@ -26,6 +28,7 @@ public class PostDeleteUsecase {
 
         // 연관 데이터 먼저 삭제
         scheduleDeleteService.deleteByPost(post);
+        reservationRepository.deleteByPostId(postId);
         scrapGetService.deleteByPostId(postId);
         commentDeleteService.deleteAllByPostId(postId);
 
