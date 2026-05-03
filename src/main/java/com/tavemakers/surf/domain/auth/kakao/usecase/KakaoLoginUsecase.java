@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.service.LoginTokenIssuer;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -23,7 +24,7 @@ public class KakaoLoginUsecase {
     private final MemberUpsertService memberUpsertService;
     private final LoginTokenIssuer loginTokenIssuer;
 
-    /** 카카오 인가 코드로 Web 로그인 처리 후 응답 payload 반환. App SDK 흐름은 별도 메서드로 추가될 예정(Step 4). */
+    /** 카카오 인가 코드로 Web 로그인 처리 후 응답 payload 반환. */
     @Transactional
     public LoginPayloadResDTO execute(String code) {
 
@@ -47,6 +48,25 @@ public class KakaoLoginUsecase {
         kakaoAuthService.logLoginSuccess(
                 member.getId(),
                 accessToken.substring(0, Math.min(accessToken.length(), 10)) + "..."
+        );
+
+        return payload;
+    }
+
+    /** 카카오 SDK 앱 AccessToken으로 로그인 처리 후 응답 payload 반환. */
+    @Transactional
+    public LoginPayloadResDTO executeAppLogin(KakaoAppLoginReqDTO req, ClientType clientType) {
+        String masked = req.accessToken().substring(0, Math.min(req.accessToken().length(), 10)) + "...";
+        log.info("[LOGIN][KAKAO][APP] start accessToken={}", masked);
+
+        OAuthUserInfoDTO userInfo = kakaoAuthService.getUserInfo(req.accessToken());
+        Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.KAKAO, userInfo);
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, clientType);
+
+        String issuedToken = payload.loginRes().accessToken();
+        kakaoAuthService.logLoginSuccess(
+                member.getId(),
+                issuedToken.substring(0, Math.min(issuedToken.length(), 10)) + "..."
         );
 
         return payload;

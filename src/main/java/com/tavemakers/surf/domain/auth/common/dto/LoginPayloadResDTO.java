@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.auth.common.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.http.ResponseCookie;
 
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseCookie;
  * <p>Usecase ↔ Controller 간 내부 전달 객체. 외부 응답 본문은 컨트롤러가 별도 조립한다.
  */
 @Schema(description = "클라이언트 타입별 로그인 응답 wrapper (내부 전달용)")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record LoginPayloadResDTO(
 
         LoginResDTO loginRes,
