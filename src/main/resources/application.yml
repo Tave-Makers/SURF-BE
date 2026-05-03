@@ -74,3 +74,10 @@ springdoc:
 
 server:
   forward-headers-strategy: framework
+
+logging:
+  forwarding:
+    enabled: false
+    url: ${LOG_FORWARD_URL:}
+    timeout-ms: 3000
+    max-retries: 1

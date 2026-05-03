@@ -41,6 +41,7 @@ public class SecurityConfig {
     private static final String[] PERMITTED_URLS = {
             "/swagger-ui/**",
             "/v3/api-docs/**",
+
             "/kakao/login",
             "/login/oauth2/code/kakao",
             "/login/**"

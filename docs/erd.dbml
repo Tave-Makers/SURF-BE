@@ -1,0 +1,350 @@
+// SURF 프로젝트 ERD
+// dbdiagram.io 에 붙여넣기해서 사용
+// https://dbdiagram.io/d
+
+// =============================================
+// 회원 (Member)
+// =============================================
+
+Table member {
+  member_id      bigint      [pk, increment, note: "회원 고유 식별자"]
+  kakao_id       bigint      [unique, not null, note: "카카오 OAuth 고유 ID"]
+  name           varchar     [not null, note: "회원 이름"]
+  email          varchar     [unique, not null, note: "이메일 (로그인/연락용)"]
+  password       varchar     [note: "관리자 페이지 전용 비밀번호 (일반 회원은 null)"]
+  profile_image_url varchar  [note: "프로필 이미지 S3 URL"]
+  phone_number   varchar     [note: "휴대폰 번호"]
+  phone_number_public boolean [default: false, note: "전화번호 공개 여부"]
+  university     varchar     [note: "대학교"]
+  graduate_school varchar    [note: "대학원"]
+  self_introduction varchar(256) [note: "자기소개"]
+  link           varchar(1024) [note: "개인 링크 (포트폴리오 등)"]
+  status         varchar     [not null, note: "회원 상태: REGISTERING(가입중) / WAITING(대기중) / APPROVED(승인) / REJECTED(거절) / WITHDRAWN(탈퇴)"]
+  role           varchar     [note: "권한: ADMIN(루트) / PRESIDENT(회장) / MANAGER(매니저) / MEMBER(일반회원)"]
+  member_type    varchar     [note: "회원 구분: YB(재학) / OB(졸업)"]
+  activity_status boolean    [note: "활동 여부 (true: 활동중, false: 비활동)"]
+  is_deleted     boolean     [not null, default: false, note: "탈퇴 처리 여부 (소프트 삭제)"]
+  deleted_at     datetime    [note: "탈퇴 처리 시각"]
+  created_at     datetime    [note: "가입 시각"]
+  updated_at     datetime    [note: "마지막 수정 시각"]
+}
+
+Table track {
+  track_id       bigint      [pk, increment, note: "트랙 고유 식별자"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "소유 회원"]
+  generation     int         [not null, note: "활동 기수 (예: 13기)"]
+  part           varchar     [not null, note: "파트: BACKEND / FRONTEND / DESIGN / AI 등"]
+  created_at     datetime    [note: "등록 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table career {
+  career_id      bigint      [pk, increment, note: "경력 고유 식별자"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "소유 회원"]
+  company_name   varchar     [not null, note: "회사명"]
+  position       varchar     [not null, note: "직무"]
+  start_date     date        [not null, note: "근무 시작일"]
+  end_date       date        [note: "근무 종료일 (재직 중이면 null)"]
+  is_working     boolean     [not null, note: "현재 재직 여부"]
+  created_at     datetime    [note: "등록 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 활동 (Activity)
+// =============================================
+
+Table active_generation {
+  id             bigint      [pk, note: "항상 1 고정 (활동 기수는 하나만 존재)"]
+  generation     int         [not null, note: "현재 활동 중인 기수 (예: 13)"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "마지막 수정 시각"]
+}
+
+Table activity_record {
+  id             bigint      [pk, note: "TSID 기반 고유 식별자 (시간순 정렬 가능)"]
+  member_id      bigint      [note: "활동 대상 회원 ID (개인 활동인 경우)"]
+  team_id        bigint      [note: "활동 대상 팀 ID (팀 활동인 경우)"]
+  category       varchar     [note: "활동 대분류: REGULAR_SESSION / ACTIVITY / STUDY_ON_PERSONAL / PROJECT_ON_PERSONAL / STUDY_ON_TEAM / PROJECT_ON_TEAM"]
+  activity_type  varchar     [note: "활동 세부 종류 (예: EARLY_BIRD, SESSION_ABSENCE 등 60여 가지)"]
+  score_type     varchar     [note: "점수 유형: REWARD(상점) / PENALTY(벌점)"]
+  activity_date  date        [note: "활동 발생 날짜"]
+  applied_score  decimal(19,1) [note: "해당 활동으로 적용된 점수 변화량 (양수/음수)"]
+  prefix_sum     decimal(19,1) [note: "이 활동 기록 이후의 누적 점수 스냅샷"]
+  is_deleted     boolean     [not null, default: false, note: "소프트 삭제 여부 (삭제 시 점수 자동 롤백)"]
+  created_at     datetime    [note: "기록 생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 점수 (Score)
+// =============================================
+
+Table personal_activity_score {
+  id             bigint      [pk, increment, note: "점수 레코드 고유 식별자"]
+  member_id      bigint      [unique, ref: - member.member_id, note: "점수 소유 회원 (개인 점수인 경우, 회원 승인 시 자동 생성)"]
+  team_id        bigint      [unique, ref: - team.id, note: "점수 소유 팀 (팀 점수인 경우)"]
+  score          decimal(19,1) [note: "현재 누적 점수 (YB 초기값: 100, OB 초기값: 50, 팀: 0)"]
+  reward_prefix_sum decimal(19,1) [note: "누적 상점 합계"]
+  penalty_prefix_sum decimal(19,1) [note: "누적 벌점 합계"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 배지 (Badge)
+// =============================================
+
+Table badge {
+  badge_id       bigint      [pk, increment, note: "배지 고유 식별자"]
+  name           varchar(100) [not null, note: "배지 이름"]
+  image_url      varchar(255) [note: "배지 이미지 S3 URL"]
+  description    text        [note: "배지 설명"]
+  requirement    varchar(255) [note: "배지 획득 조건 설명 (현재는 텍스트만, 자동 부여 미구현)"]
+}
+
+Table member_badge {
+  member_badge_id bigint     [pk, increment, note: "회원-배지 매핑 고유 식별자"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "배지 보유 회원"]
+  badge_id       bigint      [not null, ref: > badge.badge_id, note: "보유 배지"]
+  awarded_at     date        [not null, note: "배지 수여일 (관리자가 수동 부여)"]
+
+  indexes {
+    (member_id, badge_id) [unique, note: "회원당 동일 배지 중복 보유 불가"]
+  }
+}
+
+// =============================================
+// 팀 (Team)
+// =============================================
+
+Table team {
+  id             bigint      [pk, increment, note: "팀 고유 식별자"]
+  generation     int         [not null, note: "팀이 속한 기수"]
+  type           varchar(20) [not null, note: "팀 유형: STUDY(스터디) / PROJECT(프로젝트)"]
+  name           varchar(50) [not null, note: "팀 이름"]
+  description    varchar(500) [note: "팀 소개"]
+  leader_member_id bigint    [not null, ref: > member.member_id, note: "팀장 (팀원 중 한 명)"]
+  created_at     datetime    [note: "팀 생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table team_member {
+  id             bigint      [pk, increment, note: "팀원 매핑 고유 식별자"]
+  team_id        bigint      [not null, ref: > team.id, note: "소속 팀"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "팀원"]
+
+  indexes {
+    (team_id, member_id) [unique, note: "팀 내 중복 회원 불가"]
+  }
+}
+
+// =============================================
+// 게시글 (Post)
+// =============================================
+
+Table board {
+  id             bigint      [pk, increment, note: "게시판 고유 식별자"]
+  name           varchar     [not null, note: "게시판 이름 (예: 공지사항, 자유게시판)"]
+  type           varchar     [not null, note: "게시판 유형: NOTICE / GENERAL 등"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table board_category {
+  id             bigint      [pk, increment, note: "카테고리 고유 식별자"]
+  board_id       bigint      [not null, ref: > board.id, note: "상위 게시판"]
+  name           varchar     [not null, note: "카테고리 이름"]
+  slug           varchar     [not null, note: "URL용 식별 슬러그 (게시판 내 unique)"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+
+  indexes {
+    (board_id, slug) [unique]
+  }
+}
+
+Table post {
+  post_id        bigint      [pk, increment, note: "게시글 고유 식별자"]
+  board_id       bigint      [not null, ref: > board.id, note: "소속 게시판"]
+  board_name     varchar     [note: "게시판 이름 캐싱 (조회 성능 최적화)"]
+  category_id    bigint      [not null, ref: > board_category.id, note: "소속 카테고리"]
+  category_name  varchar     [note: "카테고리 이름 캐싱 (조회 성능 최적화)"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "작성자"]
+  title          varchar     [not null, note: "게시글 제목"]
+  content        longtext    [not null, note: "게시글 본문"]
+  thumbnail_url  varchar(500) [note: "썸네일 이미지 URL (원본 이미지에서 자동 생성)"]
+  posted_at      datetime    [note: "실제 게시 시각 (예약 발행 시 발행 시점으로 갱신)"]
+  is_reserved    boolean     [note: "예약 게시 여부 (true이면 posted_at 도달 시 자동 발행)"]
+  pinned         boolean     [note: "상단 고정 여부"]
+  view_count     int         [default: 0, note: "조회수"]
+  like_count     bigint      [default: 0, note: "좋아요 수 (캐싱)"]
+  comment_count  bigint      [default: 0, note: "댓글 수 (캐싱)"]
+  scrap_count    bigint      [default: 0, note: "스크랩 수 (캐싱)"]
+  has_schedule   boolean     [default: false, note: "연결된 일정 존재 여부"]
+  schedule_id    bigint      [note: "연결된 일정 ID (has_schedule=true인 경우)"]
+  version        bigint      [note: "낙관적 락 버전 (좋아요/스크랩 동시성 제어)"]
+  created_at     datetime    [note: "작성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table post_image_url {
+  post_image_url_id bigint   [pk, note: "TSID 기반 고유 식별자"]
+  post_id        bigint      [not null, ref: > post.post_id, note: "소속 게시글"]
+  original_url   varchar(500) [not null, note: "이미지 원본 S3 URL"]
+  sequence       int         [note: "이미지 표시 순서"]
+  created_at     datetime    [note: "업로드 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table post_like {
+  id             bigint      [pk, increment, note: "좋아요 고유 식별자"]
+  post_id        bigint      [not null, ref: > post.post_id, note: "좋아요 대상 게시글"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "좋아요 누른 회원"]
+  created_at     datetime    [note: "좋아요 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+
+  indexes {
+    (post_id, member_id) [unique, note: "게시글당 회원 1회만 좋아요 가능"]
+  }
+}
+
+Table scrap {
+  id             bigint      [pk, increment, note: "스크랩 고유 식별자"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "스크랩한 회원"]
+  post_id        bigint      [not null, ref: > post.post_id, note: "스크랩된 게시글"]
+  created_at     datetime    [note: "스크랩 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+
+  indexes {
+    (member_id, post_id) [unique, note: "동일 게시글 중복 스크랩 불가"]
+  }
+}
+
+// =============================================
+// 댓글 (Comment)
+// =============================================
+
+Table comment {
+  id             bigint      [pk, increment, note: "댓글 고유 식별자"]
+  post_id        bigint      [not null, ref: > post.post_id, note: "소속 게시글"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "작성자"]
+  parent_id      bigint      [ref: > comment.id, note: "부모 댓글 ID (루트 댓글이면 null)"]
+  root_id        bigint      [note: "최상위 루트 댓글 ID (트리 조회 최적화용)"]
+  depth          int         [not null, default: 0, note: "댓글 깊이 (루트=0, 대댓글=1, 대대댓글=2 ...)"]
+  content        varchar(1000) [not null, note: "댓글 내용"]
+  like_count     bigint      [default: 0, note: "좋아요 수 (캐싱)"]
+  created_at     datetime    [note: "작성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table comment_like {
+  id             bigint      [pk, increment, note: "댓글 좋아요 고유 식별자"]
+  comment_id     bigint      [not null, ref: > comment.id, note: "좋아요 대상 댓글"]
+  member_id      bigint      [not null, ref: > member.member_id, note: "좋아요 누른 회원"]
+
+  indexes {
+    (comment_id, member_id) [unique, note: "댓글당 회원 1회만 좋아요 가능"]
+  }
+}
+
+// =============================================
+// 일정 (Schedule)
+// =============================================
+
+Table schedule {
+  schedule_id    bigint      [pk, increment, note: "일정 고유 식별자"]
+  post_id        bigint      [ref: - post.post_id, note: "연결된 게시글 (없으면 null)"]
+  category       varchar     [not null, note: "일정 카테고리 (예: 정규세션, 스터디)"]
+  title          varchar     [not null, note: "일정 제목"]
+  start_at       datetime    [not null, note: "일정 시작 시각"]
+  end_at         datetime    [not null, note: "일정 종료 시각"]
+  location       varchar     [not null, note: "장소"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 예약 게시글 (Reservation)
+// =============================================
+
+Table reservation {
+  reservation_id bigint      [pk, increment, note: "예약 고유 식별자"]
+  post_id        bigint      [note: "예약 발행 대상 게시글 ID"]
+  status         varchar     [note: "예약 상태: RESERVED(예약중) / PUBLISHED(발행됨) / CANCELLED(취소됨)"]
+  reserved_at    timestamp   [note: "예약 발행 예정 시각 (이 시각 도달 시 스케줄러가 자동 발행)"]
+  created_at     datetime    [note: "예약 생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 쪽지 (Letter)
+// =============================================
+
+Table letter {
+  letter_id      bigint      [pk, increment, note: "쪽지 고유 식별자"]
+  sender_id      bigint      [not null, ref: > member.member_id, note: "발신자"]
+  receiver_id    bigint      [not null, ref: > member.member_id, note: "수신자"]
+  title          varchar(100) [not null, note: "쪽지 제목"]
+  content        text        [not null, note: "쪽지 내용"]
+  sns            varchar(100) [note: "발신자 SNS 계정 (선택 입력)"]
+  reply_email    varchar(100) [not null, note: "답장 받을 이메일"]
+  created_at     datetime    [note: "발송 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 알림 (Notification)
+// =============================================
+
+Table notification {
+  id             bigint      [pk, increment, note: "알림 고유 식별자"]
+  member_id      bigint      [not null, note: "수신자 회원 ID"]
+  type           varchar(40) [not null, note: "알림 유형 (예: COMMENT_CREATED, POST_LIKED 등)"]
+  payload        json        [not null, note: "알림 본문 데이터 (유형별 가변 필드 JSON)"]
+  is_read        boolean     [not null, default: false, note: "읽음 여부"]
+  created_at     datetime    [note: "알림 생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+Table device_token {
+  id             bigint      [pk, increment, note: "디바이스 토큰 고유 식별자"]
+  member_id      bigint      [not null, note: "토큰 소유 회원 ID"]
+  token          varchar(255) [unique, not null, note: "FCM 푸시 알림 토큰"]
+  platform       varchar(20) [not null, note: "플랫폼: WEB / ANDROID / IOS"]
+  enabled        boolean     [not null, default: true, note: "토큰 유효 여부 (로그아웃 시 false)"]
+  last_seen_at   datetime    [note: "마지막 사용 시각"]
+}
+
+// =============================================
+// 피드백 (Feedback)
+// =============================================
+
+Table feedback {
+  id             bigint      [pk, increment, note: "피드백 고유 식별자"]
+  content        varchar(500) [not null, note: "피드백 내용"]
+  writer_hash    varchar(64) [not null, note: "작성자 식별 해시 (일 단위 갱신, 익명성 보장)"]
+  created_at     datetime    [note: "작성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}
+
+// =============================================
+// 홈 (Home)
+// =============================================
+
+Table home_banner {
+  id             bigint      [pk, increment, note: "배너 고유 식별자"]
+  name           varchar(100) [not null, note: "배너 이름"]
+  image_url      varchar(1000) [not null, note: "배너 이미지 URL"]
+  link_url       varchar(1000) [not null, note: "배너 클릭 시 이동할 링크"]
+  display_order  int         [not null, note: "노출 순서 (낮을수록 앞에 표시)"]
+  status         boolean     [not null, default: true, note: "노출 활성화 여부"]
+}
+
+Table home_content {
+  id             bigint      [pk, note: "항상 1 고정 (홈 메시지는 하나만 존재)"]
+  message        varchar(2000) [not null, note: "홈 화면 표시 메시지"]
+  sender         varchar(200) [not null, note: "메시지 발신자명"]
+  created_at     datetime    [note: "생성 시각"]
+  updated_at     datetime    [note: "수정 시각"]
+}

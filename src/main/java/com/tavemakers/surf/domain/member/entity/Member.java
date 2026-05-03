@@ -38,7 +38,7 @@ public class Member extends BaseEntity {
     @Column(name = "member_id")
     private Long id;
 
-    @Column(nullable = false, unique = true) // 이메일은 고유해야 함
+    @Column(nullable = false, unique = true)
     private Long kakaoId;
 
     @Column(nullable = false)
@@ -81,6 +81,9 @@ public class Member extends BaseEntity {
     private MemberType memberType; // OB, YB 구분
 
     private boolean activityStatus; // 활동/비활동 여부
+
+    @Column(nullable = false)
+    private boolean termsAgreed = false;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
@@ -179,6 +182,11 @@ public class Member extends BaseEntity {
      */
     public void approve() {
         this.status = MemberStatus.APPROVED;
+    }
+
+    /** 약관 동의 처리 */
+    public void agreeTerms() {
+        this.termsAgreed = true;
     }
 
     public void reject() {
