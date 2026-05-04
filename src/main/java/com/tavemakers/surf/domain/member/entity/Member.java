@@ -184,6 +184,12 @@ public class Member extends BaseEntity {
         this.status = MemberStatus.APPROVED;
     }
 
+    /** 회원 기수 상태와 활동 여부를 현재 정책에 맞게 동기화합니다. */
+    public void syncGenerationStatus(MemberType memberType, boolean activityStatus) {
+        this.memberType = memberType;
+        this.activityStatus = activityStatus;
+    }
+
     /** 약관 동의 처리 */
     public void agreeTerms() {
         this.termsAgreed = true;
@@ -317,4 +323,3 @@ public class Member extends BaseEntity {
     }
 
 }
-

@@ -25,6 +25,7 @@ public interface TrackRepository extends JpaRepository<Track, Long> {
      */
     @Query("SELECT t FROM Track t JOIN FETCH t.member m " +
             "WHERE m.activityStatus = true " +
+            "AND m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED " +
             "AND t.generation = (SELECT MAX(t2.generation) FROM Track t2 WHERE t2.member = t.member)")
     List<Track> findAllWithActiveMember();
 

@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.member.usecase;
 
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
+import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
@@ -39,6 +40,8 @@ public class MemberAdminUsecase {
     //<editor-fold desc="MemberAdminUsecase Dependency Summary">
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;
+    private final ActiveGenerationGetService activeGenerationGetService;
+    private final MemberGenerationSyncService memberGenerationSyncService;
     private final MemberBlacklistCreateService memberBlacklistCreateService;
     private final MemberDismissService memberDismissService;
     private final CareerGetService careerGetService;
@@ -73,6 +76,8 @@ public class MemberAdminUsecase {
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
         members.forEach(Member::approve);
+        Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
+        members.forEach(member -> memberGenerationSyncService.syncApprovedMember(member, activeGeneration));
         personalScoreCreateService.savePersonalScores(members);
     }
 

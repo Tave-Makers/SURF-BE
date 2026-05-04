@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.domain.member.dto.response.MemberSignupResDTO;
 import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
 import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
+import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
 import com.tavemakers.surf.domain.member.dto.response.OnboardingCheckResDTO;
 import com.tavemakers.surf.domain.member.usecase.MemberUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -59,6 +60,9 @@ public class MemberSignupController {
             if (e instanceof MemberAlreadyExistsException) {
                 statusCode = 409;
                 errorReason = "MEMBER_ALREADY_EXISTS";
+            } else if (e instanceof MemberSignupRejectedException) {
+                statusCode = 403;
+                errorReason = "ADMIN_REJECTED";
             } else if (e instanceof MemberBlacklistedException) {
                 statusCode = 403;
                 errorReason = "MEMBER_BLACKLISTED";

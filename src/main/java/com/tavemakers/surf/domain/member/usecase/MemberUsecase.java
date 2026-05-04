@@ -8,6 +8,8 @@ import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
+import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
+import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.service.*;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
@@ -163,18 +165,11 @@ public class MemberUsecase {
         MemberUsecase proxy = context.getBean(MemberUsecase.class);
 
         if (status == MemberStatus.APPROVED) {
-            MemberSignupResDTO dto = MemberSignupResDTO.from(member);
-            return proxy.signupSucceeded(memberId, dto);
+            throw new MemberAlreadyExistsException();
         }
 
         if (status == MemberStatus.REJECTED) {
-            int statusCode = 403;
-            String errorReason = "ADMIN_REJECTED";
-
-            try {
-                proxy.signupFailed(memberId, statusCode, errorReason);
-            } catch (RuntimeException ignored) {}
-            return MemberSignupResDTO.from(member);
+            throw new MemberSignupRejectedException();
         }
 
         return proxy.signupCreate(member, request);
