@@ -80,9 +80,17 @@ public class AppleLoginController {
             );
         }
 
+        // code 검증을 nonce 소비 전에 수행 — nonce는 1회용이므로 code 없이 소비되면 재시도 불가
+        if (code == null || code.isBlank()) {
+            throw new AppleAuthException(
+                    AppleAuthErrorMessage.MISSING_AUTHORIZATION_CODE.getStatus(),
+                    AppleAuthErrorMessage.MISSING_AUTHORIZATION_CODE.getMessage()
+            );
+        }
+
         log.info("[LOGIN][APPLE][WEB][CALLBACK] start state={}", state);
 
-        // state로 nonce 조회 및 삭제 (1회용). state 없거나 만료 시 INVALID_STATE 예외 발생
+        // state로 nonce를 원자적 조회·삭제 (1회용). state 없거나 만료 시 INVALID_STATE 예외 발생
         String nonce = appleOAuthStateService.popNonce(state);
 
         LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce);
