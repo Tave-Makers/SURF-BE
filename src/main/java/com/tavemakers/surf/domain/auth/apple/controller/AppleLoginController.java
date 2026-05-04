@@ -111,10 +111,9 @@ public class AppleLoginController {
     )
     @PostMapping("/login/apple/app")
     public ApiResponse<LoginPayloadResDTO> appleAppLogin(
-            @RequestBody @Valid AppleAppLoginReqDTO req,
-            ClientType clientType
+            @RequestBody @Valid AppleAppLoginReqDTO req
     ) {
-        LoginPayloadResDTO payload = appleLoginUsecase.executeAppLogin(req, clientType);
+        LoginPayloadResDTO payload = appleLoginUsecase.executeAppLogin(req, ClientType.APP);
         return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload);
     }
 

@@ -33,10 +33,9 @@ public class KakaoAppLoginController {
     )
     @PostMapping("/login/kakao/app")
     public ApiResponse<LoginPayloadResDTO> kakaoAppLogin(
-            @RequestBody @Valid KakaoAppLoginReqDTO req,
-            ClientType clientType
+            @RequestBody @Valid KakaoAppLoginReqDTO req
     ) {
-        LoginPayloadResDTO payload = kakaoLoginUsecase.executeAppLogin(req, clientType);
+        LoginPayloadResDTO payload = kakaoLoginUsecase.executeAppLogin(req, ClientType.APP);
         return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload);
     }
 }
