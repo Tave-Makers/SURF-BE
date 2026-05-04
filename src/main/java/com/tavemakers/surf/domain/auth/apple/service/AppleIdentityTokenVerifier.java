@@ -18,8 +18,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HexFormat;
 
 /**
  * Apple identityToken 검증 서비스 (D3, D4).
@@ -39,7 +43,7 @@ public class AppleIdentityTokenVerifier {
      * Apple identityToken 검증 후 사용자 정보 추출.
      * @param idToken        Apple 발급 RS256 JWT
      * @param clientType     APP=Bundle ID, WEB=Service ID aud 검증 (D4)
-     * @param rawNonce       클라이언트가 원본 nonce. SHA-256 해시 후 claim과 비교.
+     * @param rawNonce       클라이언트가 전달한 원본 nonce. APP 흐름은 SHA-256(hex) 후 claim과 비교, WEB 흐름은 평문 비교.
      */
     public OAuthUserInfoDTO verifyAndExtract(String idToken, ClientType clientType, String rawNonce) {
         try {
@@ -95,13 +99,27 @@ public class AppleIdentityTokenVerifier {
                     AppleAuthErrorMessage.TOKEN_EXPIRED.getMessage()
             );
         }
-        // Apple Web 플로우: nonce를 해싱 없이 id_token에 그대로 저장 → rawNonce 직접 비교
+        // APP: 클라이언트가 SHA-256(rawNonce)를 Apple로 보내므로 서버에서 해싱 후 비교
+        // WEB: 서버가 rawNonce를 authorize URL에 직접 삽입 → Apple이 그대로 echo
         String nonceClaim = (String) claims.getClaim("nonce");
-        if (!rawNonce.equals(nonceClaim)) {
+        String expectedNonce = (clientType == ClientType.APP)
+                ? sha256Hex(rawNonce)
+                : rawNonce;
+        if (!expectedNonce.equals(nonceClaim)) {
             throw new AppleAuthException(
                     AppleAuthErrorMessage.INVALID_NONCE.getStatus(),
                     AppleAuthErrorMessage.INVALID_NONCE.getMessage()
             );
+        }
+    }
+
+    private String sha256Hex(String input) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256")
+                    .digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 unavailable", e);
         }
     }
 }
