@@ -36,6 +36,15 @@ spring:
       "[mail.smtp.writetimeout]": 5000
 
 
+apple:
+  service-client-id: ${APPLE_SERVICE_CLIENT_ID}
+  app-bundle-id: ${APPLE_APP_BUNDLE_ID}
+  team-id: ${APPLE_TEAM_ID}
+  key-id: ${APPLE_KEY_ID}
+  private-key: ${APPLE_PRIVATE_KEY}
+  redirect-uri: ${APPLE_REDIRECT_URI}
+
+
 kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
   unlink-uri: https://kapi.kakao.com/v1/user/unlink
