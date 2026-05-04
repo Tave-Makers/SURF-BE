@@ -19,7 +19,7 @@ public class BadgeUpdateController {
 
     private final BadgeUsecase badgeUsecase;
 
-    @Operation(summary = "배지 수정", description = "기존 배지 정보를 수정합니다.")
+    @Operation(summary = "배지 (부분) 수정", description = "기존 배지 정보를 수정합니다. 일부 필드 수정 요청도 가능합니다.")
     @PatchMapping("/v1/admin/badges/{badgeId}")
     public ApiResponse<Void> updateBadge(
             @PathVariable Long badgeId,
