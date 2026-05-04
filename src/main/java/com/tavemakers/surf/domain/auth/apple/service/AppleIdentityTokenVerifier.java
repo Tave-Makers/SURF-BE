@@ -24,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.List;
 
 /**
  * Apple identityToken 검증 서비스 (D3, D4).
@@ -78,30 +79,42 @@ public class AppleIdentityTokenVerifier {
     }
 
     private void validateClaims(JWTClaimsSet claims, ClientType clientType, String rawNonce) {
+        // getIssuer() null-safe: EXPECTED_ISSUER.equals(null) → false → INVALID_ISSUER 정상 처리
         if (!EXPECTED_ISSUER.equals(claims.getIssuer())) {
             throw new AppleAuthException(
                     AppleAuthErrorMessage.INVALID_ISSUER.getStatus(),
                     AppleAuthErrorMessage.INVALID_ISSUER.getMessage()
             );
         }
+
         String expectedAud = (clientType == ClientType.APP)
                 ? props.getAppBundleId()
                 : props.getServiceClientId();
-        if (!claims.getAudience().contains(expectedAud)) {
+        List<String> audience = claims.getAudience();
+        if (audience == null || !audience.contains(expectedAud)) {
             throw new AppleAuthException(
                     AppleAuthErrorMessage.INVALID_AUDIENCE.getStatus(),
                     AppleAuthErrorMessage.INVALID_AUDIENCE.getMessage()
             );
         }
-        if (new Date().after(claims.getExpirationTime())) {
+
+        Date exp = claims.getExpirationTime();
+        if (exp == null || new Date().after(exp)) {
             throw new AppleAuthException(
                     AppleAuthErrorMessage.TOKEN_EXPIRED.getStatus(),
                     AppleAuthErrorMessage.TOKEN_EXPIRED.getMessage()
             );
         }
+
         // APP: 클라이언트가 SHA-256(rawNonce)를 Apple로 보내므로 서버에서 해싱 후 비교
         // WEB: 서버가 rawNonce를 authorize URL에 직접 삽입 → Apple이 그대로 echo
         String nonceClaim = (String) claims.getClaim("nonce");
+        if (nonceClaim == null || rawNonce == null) {
+            throw new AppleAuthException(
+                    AppleAuthErrorMessage.INVALID_NONCE.getStatus(),
+                    AppleAuthErrorMessage.INVALID_NONCE.getMessage()
+            );
+        }
         String expectedNonce = (clientType == ClientType.APP)
                 ? sha256Hex(rawNonce)
                 : rawNonce;
