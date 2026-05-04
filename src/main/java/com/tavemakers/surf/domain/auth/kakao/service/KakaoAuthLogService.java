@@ -25,7 +25,7 @@ public class KakaoAuthLogService {
     @LogEvent("login.succeeded")
     public void logLoginSuccess(
             @LogParam("user_id") Long userId,
-            @LogParam("issued_token") String issuedToken
+            @LogParam("issued_token_masked") String issuedToken
     ) {}
 
     /** 로그인 실패 로그 */
