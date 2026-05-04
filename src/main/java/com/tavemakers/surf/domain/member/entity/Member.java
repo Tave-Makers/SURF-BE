@@ -97,6 +97,9 @@ public class Member extends BaseEntity {
 
     private boolean activityStatus; // 활동/비활동 여부
 
+    @Column(nullable = false)
+    private boolean termsAgreed = false;
+
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
@@ -212,6 +215,11 @@ public class Member extends BaseEntity {
      */
     public void approve() {
         this.status = MemberStatus.APPROVED;
+    }
+
+    /** 약관 동의 처리 */
+    public void agreeTerms() {
+        this.termsAgreed = true;
     }
 
     public void reject() {
