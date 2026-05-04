@@ -6,6 +6,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ public class MemberWithdrawService {
     private final MemberGetService memberGetService;
     private final RefreshTokenService refreshTokenService;
 
+    @Qualifier("kakaoRestTemplate")
     private final RestTemplate restTemplate;
 
     @Value("${kakao.admin-key}")
