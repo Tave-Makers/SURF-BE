@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.auth.kakao.controller;
 
 import com.tavemakers.surf.domain.auth.common.dto.ClientType;
 import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
+import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -29,13 +30,13 @@ public class KakaoAppLoginController {
     @Operation(
             summary = "카카오 앱 SDK 로그인",
             description = "카카오 SDK AccessToken을 서버에서 /v2/user/me로 검증 후 SURF JWT 발급. " +
-                          "응답 본문에 refreshToken 포함 (APP 흐름)."
+                          "응답 본문에 accessToken + refreshToken 포함 (APP 흐름)."
     )
     @PostMapping("/login/kakao/app")
-    public ApiResponse<LoginPayloadResDTO> kakaoAppLogin(
+    public ApiResponse<LoginResDTO> kakaoAppLogin(
             @RequestBody @Valid KakaoAppLoginReqDTO req
     ) {
         LoginPayloadResDTO payload = kakaoLoginUsecase.executeAppLogin(req, ClientType.APP);
-        return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload);
+        return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes());
     }
 }

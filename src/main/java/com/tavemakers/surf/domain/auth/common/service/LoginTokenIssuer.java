@@ -27,17 +27,14 @@ public class LoginTokenIssuer {
     public LoginPayloadResDTO issue(Member member, OAuthUserInfoDTO info, ClientType clientType) {
         String deviceId = UUID.randomUUID().toString();
         String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
-        LoginResDTO loginRes = buildLoginRes(info, accessToken);
 
         if (clientType == ClientType.APP) {
             String refreshToken = refreshTokenService.issueRaw(member.getId(), deviceId);
-            return LoginPayloadResDTO.app(loginRes, refreshToken);
+            LoginResDTO loginRes = LoginResDTO.ofApp(info.nickname(), info.email(), accessToken, refreshToken, info.profileImageUrl());
+            return LoginPayloadResDTO.app(loginRes);
         }
+        LoginResDTO loginRes = LoginResDTO.of(info.nickname(), info.email(), accessToken, info.profileImageUrl());
         ResponseCookie cookie = refreshTokenService.issue(member.getId(), deviceId);
         return LoginPayloadResDTO.web(loginRes, cookie);
-    }
-
-    private LoginResDTO buildLoginRes(OAuthUserInfoDTO info, String accessToken) {
-        return LoginResDTO.of(info.nickname(), info.email(), accessToken, info.profileImageUrl());
     }
 }

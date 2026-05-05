@@ -103,18 +103,18 @@ public class AppleLoginController {
 
     /**
      * Apple SDK 앱 로그인 — identityToken + nonce 검증 후 JWT 발급.
-     * <p>APP 클라이언트는 응답 본문에 {@code loginRes} + {@code refreshToken} 수신.
+     * <p>APP 클라이언트는 응답 본문에 accessToken + refreshToken 수신.
      */
     @Operation(
             summary = "Apple 앱 SDK 로그인",
-            description = "Apple SDK identityToken을 RS256 검증 후 SURF JWT 발급. 응답 본문에 refreshToken 포함 (APP 흐름)."
+            description = "Apple SDK identityToken을 RS256 검증 후 SURF JWT 발급. 응답 본문에 accessToken + refreshToken 포함 (APP 흐름)."
     )
     @PostMapping("/login/apple/app")
-    public ApiResponse<LoginPayloadResDTO> appleAppLogin(
+    public ApiResponse<LoginResDTO> appleAppLogin(
             @RequestBody @Valid AppleAppLoginReqDTO req
     ) {
         LoginPayloadResDTO payload = appleLoginUsecase.executeAppLogin(req, ClientType.APP);
-        return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload);
+        return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes());
     }
 
     /**
