@@ -8,4 +8,8 @@ public class InvalidMemberInfoException extends BaseException {
     public InvalidMemberInfoException() {
         super(INVALID_MEMBER_INFO.getStatus(), INVALID_MEMBER_INFO.getMessage());
     }
+
+    public InvalidMemberInfoException(String message) {
+        super(INVALID_MEMBER_INFO.getStatus(), message);
+    }
 }

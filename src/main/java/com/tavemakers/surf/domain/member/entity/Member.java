@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.member.entity;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
+import com.tavemakers.surf.domain.member.exception.InvalidMemberInfoException;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -168,7 +169,15 @@ public class Member extends BaseEntity {
             throw new IllegalStateException(provider + " 식별자(oauthId)가 비어 있습니다.");
         }
 
-        Long legacyKakaoId = (provider == Provider.KAKAO) ? Long.parseLong(info.oauthId()) : null;
+        Long legacyKakaoId = null;
+        if (provider == Provider.KAKAO) {
+            try {
+                legacyKakaoId = Long.parseLong(info.oauthId());
+            } catch (NumberFormatException e) {
+                throw new InvalidMemberInfoException(
+                        "Provider.KAKAO oauthId가 유효한 숫자 형식이 아닙니다: " + info.oauthId());
+            }
+        }
 
         return Member.builder()
                 .provider(provider)
