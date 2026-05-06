@@ -35,9 +35,21 @@ public class Badge {
     }
 
     public void update(String name, String imageUrl, String description, String requirement) {
-        this.name = name;
-        this.imageUrl = imageUrl;
-        this.description = description;
-        this.requirement = requirement;
+
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+
+        if (imageUrl != null && !imageUrl.isBlank()) {
+            this.imageUrl = imageUrl;
+        }
+
+        if (description != null && !description.isBlank()) {
+            this.description = description;
+        }
+
+        if (requirement != null && !requirement.isBlank()) {
+            this.requirement = requirement;
+        }
     }
 }

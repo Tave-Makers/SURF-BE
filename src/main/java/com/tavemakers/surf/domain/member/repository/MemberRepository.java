@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.member.repository;
 
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByEmailAndStatus(String email, MemberStatus status);
   
+    /** provider + providerId 복합 식별자로 회원 조회 (D1). */
+    Optional<Member> findByProviderAndProviderId(Provider provider, String providerId);
+
+    /** @deprecated provider/providerId 모델로 마이그레이션됨 (D1). 호출자 일소 후 후속 PR(Step 7)에서 제거. */
+    @Deprecated
     Optional<Member> findByKakaoId(Long kakaoId);
 
     // 댓글(comment)에서 멘션할 회원을 검색할 때 사용

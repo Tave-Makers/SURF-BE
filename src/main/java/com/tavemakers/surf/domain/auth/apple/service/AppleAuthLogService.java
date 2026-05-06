@@ -1,24 +1,24 @@
-package com.tavemakers.surf.domain.auth.kakao.service;
+package com.tavemakers.surf.domain.auth.apple.service;
 
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import org.springframework.stereotype.Service;
 
+/** Apple 로그인 이벤트 로깅 서비스 */
 @Service
-public class KakaoAuthLogService {
+public class AppleAuthLogService {
 
-    /** 카카오 인가 요청 로그 */
-    @LogEvent("login.kakao.request")
+    /** Apple 인가 요청 로그 */
+    @LogEvent("login.apple.request")
     public void logAuthorize(
             @LogParam("login_method") String loginMethod,
             @LogParam("redirect_uri") String redirectUri
     ) {}
 
-    /** 카카오 콜백 로그 */
-    @LogEvent("login.kakao.callback")
+    /** Apple 콜백 로그 */
+    @LogEvent("login.apple.callback")
     public void logCallback(
-            @LogParam("provider") String provider,
-            @LogParam("code_length") int codeLength
+            @LogParam("provider") String provider
     ) {}
 
     /** 로그인 성공 로그 */
@@ -33,7 +33,5 @@ public class KakaoAuthLogService {
     public void logLoginFailed(
             @LogParam("error_code") int errorCode,
             @LogParam("error_msg") String errorMsg
-    ) {
-        // @LogEvent로 로깅만 수행하고 예외 전파는 호출자에서 처리
-    }
+    ) {}
 }

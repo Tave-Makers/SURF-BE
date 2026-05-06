@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.auth.kakao.controller;
 
+import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthErrorMessage;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthException;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
@@ -9,6 +9,7 @@ import com.tavemakers.surf.domain.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -63,7 +64,8 @@ public class KakaoLoginController {
             @RequestParam(value = "state", required = true) String state,
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "error", required = false) String error,
-            @CookieValue(value = "oauth_state", required = false) String storedState
+            @CookieValue(value = "oauth_state", required = false) String storedState,
+            HttpServletRequest request
     ) {
         if (storedState == null || !storedState.equals(state)) {
             throw new KakaoAuthException(
@@ -80,12 +82,11 @@ public class KakaoLoginController {
 
         log.info("[LOGIN][KAKAO][CALLBACK] start codeLength={}", code.length());
 
-        KakaoLoginResDTO result = kakaoLoginUsecase.execute(code);
+        LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code, request);
 
         log.info("[LOGIN][KAKAO][CALLBACK] success");
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, result.refreshCookie().toString())
-                .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", result.loginRes()));
+        return payload.toWebResponseBuilder()
+                .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
     }
 
     private String generateState() {

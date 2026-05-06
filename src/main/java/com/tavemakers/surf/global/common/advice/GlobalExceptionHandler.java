@@ -1,5 +1,6 @@
 package com.tavemakers.surf.global.common.advice;
 
+import com.tavemakers.surf.domain.auth.common.exception.EmailConflictException;
 import com.tavemakers.surf.global.common.exception.BaseException;
 import com.tavemakers.surf.global.common.exception.ErrorCode;
 import com.tavemakers.surf.global.common.exception.ErrorDetail;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.tavemakers.surf.global.common.exception.ErrorCode.*;
 
@@ -24,6 +26,14 @@ import static com.tavemakers.surf.global.common.exception.ErrorCode.*;
 public class GlobalExceptionHandler {
 
     private static final String LOG_FORMAT = "Class : {}, Code : {}, Message : {}";
+
+    /** 동일 이메일 다른 provider 충돌 — existingProvider 필드를 응답 본문에 포함한다 (D6). */
+    @ExceptionHandler(EmailConflictException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleEmailConflictException(EmailConflictException e) {
+        logWarning(e, e.getStatus().value());
+        Map<String, String> data = Map.of("existingProvider", e.getExistingProvider().name());
+        return responseException(e.getStatus(), e.getMessage(), data);
+    }
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {

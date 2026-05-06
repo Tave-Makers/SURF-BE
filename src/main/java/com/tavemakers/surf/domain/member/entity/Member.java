@@ -1,7 +1,9 @@
 package com.tavemakers.surf.domain.member.entity;
 
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.dto.request.ProfileUpdateReqDTO;
+import com.tavemakers.surf.domain.member.exception.InvalidMemberInfoException;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -28,6 +30,14 @@ import org.hibernate.annotations.BatchSize;
 
 
 @Entity
+@Table(
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_member_provider_provider_id",
+                        columnNames = {"provider", "provider_id"}
+                )
+        }
+)
 @Getter
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // 기본 생성자 protected 설정
@@ -38,11 +48,25 @@ public class Member extends BaseEntity {
     @Column(name = "member_id")
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    /** @deprecated provider/providerId 모델 도입 (D1) — 호출자 일소 후 후속 PR(Step 7)에서 제거. */
+    @Deprecated
+    @Column
     private Long kakaoId;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    private Provider provider;
+
+    @Column(nullable = false, length = 64)
+    private String providerId;
+
+    /** Apple 첫 로그인 시 닉네임 미제공 (D5) → nullable 허용. 가입 폼(applySignup)에서 채워진다. */
+    @Column
     private String name;
+
+    /** Apple 계정 탈퇴(revoke) 시 사용. Web 로그인 최초 코드 교환 시 저장, 탈퇴 시 null 처리. */
+    @Column(name = "apple_refresh_token", length = 1024)
+    private String appleRefreshToken;
 
     private String profileImageUrl;
 
@@ -107,7 +131,9 @@ public class Member extends BaseEntity {
     }
 
     @Builder
-    public Member(Long kakaoId,
+    public Member(Provider provider,
+                  String providerId,
+                  Long kakaoId,
                   String name,
                   String profileImageUrl,
                   String university,
@@ -119,6 +145,8 @@ public class Member extends BaseEntity {
                   MemberRole role,
                   MemberType memberType,
                   boolean activityStatus) {
+        this.provider = provider;
+        this.providerId = providerId;
         this.kakaoId = kakaoId;
         this.name = name;
         this.profileImageUrl = profileImageUrl;
@@ -134,13 +162,35 @@ public class Member extends BaseEntity {
         this.tracks = new ArrayList<>();
     }
 
-    public static Member createRegisteringFromKakao(OAuthUserInfoDTO info) {
+    /**
+     * OAuth provider 정보로 REGISTERING 상태의 회원을 생성한다 (D1, D5).
+     * Kakao 는 닉네임이 일반적으로 채워져 있고, Apple 은 첫 로그인 시 nickname/profileImageUrl 이 null 일 수 있다.
+     */
+    public static Member createRegisteringFromOAuth(Provider provider, OAuthUserInfoDTO info) {
+        if (provider == null) {
+            throw new IllegalStateException("provider 는 필수입니다.");
+        }
         if (info.email() == null || info.email().isBlank()) {
-            throw new IllegalStateException("카카오 계정 이메일 권한이 필요합니다.");
+            throw new IllegalStateException(provider + " 계정의 이메일 권한이 필요합니다.");
+        }
+        if (info.oauthId() == null || info.oauthId().isBlank()) {
+            throw new IllegalStateException(provider + " 식별자(oauthId)가 비어 있습니다.");
+        }
+
+        Long legacyKakaoId = null;
+        if (provider == Provider.KAKAO) {
+            try {
+                legacyKakaoId = Long.parseLong(info.oauthId());
+            } catch (NumberFormatException e) {
+                throw new InvalidMemberInfoException(
+                        "Provider.KAKAO oauthId가 유효한 숫자 형식이 아닙니다: " + info.oauthId());
+            }
         }
 
         return Member.builder()
-                .kakaoId(Long.parseLong(info.oauthId()))
+                .provider(provider)
+                .providerId(info.oauthId())
+                .kakaoId(legacyKakaoId)
                 .name(info.nickname())
                 .email(info.email())
                 .phoneNumberPublic(false)
@@ -304,8 +354,16 @@ public class Member extends BaseEntity {
         this.university = null;
         this.graduateSchool = null;
 
-        this.email = "withdrawn_" + this.id + "_" + System.currentTimeMillis() + "@deleted.local";
-        this.kakaoId = -this.id;
+        long ts = System.currentTimeMillis();
+        this.email = "withdrawn_" + this.id + "_" + ts + "@deleted.local";
+        this.providerId = "withdrawn_" + this.id + "_" + ts;
+        this.kakaoId = null;
+        this.appleRefreshToken = null;
+    }
+
+    /** Apple refresh_token 갱신 — Web 로그인 코드 교환 시 호출 */
+    public void updateAppleRefreshToken(String refreshToken) {
+        this.appleRefreshToken = refreshToken;
     }
 
     public void updatePassword(String password) {
