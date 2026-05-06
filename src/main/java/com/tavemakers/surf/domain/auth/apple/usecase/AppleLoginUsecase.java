@@ -11,6 +11,7 @@ import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.service.LoginTokenIssuer;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class AppleLoginUsecase {
      * @param cookieNonce 쿠키에서 복원한 nonce 원문 (D9)
      */
     @Transactional
-    public LoginPayloadResDTO executeWebCallback(String code, String cookieNonce) {
+    public LoginPayloadResDTO executeWebCallback(String code, String cookieNonce, HttpServletRequest request) {
         appleAuthService.logCallback("apple");
         log.info("[LOGIN][APPLE][WEB] callback start");
 
@@ -51,7 +52,7 @@ public class AppleLoginUsecase {
         if (appleToken.refreshToken() != null) {
             member.updateAppleRefreshToken(appleToken.refreshToken());
         }
-        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, ClientType.WEB);
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, ClientType.WEB, request);
 
         String accessToken = payload.loginRes().accessToken();
         appleAuthService.logLoginSuccess(
@@ -68,7 +69,7 @@ public class AppleLoginUsecase {
      * @param clientType resolver 주입 — APP=본문 RefreshToken 전달
      */
     @Transactional
-    public LoginPayloadResDTO executeAppLogin(AppleAppLoginReqDTO req, ClientType clientType) {
+    public LoginPayloadResDTO executeAppLogin(AppleAppLoginReqDTO req, ClientType clientType, HttpServletRequest request) {
         String masked = req.identityToken().substring(0, Math.min(req.identityToken().length(), 10)) + "...";
         log.info("[LOGIN][APPLE][APP] start identityToken={}", masked);
 
@@ -77,7 +78,7 @@ public class AppleLoginUsecase {
         );
 
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.APPLE, userInfo);
-        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, clientType);
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, clientType, request);
 
         String accessToken = payload.loginRes().accessToken();
         appleAuthService.logLoginSuccess(

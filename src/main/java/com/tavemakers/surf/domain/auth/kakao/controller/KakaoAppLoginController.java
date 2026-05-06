@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -34,9 +35,10 @@ public class KakaoAppLoginController {
     )
     @PostMapping("/login/kakao/app")
     public ApiResponse<LoginResDTO> kakaoAppLogin(
-            @RequestBody @Valid KakaoAppLoginReqDTO req
+            @RequestBody @Valid KakaoAppLoginReqDTO req,
+            HttpServletRequest request
     ) {
-        LoginPayloadResDTO payload = kakaoLoginUsecase.executeAppLogin(req, ClientType.APP);
+        LoginPayloadResDTO payload = kakaoLoginUsecase.executeAppLogin(req, ClientType.APP, request);
         return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes());
     }
 }

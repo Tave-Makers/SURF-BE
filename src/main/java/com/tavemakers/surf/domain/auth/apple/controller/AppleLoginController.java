@@ -12,6 +12,7 @@ import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +72,7 @@ public class AppleLoginController {
             @RequestParam(value = "state") String state,
             @RequestParam(value = "user", required = false) String user,
             @RequestParam(value = "error", required = false) String error,
+            HttpServletRequest request,
             HttpServletResponse response
     ) {
         if (error != null) {
@@ -93,7 +95,7 @@ public class AppleLoginController {
         // state로 nonce를 원자적 조회·삭제 (1회용). state 없거나 만료 시 INVALID_STATE 예외 발생
         String nonce = appleOAuthStateService.popNonce(state);
 
-        LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce);
+        LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce, request);
 
         log.info("[LOGIN][APPLE][WEB][CALLBACK] success");
         return ResponseEntity.ok()
@@ -111,9 +113,10 @@ public class AppleLoginController {
     )
     @PostMapping("/login/apple/app")
     public ApiResponse<LoginResDTO> appleAppLogin(
-            @RequestBody @Valid AppleAppLoginReqDTO req
+            @RequestBody @Valid AppleAppLoginReqDTO req,
+            HttpServletRequest request
     ) {
-        LoginPayloadResDTO payload = appleLoginUsecase.executeAppLogin(req, ClientType.APP);
+        LoginPayloadResDTO payload = appleLoginUsecase.executeAppLogin(req, ClientType.APP, request);
         return ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes());
     }
 
