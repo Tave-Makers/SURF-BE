@@ -98,8 +98,7 @@ public class AppleLoginController {
         LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce, request);
 
         log.info("[LOGIN][APPLE][WEB][CALLBACK] success");
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, payload.refreshCookie().toString())
+        return payload.toWebResponseBuilder()
                 .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
     }
 

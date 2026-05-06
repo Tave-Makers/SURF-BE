@@ -85,8 +85,7 @@ public class KakaoLoginController {
         LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code, request);
 
         log.info("[LOGIN][KAKAO][CALLBACK] success");
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, payload.refreshCookie().toString())
+        return payload.toWebResponseBuilder()
                 .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
     }
 

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.UUID;
 
 /**
@@ -30,41 +31,53 @@ public class LoginTokenIssuer {
 
     /** 회원 + OAuth 사용자 정보 + 클라이언트 타입 + 요청 컨텍스트 → 토큰 발급 후 응답 wrapper 반환. */
     public LoginPayloadResDTO issue(Member member, OAuthUserInfoDTO info, ClientType clientType, HttpServletRequest request) {
-        String deviceId = resolveDeviceId(request, clientType);
+        DeviceResolution resolution = resolveDeviceId(request, clientType);
         // 동일 deviceId의 기존 세션 선제 폐기 — 한 기기 한 세션 보장
-        refreshTokenService.invalidate(member.getId(), deviceId);
+        refreshTokenService.invalidate(member.getId(), resolution.deviceId());
 
         String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
 
         if (clientType == ClientType.APP) {
-            String refreshToken = refreshTokenService.issueRaw(member.getId(), deviceId);
+            String refreshToken = refreshTokenService.issueRaw(member.getId(), resolution.deviceId());
             LoginResDTO loginRes = LoginResDTO.ofApp(info.nickname(), info.email(), accessToken, refreshToken, info.profileImageUrl());
             return LoginPayloadResDTO.app(loginRes);
         }
         LoginResDTO loginRes = LoginResDTO.of(info.nickname(), info.email(), accessToken, info.profileImageUrl());
-        ResponseCookie cookie = refreshTokenService.issue(member.getId(), deviceId);
-        return LoginPayloadResDTO.web(loginRes, cookie);
+        ResponseCookie rtCookie = refreshTokenService.issue(member.getId(), resolution.deviceId());
+        return LoginPayloadResDTO.web(loginRes, rtCookie, resolution.newCookie());
     }
 
     /**
      * 클라이언트 타입별 deviceId 결정.
      * <ul>
-     *   <li>APP: {@code X-Device-Id} 헤더 → fallback UUID</li>
-     *   <li>WEB: {@code __surf_did} 쿠키 → fallback UUID</li>
+     *   <li>APP: {@code X-Device-Id} 헤더 → fallback UUID (쿠키 없음)</li>
+     *   <li>WEB: {@code __surf_device_id} 쿠키 존재 → 재사용 (newCookie=null) / 없음 → UUID 생성 + 쿠키 발급</li>
      * </ul>
      */
-    private String resolveDeviceId(HttpServletRequest request, ClientType clientType) {
+    private DeviceResolution resolveDeviceId(HttpServletRequest request, ClientType clientType) {
         if (clientType == ClientType.APP) {
             String header = request.getHeader(DEVICE_ID_HEADER);
-            if (header != null && !header.isBlank()) return header;
-        } else {
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if (DEVICE_ID_COOKIE.equals(cookie.getName())) return cookie.getValue();
+            String deviceId = (header != null && !header.isBlank()) ? header : UUID.randomUUID().toString();
+            return new DeviceResolution(deviceId, null);
+        }
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (DEVICE_ID_COOKIE.equals(cookie.getName())) {
+                    return new DeviceResolution(cookie.getValue(), null);
                 }
             }
         }
-        return UUID.randomUUID().toString();
+        // WEB 첫 로그인 — UUID 생성 후 브라우저에 저장할 쿠키도 함께 반환
+        String newId = UUID.randomUUID().toString();
+        ResponseCookie newCookie = ResponseCookie.from(DEVICE_ID_COOKIE, newId)
+                .httpOnly(true)
+                .path("/")
+                .maxAge(Duration.ofDays(365))
+                .sameSite("Lax")
+                .build();
+        return new DeviceResolution(newId, newCookie);
     }
+
+    private record DeviceResolution(String deviceId, ResponseCookie newCookie) {}
 }
