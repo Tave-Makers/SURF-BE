@@ -1,10 +1,13 @@
 package com.tavemakers.surf.domain.member.service;
 
+import com.tavemakers.surf.domain.auth.apple.service.AppleApiClient;
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -24,7 +27,9 @@ public class MemberWithdrawService {
 
     private final MemberGetService memberGetService;
     private final RefreshTokenService refreshTokenService;
+    private final AppleApiClient appleApiClient;
 
+    @Qualifier("kakaoRestTemplate")
     private final RestTemplate restTemplate;
 
     @Value("${kakao.admin-key}")
@@ -33,18 +38,33 @@ public class MemberWithdrawService {
     @Value("${kakao.unlink-uri}")
     private String unlinkUri;
 
-    /** 회원 탈퇴 처리 및 카카오 연결 해제 */
+    /** 회원 탈퇴 처리 — SURF 토큰 무효화 후 provider 별 외부 연결 해제 (KAKAO unlink / APPLE revoke) */
     @Transactional
     public void withdraw(Long memberId) {
         Member member = memberGetService.getMember(memberId);
 
+        // SURF 토큰 무효화
         refreshTokenService.invalidateAll(memberId);
 
-        unlinkKakao(member.getKakaoId());
+        // Provider 별 외부 연결 해제
+        if (member.getProvider() == Provider.KAKAO) {
+            unlinkKakao(member.getKakaoId());
+        } else if (member.getProvider() == Provider.APPLE) {
+            revokeApple(member.getAppleRefreshToken());
+        }
 
         if (member.getStatus() != MemberStatus.WITHDRAWN) {
             member.withdraw();
         }
+    }
+
+    private void revokeApple(String appleRefreshToken) {
+        if (appleRefreshToken == null) {
+            // App 로그인 회원은 authorizationCode 미전달로 refresh_token 미보유 → revoke 생략
+            log.warn("[APPLE][REVOKE] appleRefreshToken 없음 — revoke 생략 (App 로그인 회원)");
+            return;
+        }
+        appleApiClient.revokeToken(appleRefreshToken);
     }
 
     private void unlinkKakao(Long kakaoId) {

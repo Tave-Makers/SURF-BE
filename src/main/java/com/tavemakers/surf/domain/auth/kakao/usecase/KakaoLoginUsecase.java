@@ -1,21 +1,20 @@
 package com.tavemakers.surf.domain.auth.kakao.usecase;
 
-import com.tavemakers.surf.domain.auth.common.dto.LoginResDTO;
+import com.tavemakers.surf.domain.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
-import com.tavemakers.surf.domain.auth.kakao.dto.KakaoLoginResDTO;
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.service.LoginTokenIssuer;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
-import com.tavemakers.surf.global.jwt.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -24,12 +23,11 @@ public class KakaoLoginUsecase {
 
     private final KakaoAuthService kakaoAuthService;
     private final MemberUpsertService memberUpsertService;
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
+    private final LoginTokenIssuer loginTokenIssuer;
 
-    /** 카카오 인가 코드로 로그인 처리 후 결과 반환 */
+    /** 카카오 인가 코드로 Web 로그인 처리 후 응답 payload 반환. */
     @Transactional
-    public KakaoLoginResDTO execute(String code) {
+    public LoginPayloadResDTO execute(String code, HttpServletRequest request) {
 
         // 1. 콜백 진입 로그
         kakaoAuthService.logCallback("kakao", code.length());
@@ -41,28 +39,37 @@ public class KakaoLoginUsecase {
         OAuthUserInfoDTO userInfo = kakaoAuthService.getUserInfo(token.accessToken());
 
         // 4. 회원 upsert
-        Member member = memberUpsertService.upsertRegisteringFromKakao(userInfo);
+        Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.KAKAO, userInfo);
 
-        // 5. deviceId 생성
-        String deviceId = UUID.randomUUID().toString();
+        // 5. JWT 발급 + 응답 wrapper 조립 (Web=쿠키)
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, ClientType.WEB, request);
 
-        // 6. AccessToken 발급
-        String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
-
-        // 7. RefreshToken 발급 및 쿠키 반환
-        ResponseCookie refreshCookie = refreshTokenService.issue(member.getId(), deviceId);
-
-        // 8. 로그인 성공 로그
-        kakaoAuthService.logLoginSuccess(member.getId(), accessToken.substring(0, Math.min(accessToken.length(), 10)) + "...");
-
-        // 9. 응답 DTO 조립
-        LoginResDTO loginRes = LoginResDTO.of(
-                userInfo.nickname(),
-                userInfo.email(),
-                accessToken,
-                userInfo.profileImageUrl()
+        // 6. 로그인 성공 로그
+        String accessToken = payload.loginRes().accessToken();
+        kakaoAuthService.logLoginSuccess(
+                member.getId(),
+                accessToken.substring(0, Math.min(accessToken.length(), 10)) + "..."
         );
 
-        return new KakaoLoginResDTO(loginRes, refreshCookie);
+        return payload;
+    }
+
+    /** 카카오 SDK 앱 AccessToken으로 로그인 처리 후 응답 payload 반환. */
+    @Transactional
+    public LoginPayloadResDTO executeAppLogin(KakaoAppLoginReqDTO req, ClientType clientType, HttpServletRequest request) {
+        String masked = req.accessToken().substring(0, Math.min(req.accessToken().length(), 10)) + "...";
+        log.info("[LOGIN][KAKAO][APP] start accessToken={}", masked);
+
+        OAuthUserInfoDTO userInfo = kakaoAuthService.getUserInfo(req.accessToken());
+        Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.KAKAO, userInfo);
+        LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, clientType, request);
+
+        String issuedToken = payload.loginRes().accessToken();
+        kakaoAuthService.logLoginSuccess(
+                member.getId(),
+                issuedToken.substring(0, Math.min(issuedToken.length(), 10)) + "..."
+        );
+
+        return payload;
     }
 }

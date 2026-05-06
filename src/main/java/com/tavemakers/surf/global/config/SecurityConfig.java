@@ -75,16 +75,33 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        // Apple form_post 콜백 전용: appleid.apple.com이 브라우저를 통해 cross-site POST를 보냄
+        // form_post는 XHR이 아니므로 allowCredentials 불필요, POST만 허용
+        CorsConfiguration appleCallback = new CorsConfiguration();
+        appleCallback.setAllowedOrigins(Arrays.asList("https://appleid.apple.com"));
+        appleCallback.setAllowedMethods(Arrays.asList("POST"));
+        appleCallback.setAllowedHeaders(Arrays.asList("*"));
+        appleCallback.setAllowCredentials(false);
+        source.registerCorsConfiguration("/login/oauth2/code/apple", appleCallback);
+
+        // 일반 API 설정
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://139.150.81.126.nip.io","https://139.150.81.126.nip.io", "https://tavesurf.site"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://139.150.81.126.nip.io",
+                "https://139.150.81.126.nip.io",
+                "https://tavesurf.site"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "RefreshToken", "Content-Type", "Set-Cookie"));
         configuration.setAllowCredentials(true);
+        source.registerCorsConfiguration("/**", configuration);
 
-        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", configuration);
-        return urlBasedCorsConfigurationSource;
+        return source;
     }
 
     @Bean

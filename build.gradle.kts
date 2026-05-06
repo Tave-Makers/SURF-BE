@@ -76,6 +76,9 @@ dependencies {
 
     // 쪽지의 email 전송 기능
     implementation ("org.springframework.boot:spring-boot-starter-mail")
+
+    // Apple identityToken 검증 (RS256 JWKS) + client_secret 생성 (ES256)
+    implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
 }
 
 // log4j2 사용을 위해 추가

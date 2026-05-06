@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.auth.common.service;
 
+import com.tavemakers.surf.domain.auth.common.dto.ClientType;
 import com.tavemakers.surf.domain.auth.common.exception.TokenErrorMessage;
 import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.jwt.JwtService;
@@ -24,7 +25,7 @@ public class RefreshTokenService {
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
 
-    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 */
+    /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 (WEB 흐름) */
     public ResponseCookie issue(Long memberId, String deviceId) {
         String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
         save(refreshToken);
@@ -32,10 +33,27 @@ public class RefreshTokenService {
         return jwtService.buildRefreshTokenCookie(refreshToken);
     }
 
-    /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation) */
-    public Long rotate(HttpServletResponse response, String refreshToken) {
+    /** 로그인 시 refresh 발급 + 저장 + 토큰 문자열 반환 (APP 본문 전달용) */
+    public String issueRaw(Long memberId, String deviceId) {
+        String refreshToken = jwtService.createRefreshToken(memberId, deviceId);
+        save(refreshToken);
+        log.info("[RTR][ISSUE] refresh token raw issued (app body)");
+        return refreshToken;
+    }
+
+    /**
+     * RTR 회전 결과.
+     * <ul>
+     *   <li>WEB: {@code newRefreshToken=null} — 쿠키로 송출됨 (response 부착 완료)</li>
+     *   <li>APP: {@code newRefreshToken=새 토큰} — 컨트롤러가 본문에 담아 응답</li>
+     * </ul>
+     */
+    public record RotateResult(Long memberId, String newRefreshToken) {}
+
+    /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation). ClientType 분기로 송출 채널 결정. */
+    public RotateResult rotate(HttpServletResponse response, ClientType clientType, String refreshToken) {
         boolean valid = jwtService.isTokenValid(refreshToken);
-        log.info("[RTR][ROTATE] isTokenValid={}", valid);
+        log.info("[RTR][ROTATE] isTokenValid={} clientType={}", valid, clientType);
 
         if (!valid) {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_INVALID.getMessage());
@@ -70,10 +88,14 @@ public class RefreshTokenService {
 
         String newRefresh = jwtService.createRefreshToken(memberId, deviceId);
         save(newRefresh);
-        jwtService.sendRefreshToken(response, newRefresh);
 
-        log.info("[RTR][ROTATE] rotation success memberId={}", memberId);
-        return memberId;
+        if (clientType == ClientType.APP) {
+            log.info("[RTR][ROTATE] rotation success (app body) memberId={}", memberId);
+            return new RotateResult(memberId, newRefresh);
+        }
+        jwtService.sendRefreshToken(response, newRefresh);
+        log.info("[RTR][ROTATE] rotation success (web cookie) memberId={}", memberId);
+        return new RotateResult(memberId, null);
     }
 
     /** 특정 디바이스 refresh 무효화 (로그아웃) */
