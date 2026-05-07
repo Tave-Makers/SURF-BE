@@ -27,7 +27,6 @@ public class MemberBlacklist extends BaseEntity {
 
     private Long memberId;
 
-    @Column(nullable = false)
     private Long kakaoId;
 
     @Column(nullable = false)

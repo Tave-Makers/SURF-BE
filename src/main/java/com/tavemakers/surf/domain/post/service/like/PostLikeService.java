@@ -101,13 +101,13 @@ public class PostLikeService {
         return postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
     }
 
-    /** 특정 회원이 누른 게시글 좋아요 전체 제거 */
+    /** 특정 회원이 누른 게시글 좋아요 전체 제거 — dismiss 전용 bulk 삭제 */
     @Transactional
     public void unlikeAllByMemberId(Long memberId) {
         List<Long> postIds = postLikeRepository.findPostIdsByMemberId(memberId);
-        for (Long postId : postIds) {
-            unlike(postId, memberId);
-        }
+        if (postIds.isEmpty()) return;
+        postLikeRepository.deleteAllByMemberId(memberId);
+        postRepository.decreaseLikeCountBulk(postIds);
     }
 
     /** 좋아요 생성시 알림 - 게시글 작성자에게 */

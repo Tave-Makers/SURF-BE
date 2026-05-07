@@ -113,14 +113,12 @@ public class MemberDismissService {
     }
 
     private Set<Long> deleteOwnedPosts(Long memberId) {
-        List<Long> postIds = postRepository.findAllByMemberId(memberId).stream()
-                .map(Post::getId)
-                .toList();
+        List<Post> posts = postRepository.findAllByMemberId(memberId);
 
-        for (Long postId : postIds) {
-            postDeleteUsecase.deletePost(postId);
+        for (Post post : posts) {
+            postDeleteUsecase.forceDeletePost(post);
         }
 
-        return postIds.stream().collect(Collectors.toSet());
+        return posts.stream().map(Post::getId).collect(Collectors.toSet());
     }
 }

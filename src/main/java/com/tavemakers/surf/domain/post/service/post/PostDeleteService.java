@@ -62,6 +62,24 @@ public class PostDeleteService {
         postRepository.delete(post);
     }
 
+    /** 권한 검증 없이 게시글 강제 삭제 — dismiss 전용 */
+    @Transactional
+    public void forceDeletePost(Post post) {
+        postLikeRepository.deleteByPostId(post.getId());
+
+        List<PostImageUrl> postImageUrls = postImageGetService.getPostImageUrls(post.getId());
+        if (postImageUrls != null && !postImageUrls.isEmpty()) {
+            postImageDeleteService.deleteAll(postImageUrls);
+        }
+
+        List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
+        if (postFileUrls != null && !postFileUrls.isEmpty()) {
+            postFileDeleteService.deleteAll(postFileUrls);
+        }
+
+        postRepository.delete(post);
+    }
+
     /** 게시글 소유자 또는 관리자 권한 검증 */
     private void validateOwnerOrManager(Post post, Member member) {
         if (!member.hasDeleteRole() && !post.isOwner(member.getId())) {

@@ -44,7 +44,7 @@ public class AdminMemberController {
         return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
     }
 
-    @Operation(summary = "회원 제명", description = "가입 단계 회원을 하드 딜리트하고 블랙리스트에 등록합니다.")
+    @Operation(summary = "회원 제명", description = "승인된(APPROVED) 회원을 하드 딜리트하고 블랙리스트에 등록합니다.")
     @PatchMapping("/v1/admin/members/{memberId}/dismiss")
     public ApiResponse<Void> dismissMember(@PathVariable Long memberId) {
         Long actorId = SecurityUtils.getCurrentMemberId();

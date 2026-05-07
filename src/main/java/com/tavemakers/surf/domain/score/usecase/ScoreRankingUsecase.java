@@ -3,7 +3,6 @@ package com.tavemakers.surf.domain.score.usecase;
 import com.tavemakers.surf.domain.activity.dto.activityRecord.response.TeamMemberScoreListResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.score.dto.response.MemberScoreRankingResDTO;
@@ -36,7 +35,7 @@ public class ScoreRankingUsecase {
     /** 개인별 상/벌점 현황 조회 (무한스크롤) */
     public MemberScoreRankingSliceResDTO getMemberScoreRanking(int pageNum, int pageSize) {
         // 1. 활동 멤버 ID 목록 조회
-        List<Long> memberIds = memberGetService.getActiveMemberIdsExcludeStatus(MemberStatus.WITHDRAWN);
+        List<Long> memberIds = memberGetService.getActiveMemberIds();
         if (memberIds.isEmpty()) {
             return MemberScoreRankingSliceResDTO.from(
                     new SliceImpl<>(List.of(), PageRequest.of(pageNum, pageSize), false));

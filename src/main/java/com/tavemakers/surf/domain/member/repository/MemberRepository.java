@@ -55,9 +55,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         from Member m
         where m.activityStatus = true
           and m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED
-          and m.status <> :status
     """)
-    List<Long> findActiveMemberIdsExcludeStatus(@Param("status") MemberStatus status);
+    List<Long> findActiveMemberIds();
 
     boolean existsByIdAndStatusNot(Long id, MemberStatus status);
 

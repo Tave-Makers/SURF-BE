@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.notification.service;
 
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.post.entity.Post;
@@ -33,7 +32,7 @@ public class NotificationUsecase {
         }
 
         // 1 알림 대상 조회
-        List<Long> targetIds = memberGetService.getActiveMemberIdsExcludeStatus(MemberStatus.WITHDRAWN);
+        List<Long> targetIds = memberGetService.getActiveMemberIds();
 
         if (targetIds.isEmpty()) {
             log.info("[NoticeNotification] no target members, postId={}", post.getId());

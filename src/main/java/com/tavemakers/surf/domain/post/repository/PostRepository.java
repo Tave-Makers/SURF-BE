@@ -45,6 +45,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             " where p.id = :id and p.version = :version and p.likeCount > 0")
     int decreaseLikeCount(@Param("id") Long postId, @Param("version") Long version);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Post p SET p.likeCount = GREATEST(p.likeCount - 1, 0) WHERE p.id IN :postIds")
+    void decreaseLikeCountBulk(@Param("postIds") List<Long> postIds);
+
     Slice<Post> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
             String title, String content, Pageable pageable);
 
