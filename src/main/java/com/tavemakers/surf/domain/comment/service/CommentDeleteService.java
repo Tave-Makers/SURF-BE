@@ -41,10 +41,10 @@ public class CommentDeleteService {
     /** 댓글 단건 강제 삭제 */
     @Transactional
     public void deleteComment(Comment comment) {
+        comment.getPost().decreaseCommentCount();
         commentRepository.detachChildren(comment.getId());
         commentLikeRepository.deleteAllByComment(comment);
         commentMentionRepository.deleteAllByComment(comment);
         commentRepository.delete(comment);
-        comment.getPost().decreaseCommentCount();
     }
 }

@@ -44,6 +44,7 @@ public class MemberAdminUsecase {
     private final MemberGenerationSyncService memberGenerationSyncService;
     private final MemberBlacklistCreateService memberBlacklistCreateService;
     private final MemberDismissService memberDismissService;
+    private final MemberDismissUsecase memberDismissUsecase;
     private final CareerGetService careerGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
     private final PersonalScoreGetService scoreGetService;
@@ -100,7 +101,7 @@ public class MemberAdminUsecase {
             @LogParam("actor_id") Long actorId
     ) {
         Member member = memberGetService.getMember(memberId);
-        memberDismissService.dismiss(member, actorId);
+        memberDismissUsecase.dismiss(member, actorId);
     }
 
     /** 회원 퇴출 처리 */
@@ -111,6 +112,7 @@ public class MemberAdminUsecase {
             @LogParam("actor_id") Long actorId
     ) {
         Member member = memberGetService.getMember(memberId);
+        memberDismissService.validateDismissible(member);
         memberBlacklistCreateService.createIfAbsent(member, MemberBlacklistActionType.EXPEL, actorId);
         memberWithdrawService.expel(member);
     }

@@ -10,7 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    List<Comment> findAllByMemberId(Long memberId);
+    @Query("select c from Comment c join fetch c.post where c.member.id = :memberId")
+    List<Comment> findAllByMemberId(@Param("memberId") Long memberId);
 
     /** 게시글 내 모든 댓글 + 대댓글 조회 (작성 시간순) */
     Slice<Comment> findByPostIdOrderByCreatedAtAsc(Long postId, Pageable pageable);

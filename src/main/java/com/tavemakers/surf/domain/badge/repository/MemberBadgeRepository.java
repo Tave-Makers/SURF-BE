@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.badge.entity.MemberBadge;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,5 +33,7 @@ public interface MemberBadgeRepository extends JpaRepository<MemberBadge, Long> 
     // 배지 삭제 전 해당 배지 부여 기록 먼저 삭제
     void deleteByBadgeId(Long badgeId);
 
-    void deleteByMemberId(Long memberId);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM MemberBadge mb WHERE mb.member.id = :memberId")
+    void deleteByMemberId(@Param("memberId") Long memberId);
 }

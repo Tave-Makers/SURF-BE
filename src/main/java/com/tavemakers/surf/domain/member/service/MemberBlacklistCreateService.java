@@ -23,6 +23,10 @@ public class MemberBlacklistCreateService {
         String normalizedEmail = normalizeEmail(member.getEmail());
         String normalizedPhoneNumber = normalizePhoneNumber(member.getPhoneNumber());
 
+        if (normalizedEmail == null) {
+            throw new IllegalStateException("블랙리스트 생성 실패: 회원 이메일 없음");
+        }
+
         if (isBlacklisted(kakaoId, normalizedEmail, normalizedPhoneNumber)) {
             return;
         }
