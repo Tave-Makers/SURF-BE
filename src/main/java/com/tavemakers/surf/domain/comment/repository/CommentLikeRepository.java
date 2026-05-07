@@ -17,6 +17,14 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
     @Query("SELECT cl.member FROM CommentLike cl WHERE cl.comment.id = :commentId")
     List<Member> findMembersWhoLiked(@Param("commentId") Long commentId);
 
+    @Query("""
+        select cl
+        from CommentLike cl
+        join fetch cl.comment c
+        where cl.member.id = :memberId
+    """)
+    List<CommentLike> findAllByMemberId(@Param("memberId") Long memberId);
+
     /** 특정 댓글에 특정 회원이 좋아요를 눌렀는지 여부 */
     boolean existsByCommentAndMember(Comment comment, Member member);
 

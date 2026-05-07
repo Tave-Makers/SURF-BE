@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.post.entity.PostLike;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
@@ -14,6 +15,13 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
 
     boolean existsByPostIdAndMemberId(Long postId, Long memberId);
 
+
+    @Query("""
+           select pl.post.id
+           from PostLike pl
+           where pl.member.id = :memberId
+           """)
+    List<Long> findPostIdsByMemberId(@Param("memberId") Long memberId);
 
     @Query("""
            select pl.post.id
@@ -31,4 +39,8 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     List<Member> findLikedMembersByPostId(@Param("postId") Long postId);
 
     void deleteByPostId(Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM PostLike pl WHERE pl.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }

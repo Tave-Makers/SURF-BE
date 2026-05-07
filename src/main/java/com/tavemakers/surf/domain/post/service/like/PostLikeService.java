@@ -13,6 +13,7 @@ import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventContext;
 import com.tavemakers.surf.global.logging.LogParam;
 import jakarta.persistence.OptimisticLockException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -98,6 +99,15 @@ public class PostLikeService {
     @Transactional(readOnly = true)
     public boolean isLikedByMe(Long memberId, Long postId) {
         return postLikeRepository.existsByPostIdAndMemberId(postId, memberId);
+    }
+
+    /** 특정 회원이 누른 게시글 좋아요 전체 제거 — dismiss 전용 bulk 삭제 */
+    @Transactional
+    public void unlikeAllByMemberId(Long memberId) {
+        List<Long> postIds = postLikeRepository.findPostIdsByMemberId(memberId);
+        if (postIds.isEmpty()) return;
+        postLikeRepository.deleteAllByMemberId(memberId);
+        postRepository.decreaseLikeCountBulk(postIds);
     }
 
     /** 좋아요 생성시 알림 - 게시글 작성자에게 */

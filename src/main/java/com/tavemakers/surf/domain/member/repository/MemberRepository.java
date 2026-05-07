@@ -54,9 +54,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         select m.id
         from Member m
         where m.activityStatus = true
-          and m.status <> :status
+          and m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED
     """)
-    List<Long> findActiveMemberIdsExcludeStatus(@Param("status") MemberStatus status);
+    List<Long> findActiveMemberIds();
 
     boolean existsByIdAndStatusNot(Long id, MemberStatus status);
 
@@ -84,8 +84,18 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
         from Member m
         join m.tracks t
         where t.generation = :generation
+          and m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED
           and m.isDeleted = false
         order by m.name asc
     """)
     List<Member> findAllByTrackGeneration(@Param("generation") Integer generation);
+
+    @Query("""
+        select distinct m
+        from Member m
+        left join fetch m.tracks
+        where m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED
+          and m.isDeleted = false
+    """)
+    List<Member> findAllApprovedWithTracks();
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberUpsertService {
 
     private final MemberRepository memberRepository;
+    private final MemberBlacklistGetService memberBlacklistGetService;
 
     /**
      * OAuth provider 정보로 회원 생성 또는 기존 회원 반환 (D1).
@@ -27,6 +28,9 @@ public class MemberUpsertService {
     }
 
     private Member createWithEmailConflictGuard(Provider provider, OAuthUserInfoDTO info) {
+        Long kakaoId = provider == Provider.KAKAO ? Long.parseLong(info.oauthId()) : null;
+        memberBlacklistGetService.validateNotBlacklisted(kakaoId, info.email(), null);
+
         memberRepository.findByEmail(info.email()).ifPresent(existing -> {
             if (existing.getProvider() != provider) {
                 throw new EmailConflictException(existing.getProvider());

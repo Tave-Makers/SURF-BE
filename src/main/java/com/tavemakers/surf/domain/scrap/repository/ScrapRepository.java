@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface ScrapRepository extends JpaRepository<Scrap, Long> {
@@ -15,6 +16,13 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
     boolean existsByMemberIdAndPostId(Long memberId, Long postId);
 
     int deleteByMemberIdAndPostId(Long memberId, Long postId);
+
+    @Query("""
+           select s.post.id
+           from Scrap s
+           where s.member.id = :memberId
+           """)
+    List<Long> findPostIdsByMemberId(Long memberId);
 
     @Query(
             value = """
@@ -39,4 +47,6 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
     Set<Long> findScrappedPostIdsByMemberAndPostIds(Long memberId, Collection<Long> postIds);
 
     void deleteByPostId(Long postId);
+
+    void deleteByMemberId(Long memberId);
 }

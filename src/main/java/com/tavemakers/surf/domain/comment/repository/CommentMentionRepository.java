@@ -24,6 +24,11 @@ public interface CommentMentionRepository extends JpaRepository<CommentMention, 
     /** 특정 회원이 멘션된 CommentMention 목록 조회 */
     List<CommentMention> findAllByMentionedMember(Member member);
 
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("DELETE FROM CommentMention cm WHERE cm.mentionedMember.id = :memberId")
+    void deleteAllByMentionedMemberId(@Param("memberId") Long memberId);
+
     /** 특정 댓글에 달린 멘션 데이터를 모두 삭제 (JPQL 명시) */
     @Transactional
     @Modifying(clearAutomatically = true)

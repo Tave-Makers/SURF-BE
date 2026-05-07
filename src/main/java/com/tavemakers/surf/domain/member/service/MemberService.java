@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MemberService {
 
+    private final MemberBlacklistGetService memberBlacklistGetService;
+
     /** 자체 회원가입 신청 완료 */
     @Transactional
     public MemberSignupResDTO signup(
@@ -26,6 +28,8 @@ public class MemberService {
         final String normalizedPhone = request.getPhoneNumber() == null
                 ? null
                 : request.getPhoneNumber().replaceAll("\\D", "");
+
+        memberBlacklistGetService.validateNotBlacklisted(null, normalizedEmail, normalizedPhone);
 
         // 회원가입 정보 반영
         member.applySignup(request, normalizedEmail, normalizedPhone);

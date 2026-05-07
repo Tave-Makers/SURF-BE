@@ -2,11 +2,14 @@ package com.tavemakers.surf.domain.post.service.post;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.post.entity.PostFileUrl;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
 import com.tavemakers.surf.domain.post.exception.PostDeleteAccessDeniedException;
 import com.tavemakers.surf.domain.post.repository.PostLikeRepository;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
+import com.tavemakers.surf.domain.post.service.file.PostFileDeleteService;
+import com.tavemakers.surf.domain.post.service.file.PostFileGetService;
 import com.tavemakers.surf.domain.post.service.image.PostImageDeleteService;
 import com.tavemakers.surf.domain.post.service.image.PostImageGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
@@ -30,6 +33,8 @@ public class PostDeleteService {
     private final PostGetService postGetService;
     private final PostImageGetService postImageGetService;
     private final PostImageDeleteService postImageDeleteService;
+    private final PostFileGetService postFileGetService;
+    private final PostFileDeleteService postFileDeleteService;
     private final MemberGetService memberGetService;
 
     /** 게시글 삭제 - Post 도메인 내부 데이터만 삭제 (좋아요, 이미지, 게시글) */
@@ -47,6 +52,29 @@ public class PostDeleteService {
         List<PostImageUrl> postImageUrls = postImageGetService.getPostImageUrls(post.getId());
         if (postImageUrls != null && !postImageUrls.isEmpty()) {
             postImageDeleteService.deleteAll(postImageUrls);
+        }
+
+        List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
+        if (postFileUrls != null && !postFileUrls.isEmpty()) {
+            postFileDeleteService.deleteAll(postFileUrls);
+        }
+
+        postRepository.delete(post);
+    }
+
+    /** 권한 검증 없이 게시글 강제 삭제 — dismiss 전용 */
+    @Transactional
+    public void forceDeletePost(Post post) {
+        postLikeRepository.deleteByPostId(post.getId());
+
+        List<PostImageUrl> postImageUrls = postImageGetService.getPostImageUrls(post.getId());
+        if (postImageUrls != null && !postImageUrls.isEmpty()) {
+            postImageDeleteService.deleteAll(postImageUrls);
+        }
+
+        List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
+        if (postFileUrls != null && !postFileUrls.isEmpty()) {
+            postFileDeleteService.deleteAll(postFileUrls);
         }
 
         postRepository.delete(post);

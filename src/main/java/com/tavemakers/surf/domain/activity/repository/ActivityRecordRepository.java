@@ -14,6 +14,10 @@ import java.util.List;
 @Repository
 public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, Long> {
 
+    void deleteByMemberId(Long memberId);
+
+    void deleteByTeamId(Long teamId);
+
     @Query("SELECT ar " +
             "FROM ActivityRecord ar " +
             "WHERE ar.memberId = :memberId " +

@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.team.repository;
 
 import com.tavemakers.surf.domain.team.entity.Team;
+import com.tavemakers.surf.domain.team.entity.TeamMember;
 import com.tavemakers.surf.domain.team.entity.TeamType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -32,4 +33,18 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
     @EntityGraph(attributePaths = {"teamMembers", "teamMembers.member"})
     @Query("select distinct t from Team t where (:generation is null or t.generation = :generation)")
     List<Team> findTeamsWithMembers(@Param("generation") Integer generation);
+
+    @EntityGraph(attributePaths = {"leader", "teamMembers", "teamMembers.member"})
+    @Query("""
+        select distinct t
+        from Team t
+        where t.leader.id = :memberId
+           or exists (
+               select 1
+               from TeamMember tm
+               where tm.team = t
+                 and tm.member.id = :memberId
+           )
+    """)
+    List<Team> findAllByMemberIdForDismissal(@Param("memberId") Long memberId);
 }

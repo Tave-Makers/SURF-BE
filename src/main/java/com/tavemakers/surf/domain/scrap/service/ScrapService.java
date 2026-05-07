@@ -92,4 +92,13 @@ public class ScrapService {
 
         return result;
     }
+
+    /** 특정 회원의 스크랩 전체 제거 */
+    @Transactional
+    public void removeAllByMemberId(Long memberId) {
+        List<Long> postIds = scrapRepository.findPostIdsByMemberId(memberId);
+        for (Long postId : postIds) {
+            removeScrap(memberId, postId);
+        }
+    }
 }

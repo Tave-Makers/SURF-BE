@@ -29,4 +29,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     int markAsRead(@Param("id") Long id, @Param("memberId") Long memberId);
 
     boolean existsByIdAndMemberId(Long id, Long memberId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM Notification n WHERE n.memberId = :memberId")
+    void deleteByMemberId(@Param("memberId") Long memberId);
 }

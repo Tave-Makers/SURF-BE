@@ -111,9 +111,9 @@ public class MemberGetService {
         return memberRepository.findAllById(memberIds);
     }
 
-    /** 특정 상태가 아닌 활동 중인 회원 ID 목록 조회 */
-    public List<Long> getActiveMemberIdsExcludeStatus(MemberStatus status) {
-        return memberRepository.findActiveMemberIdsExcludeStatus(status);
+    /** 활동 중인 승인 회원 ID 목록 조회 */
+    public List<Long> getActiveMemberIds() {
+        return memberRepository.findActiveMemberIds();
     }
 
     /** 회원이 특정 상태가 아닌지 확인 */

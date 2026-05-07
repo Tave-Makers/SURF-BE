@@ -42,19 +42,23 @@ public class MemberWithdrawService {
     @Transactional
     public void withdraw(Long memberId) {
         Member member = memberGetService.getMember(memberId);
+        expel(member);
+    }
 
-        // SURF 토큰 무효화
-        refreshTokenService.invalidateAll(memberId);
+    @Transactional
+    public void expel(Member member) {
+        disconnectMember(member);
+        if (member.getStatus() != MemberStatus.WITHDRAWN) {
+            member.withdraw();
+        }
+    }
 
-        // Provider 별 외부 연결 해제
+    public void disconnectMember(Member member) {
+        refreshTokenService.invalidateAll(member.getId());
         if (member.getProvider() == Provider.KAKAO) {
             unlinkKakao(member.getKakaoId());
         } else if (member.getProvider() == Provider.APPLE) {
             revokeApple(member.getAppleRefreshToken());
-        }
-
-        if (member.getStatus() != MemberStatus.WITHDRAWN) {
-            member.withdraw();
         }
     }
 

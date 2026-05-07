@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
+import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
@@ -18,6 +19,8 @@ public class TrackService {
 
     private final TrackRepository trackRepository;
     private final MemberRepository memberRepository;
+    private final ActiveGenerationGetService activeGenerationGetService;
+    private final MemberGenerationSyncService memberGenerationSyncService;
 
     /** 트랙 추가 (관리자만 가능) */
     @PreAuthorize("hasAnyRole('ROOT','PRESIDENT','MANAGER')")
@@ -26,6 +29,7 @@ public class TrackService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(memberId));
         member.addTrack(generation, part); // Member 편의 메서드 활용
+        syncApprovedMemberGenerationStatus(member);
     }
 
     /** 트랙 수정 (관리자만 가능) */
@@ -35,6 +39,7 @@ public class TrackService {
         Track track = trackRepository.findById(trackId)
                 .orElseThrow(TrackNotFoundException::new);
         track.update(generation, part);
+        syncApprovedMemberGenerationStatus(track.getMember());
     }
 
     /** 트랙 삭제 (관리자만 가능) */
@@ -43,6 +48,17 @@ public class TrackService {
     public void deleteTrack(Long trackId) {
         Track track = trackRepository.findById(trackId)
                 .orElseThrow(TrackNotFoundException::new);
+        Member member = track.getMember();
         trackRepository.delete(track);
+        syncApprovedMemberGenerationStatus(member);
+    }
+
+    private void syncApprovedMemberGenerationStatus(Member member) {
+        if (!member.isApproved()) {
+            return;
+        }
+
+        Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
+        memberGenerationSyncService.syncApprovedMember(member, activeGeneration);
     }
 }

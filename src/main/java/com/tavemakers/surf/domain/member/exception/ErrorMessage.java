@@ -10,7 +10,10 @@ public enum ErrorMessage {
 
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 [회원]입니다."),
     MEMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 [회원]입니다."),
+    MEMBER_SIGNUP_REJECTED(HttpStatus.FORBIDDEN, "관리자에 의해 [회원가입]이 거절되었습니다."),
     INVALID_MEMBER_INFO(HttpStatus.BAD_REQUEST, "유효하지 않은 [회원 정보]입니다."),
+    MEMBER_BLACKLISTED(HttpStatus.FORBIDDEN, "블랙리스트에 등록된 [회원]은 가입할 수 없습니다."),
+    MEMBER_DISMISS_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "[승인된 회원]만 제명할 수 있습니다."),
     TRACK_NOT_FOUND(HttpStatus.NOT_FOUND, "회원의 [트랙]이 존재하지 않습니다."),
     CAREER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않은 [경력]입니다."),
     MEMBER_STATUS_CANNOT_CONVERT(HttpStatus.BAD_REQUEST, "잘못된 [MemberStatus]입니다."),

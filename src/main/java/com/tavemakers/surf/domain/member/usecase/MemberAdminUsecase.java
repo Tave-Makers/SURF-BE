@@ -1,11 +1,13 @@
 package com.tavemakers.surf.domain.member.usecase;
 
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
+import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.RoleChangeReqDTOV2;
 import com.tavemakers.surf.domain.member.dto.response.*;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.enums.MemberBlacklistActionType;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.exception.AdminPageRoleException;
@@ -38,12 +40,18 @@ public class MemberAdminUsecase {
     //<editor-fold desc="MemberAdminUsecase Dependency Summary">
     private final MemberPatchService memberPatchService;
     private final MemberGetService memberGetService;
+    private final ActiveGenerationGetService activeGenerationGetService;
+    private final MemberGenerationSyncService memberGenerationSyncService;
+    private final MemberBlacklistCreateService memberBlacklistCreateService;
+    private final MemberDismissService memberDismissService;
+    private final MemberDismissUsecase memberDismissUsecase;
     private final CareerGetService careerGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
     private final PersonalScoreGetService scoreGetService;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
+    private final MemberWithdrawService memberWithdrawService;
     //</editor-fold>
 
     /** 회원 권한 변경 */
@@ -69,6 +77,8 @@ public class MemberAdminUsecase {
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
         members.forEach(Member::approve);
+        Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
+        members.forEach(member -> memberGenerationSyncService.syncApprovedMember(member, activeGeneration));
         personalScoreCreateService.savePersonalScores(members);
     }
 
@@ -81,6 +91,30 @@ public class MemberAdminUsecase {
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
         members.forEach(Member::reject);
+    }
+
+    /** 회원 제명 처리 */
+    @Transactional
+    @LogEvent(value = "member.dismiss", message = "회원 제명 처리")
+    public void dismissMember(
+            @LogParam("member_id") Long memberId,
+            @LogParam("actor_id") Long actorId
+    ) {
+        Member member = memberGetService.getMember(memberId);
+        memberDismissUsecase.dismiss(member, actorId);
+    }
+
+    /** 회원 퇴출 처리 */
+    @Transactional
+    @LogEvent(value = "member.expel", message = "회원 퇴출 처리")
+    public void expelMember(
+            @LogParam("member_id") Long memberId,
+            @LogParam("actor_id") Long actorId
+    ) {
+        Member member = memberGetService.getMember(memberId);
+        memberDismissService.validateDismissible(member);
+        memberBlacklistCreateService.createIfAbsent(member, MemberBlacklistActionType.EXPEL, actorId);
+        memberWithdrawService.expel(member);
     }
 
     /** 관리자 비밀번호 설정 */

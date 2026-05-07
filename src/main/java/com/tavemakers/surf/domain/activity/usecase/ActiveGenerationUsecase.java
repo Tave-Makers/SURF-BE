@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.activity.usecase;
 import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveGenerationMemberResDTO;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationPutService;
+import com.tavemakers.surf.domain.member.service.MemberGenerationSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ public class ActiveGenerationUsecase {
 
     private final ActiveGenerationGetService activeGenerationGetService;
     private final ActiveGenerationPutService activeGenerationPutService;
+    private final MemberGenerationSyncService memberGenerationSyncService;
 
     /** 현재 활동 기수 조회 */
     @Transactional(readOnly = true)
@@ -33,5 +35,6 @@ public class ActiveGenerationUsecase {
     @Transactional
     public void updateActiveGeneration(Integer generation) {
         activeGenerationPutService.updateActiveGeneration(generation);
+        memberGenerationSyncService.syncApprovedMembersByGeneration(generation);
     }
 }
