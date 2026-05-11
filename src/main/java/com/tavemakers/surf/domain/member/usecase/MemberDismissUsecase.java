@@ -26,6 +26,7 @@ import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreReposito
 import com.tavemakers.surf.domain.scrap.service.ScrapService;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamMember;
+import com.tavemakers.surf.domain.team.repository.TeamMemberRepository;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,7 @@ public class MemberDismissUsecase {
 
     private final MemberRepository memberRepository;
     private final TeamRepository teamRepository;
+    private final TeamMemberRepository teamMemberRepository;
     private final CareerRepository careerRepository;
     private final TrackRepository trackRepository;
     private final ActivityRecordRepository activityRecordRepository;
@@ -69,6 +71,7 @@ public class MemberDismissUsecase {
         recentSearchService.clearAll(member.getId());
 
         cleanupTeams(member);
+        teamMemberRepository.deleteAllByMemberId(member.getId());
 
         Set<Long> deletedPostIds = deleteOwnedPosts(member.getId());
         postLikeService.unlikeAllByMemberId(member.getId());
