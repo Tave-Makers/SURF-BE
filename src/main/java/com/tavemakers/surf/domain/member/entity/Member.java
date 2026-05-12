@@ -64,7 +64,7 @@ public class Member extends BaseEntity {
     @Column
     private String name;
 
-    /** Apple 계정 탈퇴(revoke) 시 사용. Web 로그인 최초 코드 교환 시 저장, 탈퇴 시 null 처리. */
+    /** Apple 계정 탈퇴(revoke) 시 사용. 로그인 시 코드 교환 후 저장, 탈퇴 시 null 처리. */
     @Column(name = "apple_refresh_token", length = 1024)
     private String appleRefreshToken;
 
@@ -361,7 +361,7 @@ public class Member extends BaseEntity {
         this.appleRefreshToken = null;
     }
 
-    /** Apple refresh_token 갱신 — Web 로그인 코드 교환 시 호출 */
+    /** Apple refresh_token 갱신 — 로그인 코드 교환 시 호출 */
     public void updateAppleRefreshToken(String refreshToken) {
         this.appleRefreshToken = refreshToken;
     }

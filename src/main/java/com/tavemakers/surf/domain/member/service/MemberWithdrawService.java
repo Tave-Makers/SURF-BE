@@ -64,10 +64,12 @@ public class MemberWithdrawService {
 
     private void revokeApple(String appleRefreshToken) {
         if (appleRefreshToken == null) {
-            // App 로그인 회원은 authorizationCode 미전달로 refresh_token 미보유 → revoke 생략
-            log.warn("[APPLE][REVOKE] appleRefreshToken 없음 — revoke 생략 (App 로그인 회원)");
+            log.warn("[APPLE][REVOKE] appleRefreshToken 없음 — revoke 생략");
             return;
         }
+        // App(Bundle ID) 기준으로 먼저 시도, 이후 Web(Service ID) 기준으로 시도
+        // Apple /auth/revoke는 잘못된 client_id로 호출해도 HTTP 200을 반환하므로 에러 로그 오염 없음
+        appleApiClient.revokeAppToken(appleRefreshToken);
         appleApiClient.revokeToken(appleRefreshToken);
     }
 

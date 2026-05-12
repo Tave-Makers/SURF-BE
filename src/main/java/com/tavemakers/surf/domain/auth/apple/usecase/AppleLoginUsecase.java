@@ -81,10 +81,12 @@ public class AppleLoginUsecase {
 
         // authorizationCode로 Apple refresh_token 교환 후 저장 — 탈퇴 시 /auth/revoke 호출에 사용
         if (req.authorizationCode() != null && !req.authorizationCode().isBlank()) {
-            AppleTokenResDTO appleToken = appleAuthService.exchangeCodeForToken(req.authorizationCode());
+            AppleTokenResDTO appleToken = appleAuthService.exchangeAppCodeForToken(req.authorizationCode());
             if (appleToken.refreshToken() != null) {
                 member.updateAppleRefreshToken(appleToken.refreshToken());
                 log.info("[LOGIN][APPLE][APP] refresh_token 저장 완료 memberId={}", member.getId());
+            } else {
+                log.warn("[LOGIN][APPLE][APP] Apple이 refresh_token 미반환 — 탈퇴 시 revoke 불가 memberId={}", member.getId());
             }
         } else {
             log.warn("[LOGIN][APPLE][APP] authorizationCode 미전달 — 탈퇴 시 revoke 불가 memberId={}", member.getId());

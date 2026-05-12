@@ -37,9 +37,14 @@ public class AppleAuthService {
                 .toUriString();
     }
 
-    /** 인가 코드로 Apple 토큰 교환 */
+    /** Web 인가 코드로 Apple 토큰 교환 */
     public AppleTokenResDTO exchangeCodeForToken(String code) {
         return appleApiClient.exchangeCodeForToken(code);
+    }
+
+    /** App 인가 코드로 Apple 토큰 교환 — client_id=appBundleId, redirect_uri 없음 */
+    public AppleTokenResDTO exchangeAppCodeForToken(String code) {
+        return appleApiClient.exchangeAppCodeForToken(code);
     }
 
     /** Apple 콜백 로그 */

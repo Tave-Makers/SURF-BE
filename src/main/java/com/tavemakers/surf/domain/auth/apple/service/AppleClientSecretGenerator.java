@@ -56,8 +56,17 @@ public class AppleClientSecretGenerator {
         }
     }
 
-    /** Apple /auth/token 호출용 client_secret JWT를 생성한다 (ES256, exp 5분). */
+    /** Web 흐름용 client_secret — sub = serviceClientId */
     public String generate() {
+        return generateWithSubject(props.getServiceClientId());
+    }
+
+    /** App 흐름용 client_secret — sub = appBundleId */
+    public String generateForApp() {
+        return generateWithSubject(props.getAppBundleId());
+    }
+
+    private String generateWithSubject(String subject) {
         if (privateKey == null) {
             throw new AppleAuthException(
                     AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getStatus(),
@@ -74,7 +83,7 @@ public class AppleClientSecretGenerator {
                     .issueTime(new Date(now * 1000))
                     .expirationTime(new Date((now + 300) * 1000))
                     .audience(List.of("https://appleid.apple.com"))
-                    .subject(props.getServiceClientId())
+                    .subject(subject)
                     .build();
             SignedJWT jwt = new SignedJWT(header, claims);
             jwt.sign(new ECDSASigner(privateKey));
