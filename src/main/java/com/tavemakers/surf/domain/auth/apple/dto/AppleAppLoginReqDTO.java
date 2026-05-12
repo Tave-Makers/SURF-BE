@@ -16,5 +16,8 @@ public record AppleAppLoginReqDTO(
         String nonce,
 
         @Schema(description = "사용자 이름 — Apple SDK 최초 로그인 시에만 제공. 이후 null.")
-        String name
+        String name,
+
+        @Schema(description = "Apple SDK 인가 코드 — 탈퇴 시 /auth/revoke 호출을 위해 서버에서 refresh_token 교환에 사용. 매 로그인 시 전달 필수.")
+        String authorizationCode
 ) {}

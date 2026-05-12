@@ -65,7 +65,7 @@ public class AppleLoginUsecase {
 
     /**
      * Apple SDK 앱 로그인 처리 (iOS identityToken 직접 검증).
-     * @param req        identityToken + nonce 원문 (+ name 최초 로그인 시)
+     * @param req        identityToken + nonce 원문 (+ name 최초 로그인 시 + authorizationCode)
      * @param clientType resolver 주입 — APP=본문 RefreshToken 전달
      */
     @Transactional
@@ -78,6 +78,18 @@ public class AppleLoginUsecase {
         );
 
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.APPLE, userInfo);
+
+        // authorizationCode로 Apple refresh_token 교환 후 저장 — 탈퇴 시 /auth/revoke 호출에 사용
+        if (req.authorizationCode() != null && !req.authorizationCode().isBlank()) {
+            AppleTokenResDTO appleToken = appleAuthService.exchangeCodeForToken(req.authorizationCode());
+            if (appleToken.refreshToken() != null) {
+                member.updateAppleRefreshToken(appleToken.refreshToken());
+                log.info("[LOGIN][APPLE][APP] refresh_token 저장 완료 memberId={}", member.getId());
+            }
+        } else {
+            log.warn("[LOGIN][APPLE][APP] authorizationCode 미전달 — 탈퇴 시 revoke 불가 memberId={}", member.getId());
+        }
+
         LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, clientType, request);
 
         String accessToken = payload.loginRes().accessToken();
