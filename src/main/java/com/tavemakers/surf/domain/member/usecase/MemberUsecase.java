@@ -14,6 +14,7 @@ import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.service.*;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,24 +50,48 @@ public class MemberUsecase {
     private final MemberService memberService;
     private final MemberWithdrawService memberWithdrawService;
     private final ApplicationContext context;
+    private final LogEventEmitter logEventEmitter;
     //</editor-fold>
 
     /** 마이페이지 + 프로필 조회 */
     public MyPageProfileResDTO getMyPageAndProfile(Long targetId) {
-        Member member = memberGetService.getMemberByStatus(targetId,MemberStatus.APPROVED);
-        List<TrackResDTO> myTracks = getMyTracks(targetId);
-        List<CareerResDTO> myCareers = getMyCareers(targetId);
+        Long requesterId = SecurityUtils.getCurrentMemberId();
 
-        if (member.isNotOwner()) { // SURF Rule - 타인의 활동점수는 조회 불가
-            return MyPageProfileResDTO.of(member, myTracks, null, myCareers);
+        logEventEmitter.emit("member_profile_api_called", Map.of(
+                "requester_id", requesterId,
+                "target_member_id", targetId
+        ));
+
+        try {
+            Member member = memberGetService.getMemberByStatus(targetId, MemberStatus.APPROVED);
+            List<TrackResDTO> myTracks = getMyTracks(targetId);
+            List<CareerResDTO> myCareers = getMyCareers(targetId);
+
+            MyPageProfileResDTO result;
+            if (member.isNotOwner()) { // SURF Rule - 타인의 활동점수는 조회 불가
+                result = MyPageProfileResDTO.of(member, myTracks, null, myCareers);
+            } else {
+                BigDecimal score = null;
+                if (member.isActive()) { // SURF Rule - 활동 중인 회원만 활동점수를 보여준다.
+                    score = personalScoreGetService.getPersonalScore(targetId).getScore();
+                }
+                result = MyPageProfileResDTO.of(member, myTracks, score, myCareers);
+            }
+
+            logEventEmitter.emit("member_profile_api_succeeded", Map.of(
+                    "requester_id", requesterId,
+                    "target_member_id", targetId
+            ));
+            return result;
+        } catch (Exception e) {
+            Map<String, Object> failedProps = new HashMap<>();
+            failedProps.put("requester_id", requesterId);
+            failedProps.put("target_member_id", targetId);
+            failedProps.put("status_code", 500);
+            failedProps.put("error_code", e.getClass().getSimpleName());
+            logEventEmitter.emitError("member_profile_api_failed", failedProps, "회원 프로필 조회 실패");
+            throw e;
         }
-
-        BigDecimal score = null;
-        if (member.isActive()) { // SURF Rule - 활동 중인 회원만 활동점수를 보여준다.
-            score = personalScoreGetService.getPersonalScore(targetId).getScore();
-        }
-
-        return MyPageProfileResDTO.of(member, myTracks, score, myCareers);
     }
 
 
@@ -223,18 +249,74 @@ public class MemberUsecase {
     }
 
     /** 조건별 회원 검색 및 페이징 처리 */
-    public MemberSearchSliceResDTO searchMembers( int pageNum, int pageSize, Integer generation, String part, String keyword) {
-        Pageable pageable = PageRequest.of(pageNum, pageSize);
-        Part memberPart = part == null ? null : Part.valueOf(part);
+    public MemberSearchSliceResDTO searchMembers(int pageNum, int pageSize, Integer generation, String part, String keyword) {
+        Long requesterId = SecurityUtils.getCurrentMemberId();
 
-        Slice<MemberSearchDetailResDTO> slice = search(generation, memberPart, keyword, pageable);
-
-        Long totalCount = null;
-        if (pageNum == 0) { // FRONTEND 협의 - 0번째 페이지에서만 검색조건에 따른 전체 회원수 조회.
-            totalCount = memberGetService.countSearchingMembers(generation, memberPart, keyword);
+        logEventEmitter.emit("member_list_api_called", Map.of("requester_id", requesterId));
+        if (keyword != null && !keyword.isBlank()) {
+            logEventEmitter.emit("member_search_api_called", Map.of(
+                    "requester_id", requesterId,
+                    "keyword_length", keyword.length()
+            ));
+        }
+        if (generation != null || part != null) {
+            String filterType = generation != null ? "generation" : "part";
+            Object filterValue = generation != null ? (Object) generation : part;
+            logEventEmitter.emit("member_filter_api_called", Map.of(
+                    "requester_id", requesterId,
+                    "filter_type", filterType,
+                    "filter_value", filterValue
+            ));
         }
 
-        return MemberSearchSliceResDTO.of(slice, totalCount);
+        try {
+            Pageable pageable = PageRequest.of(pageNum, pageSize);
+            Part memberPart = part == null ? null : Part.valueOf(part);
+            Slice<MemberSearchDetailResDTO> slice = search(generation, memberPart, keyword, pageable);
+
+            Long totalCount = null;
+            if (pageNum == 0) { // FRONTEND 협의 - 0번째 페이지에서만 검색조건에 따른 전체 회원수 조회.
+                totalCount = memberGetService.countSearchingMembers(generation, memberPart, keyword);
+            }
+
+            MemberSearchSliceResDTO result = MemberSearchSliceResDTO.of(slice, totalCount);
+
+            Map<String, Object> succeededProps = new HashMap<>();
+            succeededProps.put("requester_id", requesterId);
+            succeededProps.put("page_num", pageNum);
+            succeededProps.put("page_size", pageSize);
+            succeededProps.put("total_count", totalCount);
+            succeededProps.put("returned_count", result.numberOfElements());
+            logEventEmitter.emit("member_list_api_succeeded", succeededProps);
+
+            if (keyword != null && !keyword.isBlank()) {
+                logEventEmitter.emit("member_search_api_succeeded", Map.of(
+                        "requester_id", requesterId,
+                        "keyword", keyword,
+                        "result_count", result.numberOfElements()
+                ));
+            }
+            if (generation != null || part != null) {
+                String filterType = generation != null ? "generation" : "part";
+                Object filterValue = generation != null ? (Object) generation : part;
+                logEventEmitter.emit("member_filter_api_succeeded", Map.of(
+                        "requester_id", requesterId,
+                        "filter_type", filterType,
+                        "filter_value", filterValue,
+                        "result_count", result.numberOfElements()
+                ));
+            }
+
+            return result;
+        } catch (Exception e) {
+            Map<String, Object> failedProps = new HashMap<>();
+            failedProps.put("requester_id", requesterId);
+            failedProps.put("status_code", 500);
+            failedProps.put("error_code", e.getClass().getSimpleName());
+            failedProps.put("error_message", e.getMessage());
+            logEventEmitter.emitError("member_list_api_failed", failedProps, "회원 목록 조회 실패");
+            throw e;
+        }
     }
 
     /** MemberStatus에 따른 총 회원 수 카운트 조회 */
