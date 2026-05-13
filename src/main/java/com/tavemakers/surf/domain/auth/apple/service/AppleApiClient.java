@@ -37,26 +37,50 @@ public class AppleApiClient {
 
     /** 인가 코드로 Apple /auth/token 호출 — id_token 포함 응답 반환 */
     public AppleTokenResDTO exchangeCodeForToken(String code) {
-        log.info("[APPLE][TOKEN] exchange start");
-        try {
-            String url = "https://appleid.apple.com/auth/token";
+        return doExchange("[APPLE][TOKEN]", code,
+                props.getServiceClientId(), clientSecretGenerator.generate(), props.getRedirectUri());
+    }
 
+    /** App authorizationCode 교환 — client_id=appBundleId, redirect_uri 없음 */
+    public AppleTokenResDTO exchangeAppCodeForToken(String code) {
+        return doExchange("[APPLE][TOKEN][APP]", code,
+                props.getAppBundleId(), clientSecretGenerator.generateForApp(), null);
+    }
+
+    /** Apple 계정 연결 해제 (Web 흐름) — client_id=serviceClientId  */
+    public void revokeToken(String refreshToken) {
+        doRevoke("[APPLE][REVOKE]", refreshToken,
+                props.getServiceClientId(), clientSecretGenerator.generate());
+    }
+
+    /** Apple 계정 연결 해제 (App 흐름) — client_id=appBundleId */
+    public void revokeAppToken(String refreshToken) {
+        doRevoke("[APPLE][REVOKE][APP]", refreshToken,
+                props.getAppBundleId(), clientSecretGenerator.generateForApp());
+    }
+
+    private AppleTokenResDTO doExchange(String logPrefix, String code, String clientId, String clientSecret, String redirectUri) {
+        log.info("{} exchange start", logPrefix);
+        try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("client_id", props.getServiceClientId());
-            params.add("client_secret", clientSecretGenerator.generate());
+            params.add("client_id", clientId);
+            params.add("client_secret", clientSecret);
             params.add("code", code);
             params.add("grant_type", "authorization_code");
-            params.add("redirect_uri", props.getRedirectUri());
+            if (redirectUri != null) {
+                params.add("redirect_uri", redirectUri);
+            }
 
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-            ResponseEntity<AppleTokenResDTO> response =
-                    appleRestTemplate.postForEntity(url, request, AppleTokenResDTO.class);
+            ResponseEntity<AppleTokenResDTO> response = appleRestTemplate.postForEntity(
+                    "https://appleid.apple.com/auth/token",
+                    new HttpEntity<>(params, headers),
+                    AppleTokenResDTO.class
+            );
 
-            log.info("[APPLE][TOKEN] exchange success status={}", response.getStatusCode());
-
+            log.info("{} exchange success status={}", logPrefix, response.getStatusCode());
             return Optional.ofNullable(response.getBody())
                     .orElseThrow(() -> new AppleAuthException(
                             AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getStatus(),
@@ -65,13 +89,13 @@ public class AppleApiClient {
         } catch (AppleAuthException e) {
             throw e;
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("[APPLE][TOKEN] apple error status={} body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("{} apple error status={} body={}", logPrefix, e.getStatusCode(), e.getResponseBodyAsString());
             throw new AppleAuthException(
                     AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getStatus(),
                     AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getMessage()
             );
         } catch (Exception e) {
-            log.error("[APPLE][TOKEN] unexpected error", e);
+            log.error("{} unexpected error", logPrefix, e);
             throw new AppleAuthException(
                     AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getStatus(),
                     AppleAuthErrorMessage.APPLE_TOKEN_EXCHANGE_FAILED.getMessage()
@@ -79,29 +103,29 @@ public class AppleApiClient {
         }
     }
 
-    /** Apple 계정 연결 해제 — 탈퇴 시 refresh_token 폐기. 실패해도 탈퇴 트랜잭션은 롤백하지 않는다. */
-    public void revokeToken(String refreshToken) {
-        log.info("[APPLE][REVOKE] start");
+    private void doRevoke(String logPrefix, String refreshToken, String clientId, String clientSecret) {
+        log.info("{} start", logPrefix);
         try {
-            String url = "https://appleid.apple.com/auth/revoke";
-
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("client_id", props.getServiceClientId());
-            params.add("client_secret", clientSecretGenerator.generate());
+            params.add("client_id", clientId);
+            params.add("client_secret", clientSecret);
             params.add("token", refreshToken);
             params.add("token_type_hint", "refresh_token");
 
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
-            appleRestTemplate.postForEntity(url, request, String.class);
+            appleRestTemplate.postForEntity(
+                    "https://appleid.apple.com/auth/revoke",
+                    new HttpEntity<>(params, headers),
+                    String.class
+            );
 
-            log.info("[APPLE][REVOKE] success");
+            log.info("{} success", logPrefix);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("[APPLE][REVOKE] 실패: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString(), e);
+            log.error("{} 실패: status={}, body={}", logPrefix, e.getStatusCode(), e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            log.error("[APPLE][REVOKE] 예기치 못한 오류", e);
+            log.error("{} 예기치 못한 오류", logPrefix, e);
         }
     }
 }
