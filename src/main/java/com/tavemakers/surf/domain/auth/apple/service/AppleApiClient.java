@@ -47,13 +47,13 @@ public class AppleApiClient {
                 props.getAppBundleId(), clientSecretGenerator.generateForApp(), null);
     }
 
-    /** Web 계정 연결 해제 — client_id=serviceClientId */
+    /** Apple 계정 연결 해제 (Web 흐름) — client_id=serviceClientId  */
     public void revokeToken(String refreshToken) {
         doRevoke("[APPLE][REVOKE]", refreshToken,
                 props.getServiceClientId(), clientSecretGenerator.generate());
     }
 
-    /** App 계정 연결 해제 — client_id=appBundleId */
+    /** Apple 계정 연결 해제 (App 흐름) — client_id=appBundleId */
     public void revokeAppToken(String refreshToken) {
         doRevoke("[APPLE][REVOKE][APP]", refreshToken,
                 props.getAppBundleId(), clientSecretGenerator.generateForApp());
