@@ -69,19 +69,6 @@ public class ActivityRecordUsecase {
 
         try {
 
-            logEventEmitter.emit("activity.record.create", Map.of(
-                    "member_id_list_count",
-                    dto.isTeam()
-                            ? dto.teamIdList().size()
-                            : dto.memberIdList().size(),
-
-                    "activity_name",
-                    dto.activityName().name(),
-
-                    "activity_date",
-                    dto.activityDate()
-            ));
-
             ActivityType activityType = dto.activityName();
 
             if (dto.isTeam()) {
@@ -104,6 +91,12 @@ public class ActivityRecordUsecase {
 
                 activityRecordCreateService.saveActivityRecordList(recordList);
 
+                logEventEmitter.emit("activity.record.create", Map.of(
+                        "member_id_list_count", dto.teamIdList().size(),
+                        "activity_name", activityType.name(),
+                        "activity_date", dto.activityDate()
+                ));
+
                 return;
             }
 
@@ -124,6 +117,12 @@ public class ActivityRecordUsecase {
                     ).toList();
 
             activityRecordCreateService.saveActivityRecordList(recordList);
+
+            logEventEmitter.emit("activity.record.create", Map.of(
+                    "member_id_list_count", dto.memberIdList().size(),
+                    "activity_name", activityType.name(),
+                    "activity_date", dto.activityDate()
+            ));
 
         } catch (Exception e) {
 
