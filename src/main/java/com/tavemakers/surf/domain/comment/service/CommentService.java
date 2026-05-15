@@ -44,9 +44,8 @@ public class CommentService {
 
     /** 댓글 작성 */
     @Transactional
-    @LogEvent(value = "comment.create", message = "댓글 생성 성공")
     public CommentResDTO createComment(
-            @LogParam("post_id") Long postId,
+            Long postId,
             Long memberId, CommentCreateReqDTO req) {
         Post post = postGetService.getPost(postId);
         Member member = memberGetService.getMember(memberId);
@@ -123,10 +122,9 @@ public class CommentService {
 
     /** 댓글 삭제 */
     @Transactional
-    @LogEvent("comment.delete")
     public void deleteComment(
             Long postId,
-            @LogParam("comment_id") Long commentId,
+            Long commentId,
             Long memberId
     ) {
         Comment comment = commentRepository.findById(commentId)

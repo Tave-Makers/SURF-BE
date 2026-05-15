@@ -5,6 +5,8 @@ import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
 import com.tavemakers.surf.domain.schedule.service.ScheduleDeleteService;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
