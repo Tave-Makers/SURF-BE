@@ -32,6 +32,7 @@ public class PersonalScoreUsecase {
 
         List<String> topTypes = list.stream()
                 .map(record -> record.getActivityType().name())
+                .limit(5)
                 .toList();
 
         logEventEmitter.emit("personal.score.pinned5", Map.of(
