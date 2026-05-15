@@ -67,7 +67,7 @@ public class MemberAdminUsecase {
 
     /** 회원 권한 변경 Version 2 (한 번에 여러명 변경) */
     @Transactional
-    @LogEvent(value = "role.bulk_grant", message = "회원 다중 권한 변경")
+    @LogEvent(value = "role.bulk.grant", message = "회원 다중 권한 변경")
     public void changeMembersRole(
             @LogParam("member_ids") List<Long> memberIds,
             @LogParam("role") MemberRole role

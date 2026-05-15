@@ -31,7 +31,7 @@ public class PostCreateUsecase {
                 "post_id", result.postId(),
                 "board_id", req.boardId(),
                 "title_length", req.title().length(),
-                "has_Fimage", req.hasImage()
+                "has_image", req.hasImage()
         ));
 
         return result;
