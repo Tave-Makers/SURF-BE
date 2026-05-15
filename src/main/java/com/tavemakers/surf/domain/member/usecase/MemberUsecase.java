@@ -161,13 +161,14 @@ public class MemberUsecase {
                     props
             );
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
 
+            int errorCode = 500; // 기본값
             logEventEmitter.emitError(
                     "profile.update.failed",
                     Map.of(
                             "member_id", memberId,
-                            "error_code", 500,
+                            "error_code", errorCode,
                             "error_msg", e.getClass().getSimpleName()
                     ),
                     "회원 프로필 수정 실패"
