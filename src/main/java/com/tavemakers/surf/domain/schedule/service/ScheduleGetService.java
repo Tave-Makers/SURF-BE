@@ -85,7 +85,7 @@ public class ScheduleGetService {
 
     /** 캘린더에서 일정 상세 조회 */
     @Transactional(readOnly = true)
-    @LogEvent("calendar_summary_open")
+    @LogEvent("calendar.summary.open")
     public ScheduleResDTO getScheduleSingleAtCalendar(@LogParam("schedule_id") Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(ScheduleNotFoundException::new);
