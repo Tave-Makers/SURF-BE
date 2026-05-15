@@ -24,9 +24,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -48,10 +50,14 @@ public class MemberUsecase {
     private final MemberService memberService;
     private final MemberWithdrawService memberWithdrawService;
     private final ApplicationContext context;
+    private final LogEventEmitter logEventEmitter;
     //</editor-fold>
 
     /** 마이페이지 + 프로필 조회 */
-    public MyPageProfileResDTO getMyPageAndProfile(Long targetId) {
+    @LogEvent(value = "profile.get", message = "프로필 조회")
+    public MyPageProfileResDTO getMyPageAndProfile(
+            @LogParam("member_id") Long targetId
+    ) {
         Member member = memberGetService.getMemberByStatus(targetId,MemberStatus.APPROVED);
         List<TrackResDTO> myTracks = getMyTracks(targetId);
         List<CareerResDTO> myCareers = getMyCareers(targetId);
@@ -112,29 +118,62 @@ public class MemberUsecase {
     }
 
     /** 회원 프로필 및 경력 정보 수정 */
-    @LogEvent(value = "member.profile_update", message = "회원 정보 수정")
     @Transactional
-    public void updateProfile(@LogParam("member_id") Long memberId,
+    public void updateProfile(Long memberId,
                               ProfileUpdateReqDTO dto) {
 
-        Member member = memberGetService.getMember(memberId);
+        try {
 
-        // 프로필 정보 수정
-        memberPatchService.updateProfile(member, dto);
+            Member member = memberGetService.getMember(memberId);
 
-        // 경력 수정
-        if (dto.careersToUpdate() != null) {
-            careerPatchService.updateCareer(member, dto.careersToUpdate());
-        }
+            // 프로필 정보 수정
+            memberPatchService.updateProfile(member, dto);
 
-        // 경력 삭제
-        if (dto.careerIdsToDelete() != null) {
-            careerDeleteService.deleteCareer(member, dto.careerIdsToDelete());
-        }
+            // 경력 수정
+            if (dto.careersToUpdate() != null) {
+                careerPatchService.updateCareer(member, dto.careersToUpdate());
+            }
 
-        // 경력 생성
-        if (dto.careersToCreate() != null) {
-            careerCreateService.createCareer(member, dto.careersToCreate());
+            // 경력 삭제
+            if (dto.careerIdsToDelete() != null) {
+                careerDeleteService.deleteCareer(member, dto.careerIdsToDelete());
+            }
+
+            // 경력 생성
+            if (dto.careersToCreate() != null) {
+                careerCreateService.createCareer(member, dto.careersToCreate());
+            }
+
+            Map<String, Object> props = new HashMap<>(dto.buildProps());
+
+            props.put("member_id", memberId);
+
+            List<?> changedFields =
+                    (List<?>) props.getOrDefault("changed_fields", List.of());
+
+            props.put(
+                    "updated_fields_count",
+                    changedFields.size()
+            );
+
+            logEventEmitter.emit(
+                    "profile.update.succeeded",
+                    props
+            );
+
+        } catch (Exception e) {
+
+            logEventEmitter.emitError(
+                    "profile.update.failed",
+                    Map.of(
+                            "member_id", memberId,
+                            "error_code", 500,
+                            "error_msg", e.getClass().getSimpleName()
+                    ),
+                    "회원 프로필 수정 실패"
+            );
+
+            throw e;
         }
     }
 
@@ -149,6 +188,10 @@ public class MemberUsecase {
         MemberStatus memberStatus = member.getStatus();
 
         MemberRole memberRole = SecurityUtils.getCurrentMember().getRole();
+
+        logEventEmitter.emit("onboarding.valid_status", Map.of(
+                "need_onboarding", needOnboarding
+        ));
 
         return OnboardingCheckResDTO.of(memberId, needOnboarding, memberStatus, memberRole);
     }
@@ -187,7 +230,6 @@ public class MemberUsecase {
     @Transactional
     @LogEvent(value = "signup.succeeded", message = "회원가입 성공")
     public MemberSignupResDTO signupSucceeded(
-            @LogParam("member_id") Long memberId,
             MemberSignupResDTO response
     ) {
         return response;
@@ -197,8 +239,13 @@ public class MemberUsecase {
     @Transactional
     @LogEvent(value = "signup.failed", message = "회원가입 실패")
     public MemberSignupResDTO signupFailed(
+            @LogParam("member_id")
             Long memberId,
+
+            @LogParam("error_code")
             int statusCode,
+
+            @LogParam("error_msg")
             String errorReason
     ) {
         throw new RuntimeException(errorReason);

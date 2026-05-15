@@ -42,19 +42,76 @@ public record ProfileUpdateReqDTO(
     public Map<String, Object> buildProps() {
         List<String> changedFields = new ArrayList<>();
 
-        if (email != null && !email.isBlank()) changedFields.add("email");
-        if (university != null && !university.isBlank()) changedFields.add("university");
-        if (graduateSchool != null && !graduateSchool.isBlank()) changedFields.add("graduateSchool");
-        if (phoneNumber != null && !phoneNumber.isBlank()) changedFields.add("phoneNumber");
-        if (phoneNumberPublic != null) changedFields.add("phoneNumberPublic");
+        if (email != null && !email.isBlank()) {
+            changedFields.add("email");
+        }
+
+        if (university != null && !university.isBlank()) {
+            changedFields.add("university");
+        }
+
+        if (graduateSchool != null && !graduateSchool.isBlank()) {
+            changedFields.add("graduateSchool");
+        }
+
+        if (selfIntroduction != null && !selfIntroduction.isBlank()) {
+            changedFields.add("selfIntroduction");
+        }
+
+        if (link != null && !link.isBlank()) {
+            changedFields.add("link");
+        }
+
+        if (phoneNumber != null && !phoneNumber.isBlank()) {
+            changedFields.add("phoneNumber");
+        }
+
+        if (phoneNumberPublic != null) {
+            changedFields.add("phoneNumberPublic");
+        }
+
+        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+            changedFields.add("profileImageUrl");
+        }
+
+        if (isProfileImageChanged != null) {
+            changedFields.add("isProfileImageChanged");
+        }
 
         return Map.of(
                 "changed_fields", changedFields,
-                "careers_created_count", careersToCreate == null ? 0 : careersToCreate.size(),
-                "careers_updated", careersToUpdate == null ? List.of() :
-                        careersToUpdate.stream().map(CareerUpdateReqDTO::careerId).toList(),
-                "careers_updated_count", careersToUpdate == null ? 0 : careersToUpdate.size(),
-                "careers_deleted", careerIdsToDelete == null ? List.of() : careerIdsToDelete
+
+                "careers_created",
+                careersToCreate == null
+                        ? List.of()
+                        : careersToCreate,
+
+                "careers_created_count",
+                careersToCreate == null
+                        ? 0
+                        : careersToCreate.size(),
+
+                "careers_updated",
+                careersToUpdate == null
+                        ? List.of()
+                        : careersToUpdate.stream()
+                        .map(CareerUpdateReqDTO::careerId)
+                        .toList(),
+
+                "careers_updated_count",
+                careersToUpdate == null
+                        ? 0
+                        : careersToUpdate.size(),
+
+                "careers_deleted",
+                careerIdsToDelete == null
+                        ? List.of()
+                        : careerIdsToDelete,
+
+                "careers_deleted_count",
+                careerIdsToDelete == null
+                        ? 0
+                        : careerIdsToDelete.size()
         );
     }
 }

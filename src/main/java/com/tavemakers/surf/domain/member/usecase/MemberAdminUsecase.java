@@ -56,16 +56,24 @@ public class MemberAdminUsecase {
 
     /** 회원 권한 변경 */
     @Transactional
-    public void changeRole (Long memberId, MemberRole role) {
+    @LogEvent(value = "role.grant", message = "회원 권한 변경")
+    public void changeRole (
+            @LogParam("member_id") Long memberId,
+            @LogParam("role") MemberRole role
+    ) {
         Member member = memberGetService.getMember(memberId);
         memberPatchService.grantRole(member, role);
     }
 
-    /** 회원 권한 변경 Version 2 */
+    /** 회원 권한 변경 Version 2 (한 번에 여러명 변경) */
     @Transactional
-    public void changeMembersRole(RoleChangeReqDTOV2 dto) {
-        List<Member> members = memberGetService.findMembersByIds(dto.memberIdList());
-        memberPatchService.grantRoleV2(members, dto.role());
+    @LogEvent(value = "role.bulk_grant", message = "회원 다중 권한 변경")
+    public void changeMembersRole(
+            @LogParam("member_ids") List<Long> memberIds,
+            @LogParam("role") MemberRole role
+    ) {
+        List<Member> members = memberGetService.findMembersByIds(memberIds);
+        memberPatchService.grantRoleV2(members, role);
     }
 
     /** 회원가입 승인 처리 */
