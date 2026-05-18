@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
 import com.tavemakers.surf.domain.schedule.service.ScheduleUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ScheduleGetController {
 
     private final ScheduleUsecase scheduleUseCase;
+    private final LogEventEmitter logEventEmitter;
 
     /** 월별 일정 목록 조회 */
     @Operation(summary = "캘린더에 월별 일정 목록 조회", description = "캘린더 페이지에서 월별 일정을 조회합니다.")
@@ -34,6 +38,10 @@ public class ScheduleGetController {
     public ApiResponse<ScheduleMonthlyResDTO> getMonthlySchedules(
             @RequestParam @Parameter int year, @RequestParam @Parameter int month) {
         String memberRole = SecurityUtils.getCurrentMemberRole();
+        logEventEmitter.emit("calendar.view", Map.of(
+                "year", year,
+                "month", month
+        ));
         ScheduleMonthlyResDTO dto = scheduleUseCase.getScheduleMonthly(memberRole, year, month);
         return ApiResponse.response(HttpStatus.OK, SCHEDULE_CALENDAR_READ.getMessage(),dto);
     }

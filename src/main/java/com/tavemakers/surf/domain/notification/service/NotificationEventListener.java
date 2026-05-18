@@ -9,6 +9,8 @@ import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.event.PostLikedEvent;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.domain.post.service.support.PostPublishedEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
+import com.tavemakers.surf.global.logging.LogEventEmitterImpl;
 import java.util.Map;
 
 import jakarta.transaction.Transactional;
@@ -28,6 +30,7 @@ public class NotificationEventListener {
     private final PostGetService postGetService;
     private final NotificationUsecase notificationUsecase;
     private final NotificationCreateService notificationCreateService;
+    private final LogEventEmitterImpl logEventEmitter;
 
     @Async
     @Transactional
@@ -126,14 +129,35 @@ public class NotificationEventListener {
     @Async
     @EventListener
     public void handleLetterSent(LetterSentEvent event) {
-        notificationCreateService.createAndSend(
-                event.getReceiverId(),
-                NotificationType.MESSAGE,
-                Map.of(
-                        "actorName", event.getSenderName(),
-                        "actorId", event.getSenderId()
-                )
-        );
-        log.info("[LetterNotification] sent to receiverId={}", event.getReceiverId());
+        logEventEmitter.emit("letter_notification_requested", Map.of(
+                "sender_id", event.getSenderId(),
+                "receiver_id", event.getReceiverId(),
+                "sender_name", event.getSenderName()
+        ));
+        try {
+            notificationCreateService.createAndSend(
+                    event.getReceiverId(),
+                    NotificationType.MESSAGE,
+                    Map.of(
+                            "actorName", event.getSenderName(),
+                            "actorId", event.getSenderId()
+                    )
+            );
+            log.info("[LetterNotification] sent to receiverId={}", event.getReceiverId());
+            logEventEmitter.emit("letter_notification_succeeded", Map.of(
+                    "receiver_id", event.getReceiverId(),
+                    "sender_id", event.getSenderId(),
+                    "delivered", true
+            ));
+        } catch (Exception e) {
+            log.error("[LetterNotification] failed for receiverId={}", event.getReceiverId(), e);
+            logEventEmitter.emitError("letter_notification_failed", Map.of(
+                    "receiver_id", event.getReceiverId(),
+                    "sender_id", event.getSenderId(),
+                    "fail_reason", e.getMessage() != null ? e.getMessage() : "unknown"
+            ), "쪽지 알림 발송 실패");
+        } finally {
+            logEventEmitter.flush(); // 비동기 스레드: 요청 필터 밖이므로 수동 flush
+        }
     }
 }

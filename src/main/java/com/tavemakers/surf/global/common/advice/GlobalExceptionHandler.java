@@ -1,10 +1,15 @@
 package com.tavemakers.surf.global.common.advice;
 
 import com.tavemakers.surf.domain.auth.common.exception.EmailConflictException;
+import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.global.common.exception.BaseException;
 import com.tavemakers.surf.global.common.exception.ErrorCode;
 import com.tavemakers.surf.global.common.exception.ErrorDetail;
 import com.tavemakers.surf.global.common.response.ApiResponse;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
+import com.tavemakers.surf.global.util.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,16 +20,20 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.tavemakers.surf.global.common.exception.ErrorCode.*;
 
 
 @Slf4j
+@RequiredArgsConstructor
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final LogEventEmitter logEventEmitter;
     private static final String LOG_FORMAT = "Class : {}, Code : {}, Message : {}";
 
     /** 동일 이메일 다른 provider 충돌 — existingProvider 필드를 응답 본문에 포함한다 (D6). */
@@ -58,7 +67,10 @@ public class GlobalExceptionHandler {
 
     // @Valid 유효성 검증 예외
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<List<ErrorDetail>>> handleMethodArgumentValidation(MethodArgumentNotValidException e) {
+    public ResponseEntity<ApiResponse<List<ErrorDetail>>> handleMethodArgumentValidation(
+            MethodArgumentNotValidException e,
+            HttpServletRequest request
+    ) {
         ErrorCode errorCode = METHOD_ARGUMENT_NOT_VALID;
 
         List<ErrorDetail> errors = e.getBindingResult()
@@ -69,6 +81,25 @@ public class GlobalExceptionHandler {
                         fe.getRejectedValue()
                 ))
                 .toList();
+
+        // 쪽지 전송 유효성 검증 실패 로그
+        if (request != null && request.getRequestURI().contains("/letters")
+                && e.getTarget() instanceof LetterCreateReqDTO req) {
+            try {
+                Long senderId = SecurityUtils.getCurrentMemberId();
+                String failReason = e.getBindingResult().getFieldErrors().stream()
+                        .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                        .collect(Collectors.joining(", "));
+                Map<String, Object> failedProps = new HashMap<>();
+                failedProps.put("sender_id", senderId);
+                if (req.receiverId() != null) failedProps.put("receiver_id", req.receiverId());
+                failedProps.put("email_valid", e.getBindingResult().getFieldError("replyEmail") == null);
+                failedProps.put("title_length", req.title() != null ? req.title().length() : 0);
+                failedProps.put("content_length", req.content() != null ? req.content().length() : 0);
+                failedProps.put("fail_reason", failReason);
+                logEventEmitter.emitError("letter_send_validation_failed", failedProps, "쪽지 전송 유효성 검증 실패");
+            } catch (Exception ignored) {}
+        }
 
         logWarning(e, errorCode.getStatus().value());
         return responseException(errorCode.getStatus(), errorCode.getMessage(), errors);
@@ -85,6 +116,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         ErrorCode errorCode = INTERNAL_SERVER_ERROR;
+        Map<String, Object> errorProps = new HashMap<>();
+        errorProps.put("error_code", "500");
+        errorProps.put("error_msg", e.getMessage() != null ? e.getMessage() : "internal server error");
+        logEventEmitter.emitError("any.error", errorProps, "서버 내부 오류");
         logError(e, errorCode.getStatus().value());
         return responseException(errorCode.getStatus(), e.getMessage(), null);
     }
