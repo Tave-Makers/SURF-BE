@@ -7,11 +7,15 @@ import com.tavemakers.surf.global.jwt.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -24,6 +28,22 @@ public class RefreshTokenService {
 
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
+
+    /** invalidateAll SCAN 배치 크기 */
+    private static final int SCAN_SIZE = 100;
+
+    // 저장된 값이 ARGV[1]과 일치할 때만 DEL — RTR 단일 사용 보장 (CAS)
+    // 반환: 1=CONSUMED, 0=MISMATCH, -1=NOT_FOUND
+    private static final DefaultRedisScript<Long> COMPARE_AND_DELETE_SCRIPT = new DefaultRedisScript<>(
+            "local v = redis.call('GET', KEYS[1]); " +
+                    "if not v then return -1 end; " +
+                    "if v == ARGV[1] then redis.call('DEL', KEYS[1]); return 1 end; " +
+                    "return 0",
+            Long.class
+    );
+
+    /** compareAndDelete 결과 */
+    private enum ConsumeResult { CONSUMED, MISMATCH, NOT_FOUND }
 
     /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 (WEB 흐름) */
     public ResponseCookie issue(Long memberId, String deviceId) {
@@ -69,22 +89,21 @@ public class RefreshTokenService {
         String key = key(memberId, deviceId);
         log.debug("[RTR][ROTATE] redisKey generated");
 
-        String stored = redisTemplate.opsForValue().get(key);
+        // 검증 + 삭제 원자화 (CAS). 동시 회전 시 단 한 요청만 CONSUMED를 받음
+        ConsumeResult consumeResult = compareAndDelete(key, refreshToken);
 
-        if (stored == null) {
+        if (consumeResult == ConsumeResult.NOT_FOUND) {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_NOT_FOUND.getMessage());
         }
 
-        // refresh reuse detection
-        if (!refreshToken.equals(stored)) {
+        if (consumeResult == ConsumeResult.MISMATCH) {
             log.error("[RTR][ROTATE] refresh reuse detected memberId={}", memberId);
             invalidateAll(memberId);
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_REUSE_DETECTED.getMessage());
         }
 
-        // ROTATION
-        log.info("[RTR][ROTATE] rotation allowed, deleting old token");
-        redisTemplate.delete(key);
+        // ROTATION (CONSUMED)
+        log.info("[RTR][ROTATE] rotation allowed, old token consumed atomically");
 
         String newRefresh = jwtService.createRefreshToken(memberId, deviceId);
         save(newRefresh);
@@ -103,28 +122,58 @@ public class RefreshTokenService {
         redisTemplate.delete(key(memberId, deviceId));
     }
 
-    /** refresh 재사용 탐지 시 전체 세션 폐기 */
-    // TODO: redisTemplate.keys()는 O(N) 블로킹 명령으로 프로덕션 Redis에서 서비스 장애를 유발할 수 있음.
-    // TODO: SCAN 커서 기반 명령(redisTemplate.scan())으로 교체 필요.
+    /** refresh 재사용 탐지 시 전체 세션 폐기 — SCAN 커서로 non-blocking 순회 */
     public void invalidateAll(Long memberId) {
         log.warn("[RTR][INVALIDATE-ALL] start memberId={}", memberId);
 
         String pattern = KEY_PREFIX + memberId + ":*";
         log.info("[RTR][INVALIDATE-ALL] pattern={}", pattern);
 
-        Set<String> keys = redisTemplate.keys(pattern);
-        log.info("[RTR][INVALIDATE-ALL] foundKeyCount={}",
-                keys == null ? 0 : keys.size());
+        ScanOptions scanOption = ScanOptions.scanOptions()
+                .match(pattern)
+                .count(SCAN_SIZE)
+                .build();
 
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-            log.warn("[RTR][INVALIDATE-ALL] deleted keyCount={}", keys.size());
+        List<String> keyBuffer = new ArrayList<>(SCAN_SIZE);
+        long totalDeleted = 0;
+
+        try (Cursor<String> cursor = redisTemplate.scan(scanOption)) {
+            while (cursor.hasNext()) {
+                keyBuffer.add(cursor.next());
+
+                if (keyBuffer.size() >= SCAN_SIZE) {
+                    totalDeleted += deleteBatch(keyBuffer);
+                    keyBuffer.clear();
+                }
+            }
+
+            if (!keyBuffer.isEmpty()) {
+                totalDeleted += deleteBatch(keyBuffer);
+            }
+        }
+
+        if (totalDeleted > 0) {
+            log.warn("[RTR][INVALIDATE-ALL] deleted keyCount={}", totalDeleted);
         } else {
             log.info("[RTR][INVALIDATE-ALL] no keys to delete");
         }
     }
 
     /* ================= 내부 유틸 ================= */
+
+    /** 저장된 값이 expected와 일치하면 삭제 — Lua 스크립트로 단일 명령 보장 */
+    private ConsumeResult compareAndDelete(String key, String expected) {
+        Long result = redisTemplate.execute(COMPARE_AND_DELETE_SCRIPT, List.of(key), expected);
+        if (result == null || result == -1L) {
+            return ConsumeResult.NOT_FOUND;
+        }
+        return result == 1L ? ConsumeResult.CONSUMED : ConsumeResult.MISMATCH;
+    }
+
+    private long deleteBatch(List<String> keys) {
+        Long deleted = redisTemplate.delete(keys);
+        return deleted == null ? 0 : deleted;
+    }
 
     private void save(String refreshToken) {
         Long memberId = jwtService.extractMemberId(refreshToken).orElseThrow();
