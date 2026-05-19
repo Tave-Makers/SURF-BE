@@ -227,31 +227,6 @@ public class MemberUsecase {
         return memberService.signup(member, request);
     }
 
-    /** 회원가입 성공 */
-    @Transactional
-    @LogEvent(value = "signup.succeeded", message = "회원가입 성공")
-    public MemberSignupResDTO signupSucceeded(
-            MemberSignupResDTO response
-    ) {
-        return response;
-    }
-
-    /** 회원가입 실패 */
-    @Transactional
-    @LogEvent(value = "signup.failed", message = "회원가입 실패")
-    public MemberSignupResDTO signupFailed(
-            @LogParam("member_id")
-            Long memberId,
-
-            @LogParam("error_code")
-            int statusCode,
-
-            @LogParam("error_msg")
-            String errorReason
-    ) {
-        throw new RuntimeException(errorReason);
-    }
-
     /** 회원 탈퇴 처리 */
     @Transactional
     public void withdraw(Long memberId) {

@@ -17,6 +17,7 @@ import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import com.tavemakers.surf.global.jwt.JwtService;
 import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -52,6 +54,7 @@ public class MemberAdminUsecase {
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
     private final MemberWithdrawService memberWithdrawService;
+    private final LogEventEmitter logEventEmitter;
     //</editor-fold>
 
     /** 회원 권한 변경 */
@@ -88,6 +91,16 @@ public class MemberAdminUsecase {
         Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
         members.forEach(member -> memberGenerationSyncService.syncApprovedMember(member, activeGeneration));
         personalScoreCreateService.savePersonalScores(members);
+
+        for (Member member : members) {
+            logEventEmitter.emit(
+                    "signup.succeeded",
+                    Map.of(
+                            "member_id", member.getId(),
+                            "approver_id", approverId
+                    )
+            );
+        }
     }
 
     /** 회원가입 거절 처리 */
@@ -99,6 +112,17 @@ public class MemberAdminUsecase {
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
         members.forEach(Member::reject);
+
+        for (Member member : members) {
+            logEventEmitter.emit(
+                    "signup.failed",
+                    Map.of(
+                            "member_id", member.getId(),
+                            "approver_id", approverId
+                    ),
+                    "회원가입 거절"
+            );
+        }
     }
 
     /** 회원 제명 처리 */
