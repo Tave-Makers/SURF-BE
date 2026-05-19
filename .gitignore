@@ -62,3 +62,5 @@ src/main/resources/application-local.yml
 ### GCP ###
 google-cloud-cli-*.tar.gz
 tave-surf.env.example
+/.claude/
+/docs/

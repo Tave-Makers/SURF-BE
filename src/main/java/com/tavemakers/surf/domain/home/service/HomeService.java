@@ -11,6 +11,7 @@ import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
 import com.tavemakers.surf.domain.schedule.service.ScheduleGetService;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -33,6 +36,7 @@ public class HomeService {
 
     private final MemberGetService memberGetService;
     private final ScheduleGetService scheduleGetService;
+    private final LogEventEmitter logEventEmitter;
 
     /** 홈 화면 정보 조회 (메시지, 배너, 회원정보, 일정) */
     @Transactional(readOnly = true)
@@ -112,6 +116,35 @@ public class HomeService {
                 Long boardId = s.getPost().getBoard().getId();
                 scheduleDeepLink = "/board/" + boardId + "/post/" + postId;
             }
+        }
+
+        Map<String, Object> homeViewProps = new HashMap<>();
+        homeViewProps.put("has_welcome_message", !message.isEmpty());
+        homeViewProps.put("next_schedule_exists", scheduleTitle != null);
+        logEventEmitter.emit("home.view", homeViewProps);
+
+        if (!message.isEmpty()) {
+            logEventEmitter.emit("home.welcome_message_view", Map.of(
+                    "is_exposed", true,
+                    "message_length", message.length()
+            ));
+        }
+
+        if (memberId != null && memberName != null) {
+            Map<String, Object> profileProps = new HashMap<>();
+            profileProps.put("member_id", memberId);
+            profileProps.put("user_name", memberName);
+            if (memberGeneration != null) profileProps.put("generation", memberGeneration);
+            if (memberPart != null) profileProps.put("primary_part", memberPart);
+            logEventEmitter.emit("home.profile_summary_view", profileProps);
+        }
+
+        if (scheduleTitle != null) {
+            Map<String, Object> schedProps = new HashMap<>();
+            schedProps.put("schedule_title", scheduleTitle);
+            if (scheduleDate != null) schedProps.put("event_date", scheduleDate);
+            schedProps.put("source", "home");
+            logEventEmitter.emit("home.next_schedule_view", schedProps);
         }
 
         return new HomeResDTO(
