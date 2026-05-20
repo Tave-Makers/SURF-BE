@@ -51,4 +51,9 @@ public class KakaoAuthService {
     public void logLoginSuccess(Long userId, String issuedToken) {
         kakaoAuthLogService.logLoginSuccess(userId, issuedToken);
     }
+
+    /** 로그인 실패 로그 */
+    public void logLoginFailed(int errorCode, String errorMsg) {
+        kakaoAuthLogService.logLoginFailed(errorCode, errorMsg);
+    }
 }
