@@ -86,7 +86,7 @@ server:
 
 logging:
   forwarding:
-    enabled: false
+    enabled: ${LOG_FORWARD_ENABLED:false}
     url: ${LOG_FORWARD_URL:}
     timeout-ms: 3000
     max-retries: 1
