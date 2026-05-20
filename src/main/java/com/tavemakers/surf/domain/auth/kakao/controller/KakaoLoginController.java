@@ -80,16 +80,17 @@ public class KakaoLoginController {
                         KakaoAuthErrorMessage.KAKAO_AUTH_CALLBACK_ERROR.getMessage()
                 );
             }
-
-            log.info("[LOGIN][KAKAO][CALLBACK] start codeLength={}", code.length());
-
             LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code, request);
 
             log.info("[LOGIN][KAKAO][CALLBACK] success");
             return payload.toWebResponseBuilder()
                     .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
         } catch (Exception e) {
-            kakaoAuthService.logLoginFailed(resolveStatusCode(e), e.getClass().getSimpleName());
+            try {
+                kakaoAuthService.logLoginFailed(resolveStatusCode(e), e.getClass().getSimpleName());
+            } catch (Exception logEx) {
+                log.warn("[LOGIN][KAKAO][CALLBACK] failure-log emit failed", logEx);
+            }
             throw e;
         }
     }
