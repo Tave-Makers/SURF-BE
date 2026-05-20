@@ -86,11 +86,11 @@ public class PostListService {
         }
 
         if (isNotice) {
-            LogEventContext.overrideEvent("notice_list_view");
+            LogEventContext.overrideEvent("notice.list.view");
             LogEventContext.overrideMessage("공지 리스트 화면 진입");
             LogEventContext.put("category", "notice");
         } else {
-            LogEventContext.overrideEvent("post_list_view");
+            LogEventContext.overrideEvent("post.list.view");
             LogEventContext.overrideMessage("게시판 리스트 화면 진입");
 
             LogEventContext.put("board_id", boardId);

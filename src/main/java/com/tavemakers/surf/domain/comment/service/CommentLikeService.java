@@ -51,7 +51,7 @@ public class CommentLikeService {
             comment.decreaseLikeCount();
             commentRepository.save(comment);
 
-            logEventEmitter.emit("comment_like_toggle", Map.of(
+            logEventEmitter.emit("comment.like.toggle", Map.of(
                     "comment_id", commentId,
                     "liked", false
             ));

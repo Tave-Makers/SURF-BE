@@ -27,7 +27,7 @@ public class PostCreateUsecase {
             reservationUsecase.reservePost(result.postId(), req.reservedAt());
         }
 
-        logEventEmitter.emit("post_create", Map.of(
+        logEventEmitter.emit("post.create", Map.of(
                 "post_id", result.postId(),
                 "board_id", req.boardId(),
                 "title_length", req.title().length(),
