@@ -25,7 +25,6 @@ public class ScheduleGetService {
 
     /** 월별 일정 목록 조회 */
     @Transactional(readOnly = true)
-    @LogEvent("calendar.view")
     public ScheduleMonthlyResDTO getScheduleMonthly(
             String memberRole,
             int year,
