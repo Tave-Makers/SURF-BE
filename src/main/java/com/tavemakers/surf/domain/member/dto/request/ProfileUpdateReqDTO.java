@@ -40,78 +40,59 @@ public record ProfileUpdateReqDTO(
         List<Long> careerIdsToDelete
 ) implements LogPropsProvider {
     public Map<String, Object> buildProps() {
-        List<String> changedFields = new ArrayList<>();
+        List<String> updatedFields = new ArrayList<>();
 
         if (email != null && !email.isBlank()) {
-            changedFields.add("email");
+            updatedFields.add("email");
         }
-
         if (university != null && !university.isBlank()) {
-            changedFields.add("university");
+            updatedFields.add("university");
         }
-
         if (graduateSchool != null && !graduateSchool.isBlank()) {
-            changedFields.add("graduateSchool");
+            updatedFields.add("graduateSchool");
         }
-
         if (selfIntroduction != null && !selfIntroduction.isBlank()) {
-            changedFields.add("selfIntroduction");
+            updatedFields.add("selfIntroduction");
         }
-
         if (link != null && !link.isBlank()) {
-            changedFields.add("link");
+            updatedFields.add("link");
         }
-
         if (phoneNumber != null && !phoneNumber.isBlank()) {
-            changedFields.add("phoneNumber");
+            updatedFields.add("phoneNumber");
         }
-
         if (phoneNumberPublic != null) {
-            changedFields.add("phoneNumberPublic");
+            updatedFields.add("phoneNumberPublic");
         }
-
         if (profileImageUrl != null && !profileImageUrl.isBlank()) {
-            changedFields.add("profileImageUrl");
+            updatedFields.add("profileImageUrl");
         }
-
         if (isProfileImageChanged != null) {
-            changedFields.add("isProfileImageChanged");
+            updatedFields.add("isProfileImageChanged");
         }
 
-        return Map.of(
-                "changed_fields", changedFields,
+        List<CareerCreateReqDTO> createdCareers =
+                careersToCreate == null ? List.of() : careersToCreate;
 
-                "careers_created",
-                careersToCreate == null
-                        ? List.of()
-                        : careersToCreate,
-
-                "careers_created_count",
-                careersToCreate == null
-                        ? 0
-                        : careersToCreate.size(),
-
-                "careers_updated",
+        List<Long> updatedCareers =
                 careersToUpdate == null
                         ? List.of()
                         : careersToUpdate.stream()
                         .map(CareerUpdateReqDTO::careerId)
-                        .toList(),
+                        .toList();
 
-                "careers_updated_count",
-                careersToUpdate == null
-                        ? 0
-                        : careersToUpdate.size(),
+        List<Long> deletedCareers =
+                careerIdsToDelete == null ? List.of() : careerIdsToDelete;
 
-                "careers_deleted",
-                careerIdsToDelete == null
-                        ? List.of()
-                        : careerIdsToDelete,
+        return Map.of(
+                "updated_fields", updatedFields,
 
-                "careers_deleted_count",
-                careerIdsToDelete == null
-                        ? 0
-                        : careerIdsToDelete.size()
+                "careers_create", createdCareers.isEmpty() ? 0 : 1,
+                "careers_update", updatedCareers.isEmpty() ? 0 : 1,
+                "careers_delete", deletedCareers.isEmpty() ? 0 : 1,
+
+                "careers_created", createdCareers,
+                "careers_updated", updatedCareers,
+                "careers_deleted", deletedCareers
         );
     }
 }
