@@ -210,13 +210,21 @@ public class MemberUsecase {
 
             props.put("member_id", memberId);
 
-            List<?> changedFields =
-                    (List<?>) props.getOrDefault("changed_fields", List.of());
+            List<?> createdCareers =
+                    (List<?>) props.getOrDefault("careers_created", List.of());
+            List<?> updatedCareers =
+                    (List<?>) props.getOrDefault("careers_updated", List.of());
+            List<?> deletedCareers =
+                    (List<?>) props.getOrDefault("careers_deleted", List.of());
 
-            props.put(
-                    "updated_fields_count",
-                    changedFields.size()
-            );
+            props.put("careers_create", createdCareers.isEmpty() ? 0 : 1);
+            props.put("careers_update", updatedCareers.isEmpty() ? 0 : 1);
+            props.put("careers_delete", deletedCareers.isEmpty() ? 0 : 1);
+
+            List<?> updatedFields =
+                    (List<?>) props.getOrDefault("updated_fields", List.of());
+
+            props.put("updated_fields_count", updatedFields.size());
 
             logEventEmitter.emit(
                     "profile.update.succeeded",
