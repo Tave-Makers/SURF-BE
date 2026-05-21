@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -55,41 +56,82 @@ public class MemberUsecase {
 
     /** 마이페이지 + 프로필 조회 */
     public MyPageProfileResDTO getMyPageAndProfile(Long targetId) {
+
         Long requesterId = SecurityUtils.getCurrentMemberId();
 
-        logEventEmitter.emit("member_profile_api_called", Map.of(
-                "requester_id", requesterId,
-                "target_member_id", targetId
-        ));
+        logEventEmitter.emit(
+                "member_profile_api_called",
+                Map.of(
+                        "requester_id", requesterId,
+                        "target_member_id", targetId
+                )
+        );
 
         try {
-            Member member = memberGetService.getMemberByStatus(targetId, MemberStatus.APPROVED);
+
+            Member member =
+                    memberGetService.getMemberByStatus(
+                            targetId,
+                            MemberStatus.APPROVED
+                    );
+
             List<TrackResDTO> myTracks = getMyTracks(targetId);
             List<CareerResDTO> myCareers = getMyCareers(targetId);
 
             MyPageProfileResDTO result;
+
             if (member.isNotOwner()) { // SURF Rule - 타인의 활동점수는 조회 불가
-                result = MyPageProfileResDTO.of(member, myTracks, null, myCareers);
+
+                result = MyPageProfileResDTO.of(
+                        member,
+                        myTracks,
+                        null,
+                        myCareers
+                );
+
             } else {
+
                 BigDecimal score = null;
+
                 if (member.isActive()) { // SURF Rule - 활동 중인 회원만 활동점수를 보여준다.
-                    score = personalScoreGetService.getPersonalScore(targetId).getScore();
+                    score = personalScoreGetService
+                            .getPersonalScore(targetId)
+                            .getScore();
                 }
-                result = MyPageProfileResDTO.of(member, myTracks, score, myCareers);
+
+                result = MyPageProfileResDTO.of(
+                        member,
+                        myTracks,
+                        score,
+                        myCareers
+                );
             }
 
-            logEventEmitter.emit("member_profile_api_succeeded", Map.of(
-                    "requester_id", requesterId,
-                    "target_member_id", targetId
-            ));
+            logEventEmitter.emit(
+                    "member_profile_api_succeeded",
+                    Map.of(
+                            "requester_id", requesterId,
+                            "target_member_id", targetId
+                    )
+            );
+
             return result;
+
         } catch (Exception e) {
+
             Map<String, Object> failedProps = new HashMap<>();
+
             failedProps.put("requester_id", requesterId);
             failedProps.put("target_member_id", targetId);
             failedProps.put("status_code", 500);
             failedProps.put("error_code", e.getClass().getSimpleName());
-            logEventEmitter.emitError("member_profile_api_failed", failedProps, "회원 프로필 조회 실패");
+
+            logEventEmitter.emitError(
+                    "member_profile_api_failed",
+                    failedProps,
+                    "회원 프로필 조회 실패"
+            );
+
             throw e;
         }
     }
@@ -138,29 +180,71 @@ public class MemberUsecase {
     }
 
     /** 회원 프로필 및 경력 정보 수정 */
-    @LogEvent(value = "member.profile_update", message = "회원 정보 수정")
     @Transactional
-    public void updateProfile(@LogParam("member_id") Long memberId,
+    public void updateProfile(Long memberId,
                               ProfileUpdateReqDTO dto) {
 
-        Member member = memberGetService.getMember(memberId);
+        try {
 
-        // 프로필 정보 수정
-        memberPatchService.updateProfile(member, dto);
+            Member member = memberGetService.getMember(memberId);
 
-        // 경력 수정
-        if (dto.careersToUpdate() != null) {
-            careerPatchService.updateCareer(member, dto.careersToUpdate());
-        }
+            // 프로필 정보 수정
+            memberPatchService.updateProfile(member, dto);
 
-        // 경력 삭제
-        if (dto.careerIdsToDelete() != null) {
-            careerDeleteService.deleteCareer(member, dto.careerIdsToDelete());
-        }
+            // 경력 수정
+            if (dto.careersToUpdate() != null) {
+                careerPatchService.updateCareer(member, dto.careersToUpdate());
+            }
 
-        // 경력 생성
-        if (dto.careersToCreate() != null) {
-            careerCreateService.createCareer(member, dto.careersToCreate());
+            // 경력 삭제
+            if (dto.careerIdsToDelete() != null) {
+                careerDeleteService.deleteCareer(member, dto.careerIdsToDelete());
+            }
+
+            // 경력 생성
+            if (dto.careersToCreate() != null) {
+                careerCreateService.createCareer(member, dto.careersToCreate());
+            }
+
+            Map<String, Object> props = new HashMap<>(dto.buildProps());
+
+            props.put("member_id", memberId);
+
+            List<?> createdCareers =
+                    (List<?>) props.getOrDefault("careers_created", List.of());
+            List<?> updatedCareers =
+                    (List<?>) props.getOrDefault("careers_updated", List.of());
+            List<?> deletedCareers =
+                    (List<?>) props.getOrDefault("careers_deleted", List.of());
+
+            props.put("careers_create", createdCareers.isEmpty() ? 0 : 1);
+            props.put("careers_update", updatedCareers.isEmpty() ? 0 : 1);
+            props.put("careers_delete", deletedCareers.isEmpty() ? 0 : 1);
+
+            List<?> updatedFields =
+                    (List<?>) props.getOrDefault("updated_fields", List.of());
+
+            props.put("updated_fields_count", updatedFields.size());
+
+            logEventEmitter.emit(
+                    "profile.update.succeeded",
+                    props
+            );
+
+        } catch (RuntimeException e) {
+
+            int errorCode = 500; // 기본값
+            logEventEmitter.emitError(
+                    "profile.update.failed",
+                    Map.of(
+                            "member_id", memberId,
+                            "error_code", errorCode,
+                            "error_msg", e.getClass().getSimpleName()
+                    ),
+                    "회원 프로필 수정 실패"
+            );
+
+            throw e;
         }
     }
 
@@ -175,6 +259,10 @@ public class MemberUsecase {
         MemberStatus memberStatus = member.getStatus();
 
         MemberRole memberRole = SecurityUtils.getCurrentMember().getRole();
+
+        logEventEmitter.emit("onboarding.valid_status", Map.of(
+                "need_onboarding", needOnboarding
+        ));
 
         return OnboardingCheckResDTO.of(memberId, needOnboarding, memberStatus, memberRole);
     }
@@ -207,27 +295,6 @@ public class MemberUsecase {
     @LogEvent(value = "signup.create", message = "회원가입 요청 처리")
     public MemberSignupResDTO signupCreate(Member member, MemberSignupReqDTO request) {
         return memberService.signup(member, request);
-    }
-
-    /** 회원가입 성공 */
-    @Transactional
-    @LogEvent(value = "signup.succeeded", message = "회원가입 성공")
-    public MemberSignupResDTO signupSucceeded(
-            @LogParam("member_id") Long memberId,
-            MemberSignupResDTO response
-    ) {
-        return response;
-    }
-
-    /** 회원가입 실패 */
-    @Transactional
-    @LogEvent(value = "signup.failed", message = "회원가입 실패")
-    public MemberSignupResDTO signupFailed(
-            Long memberId,
-            int statusCode,
-            String errorReason
-    ) {
-        throw new RuntimeException(errorReason);
     }
 
     /** 회원 탈퇴 처리 */

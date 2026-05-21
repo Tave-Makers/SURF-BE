@@ -40,7 +40,7 @@ public class AdminMemberController {
     public ApiResponse<Void> changeMembersRole(
             @RequestBody @Valid RoleChangeReqDTOV2 dto
     ) {
-        memberAdminUsecase.changeMembersRole(dto);
+        memberAdminUsecase.changeMembersRole(dto.memberIdList(), dto.role());
         return ApiResponse.response(HttpStatus.OK, "회원 역할이 성공적으로 변경되었습니다.",null);
     }
 

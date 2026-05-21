@@ -51,7 +51,6 @@ public class PostCreateService {
      * 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당)
      */
     @Transactional
-    @LogEvent(value = "post.create", message = "게시글 생성 성공")
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         Board board = boardGetService.getBoard(req.boardId());
         Member writer = memberGetService.getMember(memberId);

@@ -13,6 +13,7 @@ import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 
 import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +32,12 @@ public class CommentLikeService {
     private final CommentRepository commentRepository;
     private final MemberGetService memberGetService;
     private final PostGetService postGetService;
+    private final LogEventEmitter logEventEmitter;
 
     private final ApplicationEventPublisher eventPublisher;
 
     /** 좋아요 및 좋아요 취소 */
     @Transactional
-    @LogEvent("comment.like.toggle")
     public boolean toggleLike(@LogParam("comment_id") Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
@@ -48,6 +50,12 @@ public class CommentLikeService {
         if (removed > 0) {
             comment.decreaseLikeCount();
             commentRepository.save(comment);
+
+            logEventEmitter.emit("comment.like.toggle", Map.of(
+                    "comment_id", commentId,
+                    "liked", false
+            ));
+
             return false; // 이미 눌러져 있었던 거라서 좋아요 취소됨
         }
 
@@ -56,6 +64,11 @@ public class CommentLikeService {
             comment.increaseLikeCount();
             commentRepository.save(comment);
             createNotificationAtCommentLike(member, commentId, post.getBoard().getId(), post.getId());
+
+            logEventEmitter.emit("comment.like.toggle", Map.of(
+                    "comment_id", commentId,
+                    "liked", true
+            ));
 
             return true; // 새로 좋아요 등록
         } catch (DataIntegrityViolationException e) {

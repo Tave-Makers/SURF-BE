@@ -21,6 +21,9 @@ import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecord
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.utils.ScoreCalculator;
+import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
+import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class ActivityRecordUsecase {
     private final ActivityRecordDeleteService activityRecordDeleteService;
     private final PersonalScoreGetService personalScoreGetService;
     private final ScoreCalculator scoreCalculator;
+    private final LogEventEmitter logEventEmitter;
 
     /** 다수 회원의 활동기록 생성 및 점수 반영 */
     @Transactional
@@ -61,32 +66,87 @@ public class ActivityRecordUsecase {
     /** 활동기록 생성 및 점수 반영 */
     @Transactional
     public void applyActivityRecord(ActivityRecordReqDTOV2 dto) {
-        ActivityType activityType = dto.activityName();
 
-        if (dto.isTeam()) {
-            List<PersonalActivityScore> teamScoreList = personalScoreGetService.getTeamScoreListByIds(dto.teamIdList());
-            List<ActivityRecord> recordList = teamScoreList.stream()
-                    .map(teamScore -> {
-                        BigDecimal prefixSum = teamScore.updateScore(activityType);
-                        return ActivityRecord.ofTeam(teamScore.getTeam().getId(), dto, prefixSum);
+        try {
+
+            ActivityType activityType = dto.activityName();
+
+            if (dto.isTeam()) {
+
+                List<PersonalActivityScore> teamScoreList =
+                        personalScoreGetService.getTeamScoreListByIds(dto.teamIdList());
+
+                List<ActivityRecord> recordList = teamScoreList.stream()
+                        .map(teamScore -> {
+                                    BigDecimal prefixSum =
+                                            teamScore.updateScore(activityType);
+
+                                    return ActivityRecord.ofTeam(
+                                            teamScore.getTeam().getId(),
+                                            dto,
+                                            prefixSum
+                                    );
+                                }
+                        ).toList();
+
+                activityRecordCreateService.saveActivityRecordList(recordList);
+
+                logEventEmitter.emit("activity.record.create", Map.of(
+                        "member_id_list_count", dto.teamIdList().size(),
+                        "activity_name", activityType.name(),
+                        "activity_date", dto.activityDate()
+                ));
+
+                return;
+            }
+
+            List<PersonalActivityScore> scoreList =
+                    personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
+
+            List<ActivityRecord> recordList = scoreList.stream()
+                    .map(personalScore -> {
+                                BigDecimal prefixSum =
+                                        personalScore.updateScore(activityType);
+
+                                return ActivityRecord.ofPersonal(
+                                        personalScore.getMember().getId(),
+                                        dto,
+                                        prefixSum
+                                );
                             }
                     ).toList();
-            activityRecordCreateService.saveActivityRecordList(recordList);
-            return;
-        }
 
-        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
-        List<ActivityRecord> recordList = scoreList.stream()
-                .map(personalScore -> {
-                            BigDecimal prefixSum = personalScore.updateScore(activityType);
-                            return ActivityRecord.ofPersonal(personalScore.getMember().getId(), dto, prefixSum);
-                        }
-                ).toList();
-        activityRecordCreateService.saveActivityRecordList(recordList);
+            activityRecordCreateService.saveActivityRecordList(recordList);
+
+            logEventEmitter.emit("activity.record.create", Map.of(
+                    "member_id_list_count", dto.memberIdList().size(),
+                    "activity_name", activityType.name(),
+                    "activity_date", dto.activityDate()
+            ));
+
+        } catch (Exception e) {
+
+            logEventEmitter.emitError(
+                    "activity.record.create.failed",
+                    Map.of(
+                            "error_code", 500,
+                            "error_msg", e.getClass().getSimpleName()
+                    ),
+                    "활동 기록 생성 실패"
+            );
+
+            throw e;
+        }
     }
 
     /** 회원의 활동기록 목록 페이징 조회 */
-    public ActivityRecordSliceResDTO getActivityRecordList(Long memberId, ScoreType scoreType, int pageSize, int pageNum) {
+    @LogEvent(value = "activity.records.list", message = "활동 기록 목록 조회")
+    public ActivityRecordSliceResDTO getActivityRecordList(
+            Long memberId,
+            @LogParam("score_type") ScoreType scoreType,
+            @LogParam("page_size") int pageSize,
+            @LogParam("page_num") int pageNum
+    ) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         Slice<ActivityRecord> slice = activityRecordGetService.findActivityRecordList(memberId, scoreType, pageable);
 

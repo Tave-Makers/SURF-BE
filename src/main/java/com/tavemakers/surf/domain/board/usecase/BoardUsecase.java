@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.board.dto.request.BoardCreateReqDTO;
 import com.tavemakers.surf.domain.board.dto.request.BoardUpdateReqDTO;
 import com.tavemakers.surf.domain.board.dto.response.BoardResDTO;
 import com.tavemakers.surf.domain.board.service.BoardService;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,10 +17,13 @@ import java.util.List;
 public class BoardUsecase {
 
     private final BoardService boardService;
+    private final LogEventEmitter logEventEmitter;
 
     /** 게시판 생성 */
     @Transactional
-    public BoardResDTO createBoard(BoardCreateReqDTO req) {
+    public BoardResDTO createBoard(
+            BoardCreateReqDTO req
+    ) {
         return boardService.createBoard(req);
     }
 
@@ -37,13 +41,18 @@ public class BoardUsecase {
 
     /** 게시판 수정 */
     @Transactional
-    public BoardResDTO updateBoard(Long boardId, BoardUpdateReqDTO req) {
+    public BoardResDTO updateBoard(
+            Long boardId,
+            BoardUpdateReqDTO req
+    ) {
         return boardService.updateBoard(boardId, req);
     }
 
     /** 게시판 삭제 */
     @Transactional
-    public void deleteBoard(Long boardId) {
+    public void deleteBoard(
+            Long boardId
+    ) {
         boardService.deleteBoard(boardId);
     }
 }

@@ -67,26 +67,39 @@ public class KakaoLoginController {
             @CookieValue(value = "oauth_state", required = false) String storedState,
             HttpServletRequest request
     ) {
-        if (storedState == null || !storedState.equals(state)) {
-            throw new KakaoAuthException(
-                    KakaoAuthErrorMessage.INVALID_STATE.getStatus(),
-                    KakaoAuthErrorMessage.INVALID_STATE.getMessage()
-            );
+        try {
+            if (storedState == null || !storedState.equals(state)) {
+                throw new KakaoAuthException(
+                        KakaoAuthErrorMessage.INVALID_STATE.getStatus(),
+                        KakaoAuthErrorMessage.INVALID_STATE.getMessage()
+                );
+            }
+            if (error != null) {
+                throw new KakaoAuthException(
+                        KakaoAuthErrorMessage.KAKAO_AUTH_CALLBACK_ERROR.getStatus(),
+                        KakaoAuthErrorMessage.KAKAO_AUTH_CALLBACK_ERROR.getMessage()
+                );
+            }
+            LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code, request);
+
+            log.info("[LOGIN][KAKAO][CALLBACK] success");
+            return payload.toWebResponseBuilder()
+                    .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
+        } catch (Exception e) {
+            try {
+                kakaoAuthService.logLoginFailed(resolveStatusCode(e), e.getClass().getSimpleName());
+            } catch (Exception logEx) {
+                log.warn("[LOGIN][KAKAO][CALLBACK] failure-log emit failed", logEx);
+            }
+            throw e;
         }
-        if (error != null) {
-            throw new KakaoAuthException(
-                    KakaoAuthErrorMessage.KAKAO_AUTH_CALLBACK_ERROR.getStatus(),
-                    KakaoAuthErrorMessage.KAKAO_AUTH_CALLBACK_ERROR.getMessage()
-            );
+    }
+
+    private int resolveStatusCode(Exception e) {
+        if (e instanceof KakaoAuthException kakaoAuthException) {
+            return kakaoAuthException.getStatus().value();
         }
-
-        log.info("[LOGIN][KAKAO][CALLBACK] start codeLength={}", code.length());
-
-        LoginPayloadResDTO payload = kakaoLoginUsecase.execute(code, request);
-
-        log.info("[LOGIN][KAKAO][CALLBACK] success");
-        return payload.toWebResponseBuilder()
-                .body(ApiResponse.response(HttpStatus.OK, "로그인 성공", payload.loginRes()));
+        return HttpStatus.INTERNAL_SERVER_ERROR.value();
     }
 
     private String generateState() {

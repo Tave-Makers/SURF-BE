@@ -17,6 +17,7 @@ import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import com.tavemakers.surf.global.jwt.JwtService;
 import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -52,20 +54,29 @@ public class MemberAdminUsecase {
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
     private final MemberWithdrawService memberWithdrawService;
+    private final LogEventEmitter logEventEmitter;
     //</editor-fold>
 
     /** 회원 권한 변경 */
     @Transactional
-    public void changeRole (Long memberId, MemberRole role) {
+    @LogEvent(value = "role.grant", message = "회원 권한 변경")
+    public void changeRole (
+            @LogParam("member_id") Long memberId,
+            @LogParam("role") MemberRole role
+    ) {
         Member member = memberGetService.getMember(memberId);
         memberPatchService.grantRole(member, role);
     }
 
-    /** 회원 권한 변경 Version 2 */
+    /** 회원 권한 변경 Version 2 (한 번에 여러명 변경) */
     @Transactional
-    public void changeMembersRole(RoleChangeReqDTOV2 dto) {
-        List<Member> members = memberGetService.findMembersByIds(dto.memberIdList());
-        memberPatchService.grantRoleV2(members, dto.role());
+    @LogEvent(value = "role.bulk.grant", message = "회원 다중 권한 변경")
+    public void changeMembersRole(
+            @LogParam("member_ids") List<Long> memberIds,
+            @LogParam("role") MemberRole role
+    ) {
+        List<Member> members = memberGetService.findMembersByIds(memberIds);
+        memberPatchService.grantRoleV2(members, role);
     }
 
     /** 회원가입 승인 처리 */
@@ -80,6 +91,16 @@ public class MemberAdminUsecase {
         Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
         members.forEach(member -> memberGenerationSyncService.syncApprovedMember(member, activeGeneration));
         personalScoreCreateService.savePersonalScores(members);
+
+        for (Member member : members) {
+            logEventEmitter.emit(
+                    "signup.succeeded",
+                    Map.of(
+                            "member_id", member.getId(),
+                            "approver_id", approverId
+                    )
+            );
+        }
     }
 
     /** 회원가입 거절 처리 */
@@ -91,6 +112,17 @@ public class MemberAdminUsecase {
     ) {
         List<Member> members = memberGetService.getMembersByStatus(memberIds, MemberStatus.WAITING);
         members.forEach(Member::reject);
+
+        for (Member member : members) {
+            logEventEmitter.emit(
+                    "signup.failed",
+                    Map.of(
+                            "member_id", member.getId(),
+                            "approver_id", approverId
+                    ),
+                    "회원가입 거절"
+            );
+        }
     }
 
     /** 회원 제명 처리 */

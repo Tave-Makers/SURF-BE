@@ -42,7 +42,7 @@ public class PostLikeService {
                 .orElseThrow(PostNotFoundException::new);
 
         if (post.getBoard().getType() == BoardType.NOTICE) {
-            LogEventContext.overrideEvent("notice_like_toggle");
+            LogEventContext.overrideEvent("notice.like.toggle");
             LogEventContext.overrideMessage("좋아요 버튼 클릭");
         }
 
@@ -80,7 +80,7 @@ public class PostLikeService {
                 .orElseThrow(PostNotFoundException::new);
 
         if (post.getBoard().getType() == BoardType.NOTICE) {
-            LogEventContext.overrideEvent("notice_like_toggle");
+            LogEventContext.overrideEvent("notice.like.toggle");
             LogEventContext.overrideMessage("좋아요 버튼 클릭");
         }
 
