@@ -71,9 +71,19 @@ public class S3Service {
         return Date.from(expirationInstant);
     }
 
-    /** S3 파일 삭제 (fileUrl에서 객체 key를 추출하여 삭제) */
+    /** S3 파일 삭제 (파일 본체와 마커를 모두 정리) */
     public void deleteFile(String fileUrl) {
-        s3Client.deleteObject(bucketName, extractKey(fileUrl));
+        String fileKey = extractKey(fileUrl); // original/{UUID}/{filename}
+
+        // 실제 파일 삭제
+        s3Client.deleteObject(bucketName, fileKey);
+
+        // 부모 폴더 마커(original/{UUID}/) 정리
+        int lastSlash = fileKey.lastIndexOf('/');
+        if (lastSlash > 0) {
+            String folderMarkerKey = fileKey.substring(0, lastSlash + 1);
+            s3Client.deleteObject(bucketName, folderMarkerKey);
+        }
     }
 
     /**
