@@ -14,7 +14,8 @@ public enum ErrorMessage {
     POST_DELETED_DENIED(HttpStatus.UNAUTHORIZED, "[게시글]을 삭제할 권한이 없습니다."),
 
     POST_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 [첨부파일]입니다."),
-    POST_FILE_DELETE_DENIED(HttpStatus.UNAUTHORIZED, "[첨부파일]을 삭제할 권한이 없습니다."),
+    POST_FILE_DELETE_DENIED(HttpStatus.FORBIDDEN, "[첨부파일]을 삭제할 권한이 없습니다."),
+    POST_FILE_MISMATCH(HttpStatus.NOT_FOUND, "해당 [게시글]에 속하지 않는 [첨부파일]입니다."),
 
     BOARD_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "[공지사항] 게시판은 관리자만 게시글을 작성할 수 있습니다.");
 
