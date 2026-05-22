@@ -20,12 +20,13 @@ public class PostFileDeleteController {
     private final PostFileDeleteUsecase postFileDeleteUsecase;
 
     /** 게시글 첨부파일 삭제 (작성자/권한 검증은 서비스에서) */
-    @Operation(summary = "게시글 첨부파일 삭제", description = "게시글에 첨부된 파일을 삭제합니다. S3 파일은 트랜잭션 커밋 이후 삭제됩니다.")
-    @DeleteMapping("/v1/user/posts/files/{fileId}")
+    @Operation(summary = "게시글 첨부파일 삭제", description = "게시글에 첨부된 파일을 삭제합니다. URL의 postId와 첨부파일이 속한 게시글이 일치해야 하며, S3 파일은 트랜잭션 커밋 이후 삭제됩니다.")
+    @DeleteMapping("/v1/user/posts/{postId}/files/{fileId}")
     public ApiResponse<Void> deletePostFile(
+            @PathVariable(name = "postId") Long postId,
             @PathVariable(name = "fileId") Long fileId) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        postFileDeleteUsecase.deletePostFile(fileId, memberId);
+        postFileDeleteUsecase.deletePostFile(postId, fileId, memberId);
         return ApiResponse.response(HttpStatus.NO_CONTENT, POST_FILE_DELETED.getMessage());
     }
 }
