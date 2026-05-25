@@ -31,7 +31,9 @@ public class S3Service {
     @Value("${cloud.aws.bucket-name}")
     private String bucketName;
 
-    /** 다수 파일에 대한 PreSigned URL 목록 생성 */
+    /**
+     * 다수 파일에 대한 PreSigned URL 목록 생성
+     */
     public List<PreSignedUrlResDto> generatePreSignedUrlList(List<String> fileNames) {
         validateFileName(fileNames);
         return fileNames.stream()
@@ -40,12 +42,14 @@ public class S3Service {
     }
 
     private void validateFileName(List<String> fileNames) {
-        if(fileNames == null || fileNames.isEmpty()) {
+        if (fileNames == null || fileNames.isEmpty()) {
             throw new FileNameIsEmptyException();
         }
     }
 
-    /** 단일 파일 업로드용 PreSigned URL 생성 */
+    /**
+     * 단일 파일 업로드용 PreSigned URL 생성
+     */
     public PreSignedUrlResDto generateSinglePutPreSignedUrl(String filename) {
         String key = ORIGINAL_PATH + UUID.randomUUID() + "/" + filename;
         Date expiration = getExpiration();
@@ -71,7 +75,9 @@ public class S3Service {
         return Date.from(expirationInstant);
     }
 
-    /** S3 파일 삭제 (파일 본체와 마커를 모두 정리) */
+    /**
+     * S3 파일 삭제 (파일 본체와 마커를 모두 정리)
+     */
     public void deleteFile(String fileUrl) {
         String fileKey = extractKey(fileUrl); // original/{UUID}/{filename}
 
@@ -95,14 +101,18 @@ public class S3Service {
     private String extractKey(String fileUrl) {
         try {
             String path = new URL(fileUrl).getPath();
-            return path.startsWith("/") ? path.substring(1) : path;
+            String key = path.startsWith("/") ? path.substring(1) : path;
+            return validateKey(key);
         } catch (MalformedURLException e) {
-            // URL 파싱 실패 → key 형식으로 간주하고 그대로 사용
-            if (fileUrl.startsWith(ORIGINAL_PATH)) {
-                return fileUrl;
-            }
-            throw new InvalidFileUrlException();
+            return validateKey(fileUrl);
         }
+    }
+
+    private String validateKey(String key) {
+        if (key != null && key.startsWith(ORIGINAL_PATH)) {
+            return key;
+        }
+        throw new InvalidFileUrlException();
     }
 
 }
