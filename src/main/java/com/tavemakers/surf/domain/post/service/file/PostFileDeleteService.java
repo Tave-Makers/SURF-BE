@@ -22,4 +22,10 @@ public class PostFileDeleteService {
         }
         repository.deleteAllInBatch(beforeFiles);
     }
+
+    /** 게시글 첨부파일 단건 삭제 */
+    @Transactional
+    public void delete(PostFileUrl file) {
+        repository.delete(file);
+    }
 }

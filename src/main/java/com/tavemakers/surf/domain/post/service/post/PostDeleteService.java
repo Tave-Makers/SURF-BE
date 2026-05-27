@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.PostFileUrl;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
+import com.tavemakers.surf.domain.post.event.PostFilesDeletedEvent;
 import com.tavemakers.surf.domain.post.exception.PostDeleteAccessDeniedException;
 import com.tavemakers.surf.domain.post.repository.PostLikeRepository;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
@@ -16,6 +17,7 @@ import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,7 @@ public class PostDeleteService {
     private final PostFileGetService postFileGetService;
     private final PostFileDeleteService postFileDeleteService;
     private final MemberGetService memberGetService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 삭제 - Post 도메인 내부 데이터만 삭제 (좋아요, 이미지, 게시글) */
     @Transactional
@@ -57,6 +60,7 @@ public class PostDeleteService {
         List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
         if (postFileUrls != null && !postFileUrls.isEmpty()) {
             postFileDeleteService.deleteAll(postFileUrls);
+            publishFilesDeletedEvent(postFileUrls);
         }
 
         postRepository.delete(post);
@@ -75,9 +79,18 @@ public class PostDeleteService {
         List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
         if (postFileUrls != null && !postFileUrls.isEmpty()) {
             postFileDeleteService.deleteAll(postFileUrls);
+            publishFilesDeletedEvent(postFileUrls);
         }
 
         postRepository.delete(post);
+    }
+
+    /** DB 삭제 완료 후 호출 — 트랜잭션 커밋 이후 S3 파일 삭제를 트리거하는 이벤트를 발행한다 */
+    private void publishFilesDeletedEvent(List<PostFileUrl> fileUrls) {
+        List<String> urls = fileUrls.stream()
+                .map(PostFileUrl::getFileUrl)
+                .toList();
+        eventPublisher.publishEvent(new PostFilesDeletedEvent(urls));
     }
 
     /** 게시글 소유자 또는 관리자 권한 검증 */

@@ -16,6 +16,7 @@ import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.PostFileUrl;
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
+import com.tavemakers.surf.domain.post.event.PostFilesDeletedEvent;
 import com.tavemakers.surf.domain.post.exception.PostDeleteAccessDeniedException;
 import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
@@ -35,6 +36,7 @@ import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +66,7 @@ public class PostPatchService {
     private final PostFileDeleteService fileDeleteService;
     private final MemberGetService memberGetService;
     private final ViewCountService viewCountService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 수정 (예약 변경 처리는 Usecase에서 담당) */
     @Transactional
@@ -134,10 +137,17 @@ public class PostPatchService {
         imageDeleteService.deleteAll(beforeImages);
     }
 
-    /** 기존 첨부파일 삭제 */
+    /** 기존 첨부파일 삭제 (DB 삭제 후 커밋 시점에 S3 삭제 이벤트 발행) */
     private void deleteExistingFiles(Post post) {
         List<PostFileUrl> beforeFiles = fileGetService.getPostFileUrls(post.getId());
+        if (beforeFiles.isEmpty()) {
+            return;
+        }
+        List<String> fileUrls = beforeFiles.stream()
+                .map(PostFileUrl::getFileUrl)
+                .toList();
         fileDeleteService.deleteAll(beforeFiles);
+        eventPublisher.publishEvent(new PostFilesDeletedEvent(fileUrls));
     }
 
     /** 카테고리 유효성 검증 및 조회 */

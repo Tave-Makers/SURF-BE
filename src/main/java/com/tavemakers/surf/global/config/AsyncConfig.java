@@ -40,4 +40,20 @@ public class AsyncConfig {
                     executor.getQueue().remainingCapacity());
         }
     }
+
+    // S3 제거 로직 비동기 처리
+    @Bean("s3DeleteExecutor")
+    public Executor s3DeleteExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("s3-del-");
+
+        // 폐기(silent drop) 대신 호출 스레드에서 실행해 backpressure 확보 → 삭제 누락 방지
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
+
 }
