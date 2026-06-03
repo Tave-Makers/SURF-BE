@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.post.service.image;
 
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
+import com.tavemakers.surf.domain.post.exception.PostImageNotFoundException;
 import com.tavemakers.surf.domain.post.repository.PostImageUrlRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,13 @@ public class PostImageGetService {
     @Transactional(readOnly = true)
     public List<PostImageUrl> getPostImageUrls(Long postId) {
         return postImageUrlRepository.findByPostId(postId);
+    }
+
+    /** 게시글 이미지 단건 조회 */
+    @Transactional(readOnly = true)
+    public PostImageUrl getPostImageUrl(Long imageId) {
+        return postImageUrlRepository.findById(imageId)
+                .orElseThrow(PostImageNotFoundException::new);
     }
 
 }

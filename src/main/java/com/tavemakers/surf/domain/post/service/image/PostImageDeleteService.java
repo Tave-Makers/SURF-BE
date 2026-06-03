@@ -23,4 +23,10 @@ public class PostImageDeleteService {
         repository.deleteAllInBatch(beforeImages);
     }
 
+    /** 게시글 이미지 단건 삭제 */
+    @Transactional
+    public void delete(PostImageUrl image) {
+        repository.delete(image);
+    }
+
 }
