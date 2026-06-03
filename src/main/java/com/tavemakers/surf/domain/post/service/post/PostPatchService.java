@@ -131,10 +131,17 @@ public class PostPatchService {
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, true, imageDtoList, fileDtoList, reservedAt, viewCount);
     }
 
-    /** 기존 이미지 삭제 */
+    /** 기존 이미지 삭제 (DB 삭제 후 커밋 시점에 S3 삭제 이벤트 발행) */
     private void deleteExistingImages(Post post) {
         List<PostImageUrl> beforeImages = imageGetService.getPostImageUrls(post.getId());
+        if (beforeImages.isEmpty()) {
+            return;
+        }
+        List<String> imageUrls = beforeImages.stream()
+                .map(PostImageUrl::getOriginalUrl)
+                .toList();
         imageDeleteService.deleteAll(beforeImages);
+        eventPublisher.publishEvent(new PostFilesDeletedEvent(imageUrls));
     }
 
     /** 기존 첨부파일 삭제 (DB 삭제 후 커밋 시점에 S3 삭제 이벤트 발행) */
