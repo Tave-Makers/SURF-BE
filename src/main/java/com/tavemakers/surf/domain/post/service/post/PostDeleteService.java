@@ -55,6 +55,7 @@ public class PostDeleteService {
         List<PostImageUrl> postImageUrls = postImageGetService.getPostImageUrls(post.getId());
         if (postImageUrls != null && !postImageUrls.isEmpty()) {
             postImageDeleteService.deleteAll(postImageUrls);
+            publishImagesDeletedEvent(postImageUrls);
         }
 
         List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
@@ -74,6 +75,7 @@ public class PostDeleteService {
         List<PostImageUrl> postImageUrls = postImageGetService.getPostImageUrls(post.getId());
         if (postImageUrls != null && !postImageUrls.isEmpty()) {
             postImageDeleteService.deleteAll(postImageUrls);
+            publishImagesDeletedEvent(postImageUrls);
         }
 
         List<PostFileUrl> postFileUrls = postFileGetService.getPostFileUrls(post.getId());
@@ -89,6 +91,14 @@ public class PostDeleteService {
     private void publishFilesDeletedEvent(List<PostFileUrl> fileUrls) {
         List<String> urls = fileUrls.stream()
                 .map(PostFileUrl::getFileUrl)
+                .toList();
+        eventPublisher.publishEvent(new PostFilesDeletedEvent(urls));
+    }
+
+    /** DB 삭제 완료 후 호출 — 트랜잭션 커밋 이후 S3 이미지 삭제를 트리거하는 이벤트를 발행한다 */
+    private void publishImagesDeletedEvent(List<PostImageUrl> imageUrls) {
+        List<String> urls = imageUrls.stream()
+                .map(PostImageUrl::getOriginalUrl)
                 .toList();
         eventPublisher.publishEvent(new PostFilesDeletedEvent(urls));
     }
