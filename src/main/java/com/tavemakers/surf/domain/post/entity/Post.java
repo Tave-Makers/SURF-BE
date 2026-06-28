@@ -97,8 +97,12 @@ public class Post extends BaseEntity {
     }
 
     public void update(PostUpdateReqDTO req, Board board, BoardCategory category) {
-        this.title = req.title();
-        this.content = req.content();
+        if (req.title() != null && !req.title().isBlank()) {
+            this.title = req.title();
+        }
+        if (req.content() != null && !req.content().isBlank()) {
+            this.content = req.content();
+        }
         this.pinned = req.pinned() != null ? req.pinned() : this.pinned;
 
         this.board = board;
