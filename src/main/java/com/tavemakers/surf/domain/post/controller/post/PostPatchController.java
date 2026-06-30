@@ -23,7 +23,10 @@ public class PostPatchController {
     private final PostPatchUsecase postPatchUsecase;
 
     /** 게시글 수정 (작성자 검증은 서비스에서) */
-    @Operation(summary = "게시글 수정", description = "본인이 작성한 게시글을 수정합니다.")
+    @Operation(
+            summary = "게시글 (부분) 수정",
+            description = "본인이 작성한 게시글을 수정합니다. title/content 등 일부 필드만 보내면 해당 필드만 수정되며, null이면 기존 값이 유지됩니다."
+    )
     @PatchMapping("/v1/user/posts/{postId}")
     public ApiResponse<PostDetailResDTO> updatePost(
             @PathVariable(name = "postId") Long postId,
