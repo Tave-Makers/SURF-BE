@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -74,12 +75,15 @@ public class Member extends BaseEntity {
 
     private String graduateSchool;
 
-    @Column(nullable = false, unique = true) // 이메일은 고유해야 함
+    /** 온보딩에서 사용자가 입력한 통합 이메일. 소셜이 준 이메일(SocialAccount.providerEmail)과 구분된다. REGISTERING은 값 없음. */
+    @Column(unique = true)
     private String email;
 
     @Embedded
     private Password password;
 
+    /** 통합 판단 기준 전화번호. REGISTERING은 값 없음. */
+    @Column(unique = true)
     private String phoneNumber;
 
     @Column(length = 256)
@@ -93,6 +97,11 @@ public class Member extends BaseEntity {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 20)
     private List<Track> tracks = new ArrayList<>();
+
+    /** 회원에 연결된 소셜 로그인 수단 목록 (provider별 최대 1개). */
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<SocialAccount> socialAccounts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -261,6 +270,28 @@ public class Member extends BaseEntity {
 
         Track track = new Track(generation, part);
         track.setMember(this); // 여기서만 add 수행
+    }
+
+    /** 소셜 계정을 연결한다. 동일 provider 계정이 이미 있으면 거부한다 (1 provider = 1 account). */
+    public void addSocialAccount(SocialAccount socialAccount) {
+        if (hasProvider(socialAccount.getProvider())) {
+            throw new IllegalStateException(
+                    "이미 연결된 provider 입니다: " + socialAccount.getProvider());
+        }
+        socialAccount.setMember(this); // setMember 에서만 양방향 add 수행
+    }
+
+    /** 해당 provider 로그인 수단을 이미 보유하고 있는지 여부. */
+    public boolean hasProvider(Provider provider) {
+        return socialAccounts.stream()
+                .anyMatch(sa -> sa.getProvider() == provider);
+    }
+
+    /** 해당 provider 의 소셜 계정을 조회한다. */
+    public Optional<SocialAccount> findSocialAccount(Provider provider) {
+        return socialAccounts.stream()
+                .filter(sa -> sa.getProvider() == provider)
+                .findFirst();
     }
 
     /** 댓글의 멘션 기능에서 회원들의 기수별로 정렬하기 위한 메서드 */
