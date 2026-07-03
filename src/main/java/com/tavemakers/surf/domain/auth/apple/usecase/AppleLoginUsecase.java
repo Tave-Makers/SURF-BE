@@ -50,7 +50,7 @@ public class AppleLoginUsecase {
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.APPLE, userInfo);
 
         if (appleToken.refreshToken() != null) {
-            member.updateAppleRefreshToken(appleToken.refreshToken());
+            updateAppleRefreshToken(member, appleToken.refreshToken());
         }
         LoginPayloadResDTO payload = loginTokenIssuer.issue(member, userInfo, ClientType.WEB, request);
 
@@ -83,7 +83,7 @@ public class AppleLoginUsecase {
         if (req.authorizationCode() != null && !req.authorizationCode().isBlank()) {
             AppleTokenResDTO appleToken = appleAuthService.exchangeAppCodeForToken(req.authorizationCode());
             if (appleToken.refreshToken() != null) {
-                member.updateAppleRefreshToken(appleToken.refreshToken());
+                updateAppleRefreshToken(member, appleToken.refreshToken());
                 log.info("[LOGIN][APPLE][APP] refresh_token 저장 완료 memberId={}", member.getId());
             } else {
                 log.warn("[LOGIN][APPLE][APP] Apple이 refresh_token 미반환 — 탈퇴 시 revoke 불가 memberId={}", member.getId());
@@ -101,5 +101,15 @@ public class AppleLoginUsecase {
         );
 
         return payload;
+    }
+
+    /**
+     * Apple refresh_token 을 SocialAccount(신규 정규 저장소)와 Member(레거시, 탈퇴 revoke 호환)에 함께 저장한다.
+     * SocialAccount 로 탈퇴 로직이 이관되면(Phase 5) Member 쪽 저장은 제거한다.
+     */
+    private void updateAppleRefreshToken(Member member, String refreshToken) {
+        member.updateAppleRefreshToken(refreshToken);
+        member.findSocialAccount(Provider.APPLE)
+                .ifPresent(sa -> sa.updateAppleRefreshToken(refreshToken));
     }
 }
