@@ -37,12 +37,18 @@ public class LoginTokenIssuer {
 
         String accessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
 
+        // 응답 프로필 출처 = Member 기준(통합 프로필, 방식 B). 온보딩 전(REGISTERING)에는 Member 프로필이 비어 있으므로 provider 데이터로 폴백한다.
+        boolean registering = member.isRegistering();
+        String nickname = registering ? info.nickname() : member.getName();
+        String email = registering ? info.email() : member.getEmail();
+        String profileImageUrl = registering ? info.profileImageUrl() : member.getProfileImageUrl();
+
         if (clientType == ClientType.APP) {
             String refreshToken = refreshTokenService.issueRaw(member.getId(), resolution.deviceId());
-            LoginResDTO loginRes = LoginResDTO.ofApp(info.nickname(), info.email(), accessToken, refreshToken, info.profileImageUrl());
+            LoginResDTO loginRes = LoginResDTO.ofApp(nickname, email, accessToken, refreshToken, profileImageUrl);
             return LoginPayloadResDTO.app(loginRes);
         }
-        LoginResDTO loginRes = LoginResDTO.of(info.nickname(), info.email(), accessToken, info.profileImageUrl());
+        LoginResDTO loginRes = LoginResDTO.of(nickname, email, accessToken, profileImageUrl);
         ResponseCookie rtCookie = refreshTokenService.issue(member.getId(), resolution.deviceId());
         return LoginPayloadResDTO.web(loginRes, rtCookie, resolution.newCookie());
     }
