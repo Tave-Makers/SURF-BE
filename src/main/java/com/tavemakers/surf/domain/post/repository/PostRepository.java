@@ -20,6 +20,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Slice<Post> findByBoardIdAndCategoryIdAndIsReservedFalse(Long boardId, Long categoryId, Pageable pageable);
 
+    boolean existsByCategoryId(Long categoryId);
+
     Slice<Post> findByMemberId(Long memberId, Pageable pageable);
 
     @Query("select p.version from Post p where p.id = :id")

@@ -35,4 +35,11 @@ public class BoardCategoryService {
             throw new BoardCategoryAlreadyExistsException();
         }
     }
+
+    /** 게시판 카테고리 삭제 */
+    @Transactional
+    @LogEvent(value = "board.category.delete", message = "게시판 카테고리 삭제 성공")
+    public void deleteBoardCategory(BoardCategory category) {
+        boardCategoryRepository.delete(category);
+    }
 }
