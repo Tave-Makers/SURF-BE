@@ -8,8 +8,8 @@ import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.domain.badge.exception.BadgeNotFoundException;
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 
@@ -49,6 +49,12 @@ public class MemberBadgeAssignService {
                 .map(member -> MemberBadge.create(member, badge))
                 .toList();
 
-        memberBadgeRepository.saveAll(newMemberBadges);
+        // 동시 부여 race: exists 체크를 둘 다 통과해도 unique 제약이 막는다.
+        // 커밋 시점 flush에서는 잡을 수 없으므로 즉시 flush해 도메인 예외로 변환한다.
+        try {
+            memberBadgeRepository.saveAllAndFlush(newMemberBadges);
+        } catch (DataIntegrityViolationException e) {
+            throw new MemberBadgeAlreadyExistsException();
+        }
     }
 }
