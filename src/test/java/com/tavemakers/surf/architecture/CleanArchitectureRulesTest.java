@@ -1,0 +1,174 @@
+package com.tavemakers.surf.architecture;
+
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.Dependency;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import com.tngtech.archunit.library.freeze.FreezingArchRule;
+import org.springframework.context.event.EventListener;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
+
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
+
+/**
+ * 클린 아키텍처 의존성 규칙 R1~R6 (docs/refactoring-plan.md 참고).
+ *
+ * 모든 규칙은 FreezingArchRule로 감싸져 있다:
+ * 기존 위반은 src/test/resources/archunit-store 베이스라인에 동결되어 통과하고,
+ * "새로운" 위반만 테스트를 실패시킨다. 기존 위반은 도메인 전환(Phase 3) 때 청산한다.
+ */
+@AnalyzeClasses(packages = "com.tavemakers.surf", importOptions = ImportOption.DoNotIncludeTests.class)
+public class CleanArchitectureRulesTest {
+
+    private static final String DOMAIN_ROOT = "com.tavemakers.surf.domain.";
+
+    /** 패키지명에서 도메인 세그먼트 추출 (domain 하위가 아니면 null) */
+    private static String domainOf(String packageName) {
+        if (!packageName.startsWith(DOMAIN_ROOT)) {
+            return null;
+        }
+        String rest = packageName.substring(DOMAIN_ROOT.length());
+        int dot = rest.indexOf('.');
+        return dot == -1 ? rest : rest.substring(0, dot);
+    }
+
+    // ── R1: Controller는 application 계층(usecase/query)만 호출 ──────────────
+
+    @ArchTest
+    static final ArchRule R1a_controller_는_repository_직접_의존_금지 = FreezingArchRule.freeze(
+            noClasses().that().resideInAPackage("..controller..")
+                    .should().dependOnClassesThat(resideInAPackage("..repository.."))
+                    .as("R1a: Controller는 Repository에 직접 의존할 수 없다"));
+
+    @ArchTest
+    static final ArchRule R1b_controller_는_usecase_query_만_호출 = FreezingArchRule.freeze(
+            noClasses().that().resideInAPackage("..controller..")
+                    .should().dependOnClassesThat(
+                            resideInAnyPackage("..service..", "..facade..")
+                                    .and(not(simpleNameEndingWith("GetService")))
+                                    .and(not(simpleNameEndingWith("Usecase"))))
+                    .as("R1b: Controller는 Usecase 또는 query(GetService)만 호출한다"));
+
+    // ── R2: 타 도메인 접근은 query(GetService) 또는 이벤트만 ────────────────
+
+    @ArchTest
+    static final ArchRule R2_타_도메인_비Get_service_호출_금지 = FreezingArchRule.freeze(
+            noClasses().should(new ArchCondition<>("타 도메인의 비-Get Service/Usecase/Facade에 의존한다") {
+                @Override
+                public void check(JavaClass clazz, ConditionEvents events) {
+                    String origin = domainOf(clazz.getPackageName());
+                    if (origin == null) {
+                        return;
+                    }
+                    for (Dependency dep : clazz.getDirectDependenciesFromSelf()) {
+                        JavaClass target = dep.getTargetClass();
+                        String targetDomain = domainOf(target.getPackageName());
+                        if (targetDomain == null || targetDomain.equals(origin)) {
+                            continue;
+                        }
+                        String pkg = target.getPackageName();
+                        boolean isBehavior = pkg.contains(".service") || pkg.contains(".usecase")
+                                || pkg.contains(".facade") || pkg.contains(".application");
+                        boolean isAllowedQuery = target.getSimpleName().endsWith("GetService")
+                                || pkg.contains(".query");
+                        if (isBehavior && !isAllowedQuery) {
+                            events.add(SimpleConditionEvent.satisfied(clazz, dep.getDescription()));
+                        }
+                    }
+                }
+            }).as("R2: 타 도메인 접근은 query(GetService) 조회 또는 도메인 이벤트만 허용된다"));
+
+    // ── R3: 타 도메인 Repository 직접 참조 금지 ─────────────────────────────
+
+    @ArchTest
+    static final ArchRule R3_타_도메인_repository_직접_참조_금지 = FreezingArchRule.freeze(
+            noClasses().should(new ArchCondition<>("타 도메인의 Repository에 의존한다") {
+                @Override
+                public void check(JavaClass clazz, ConditionEvents events) {
+                    String origin = domainOf(clazz.getPackageName());
+                    if (origin == null) {
+                        return;
+                    }
+                    for (Dependency dep : clazz.getDirectDependenciesFromSelf()) {
+                        JavaClass target = dep.getTargetClass();
+                        String targetDomain = domainOf(target.getPackageName());
+                        if (targetDomain != null && !targetDomain.equals(origin)
+                                && target.getPackageName().contains(".repository")) {
+                            events.add(SimpleConditionEvent.satisfied(clazz, dep.getDescription()));
+                        }
+                    }
+                }
+            }).as("R3: 타 도메인의 Repository를 직접 참조할 수 없다"));
+
+    // ── R4: @Transactional은 application 계층(usecase/query)에만 ────────────
+
+    @ArchTest
+    static final ArchRule R4a_transactional_클래스는_application_계층에만 = FreezingArchRule.freeze(
+            noClasses().that().resideOutsideOfPackages("..usecase..", "..application..", "..query..")
+                    .should().beAnnotatedWith(Transactional.class)
+                    .as("R4a: @Transactional 클래스는 application 계층(usecase/query)에만 둔다"));
+
+    @ArchTest
+    static final ArchRule R4b_transactional_메서드는_application_계층에만 = FreezingArchRule.freeze(
+            noMethods().that().areDeclaredInClassesThat()
+                    .resideOutsideOfPackages("..usecase..", "..application..", "..query..")
+                    .should().beAnnotatedWith(Transactional.class)
+                    .as("R4b: @Transactional 메서드는 application 계층(usecase/query)에만 둔다"));
+
+    // ── R5: 트랜잭션 클래스는 외부 API 클라이언트에 의존 금지 ───────────────
+
+    private static final Set<String> EXTERNAL_CLIENT_TYPES = Set.of(
+            "org.springframework.web.client.RestTemplate",
+            "org.springframework.web.reactive.function.client.WebClient",
+            "org.springframework.mail.javamail.JavaMailSender",
+            "com.google.firebase.messaging.FirebaseMessaging",
+            "com.amazonaws.services.s3.AmazonS3");
+
+    private static final DescribedPredicate<JavaClass> 트랜잭션_보유_클래스 =
+            new DescribedPredicate<>("@Transactional을 클래스 또는 메서드에 선언한 클래스") {
+                @Override
+                public boolean test(JavaClass clazz) {
+                    return clazz.isAnnotatedWith(Transactional.class)
+                            || clazz.getMethods().stream().anyMatch(m -> m.isAnnotatedWith(Transactional.class));
+                }
+            };
+
+    private static final DescribedPredicate<JavaClass> 외부_API_클라이언트 =
+            new DescribedPredicate<>("외부 API 클라이언트 (RestTemplate/WebClient/Mail/FCM/S3/*ApiClient)") {
+                @Override
+                public boolean test(JavaClass clazz) {
+                    return EXTERNAL_CLIENT_TYPES.contains(clazz.getFullName())
+                            || clazz.getSimpleName().endsWith("ApiClient");
+                }
+            };
+
+    @ArchTest
+    static final ArchRule R5_트랜잭션_안_외부_API_호출_금지 = FreezingArchRule.freeze(
+            noClasses().that(트랜잭션_보유_클래스)
+                    .should().dependOnClassesThat(외부_API_클라이언트)
+                    .as("R5: 트랜잭션을 여는 클래스는 외부 API 클라이언트에 의존할 수 없다 "
+                            + "(커밋 후 @TransactionalEventListener(AFTER_COMMIT)로 분리)"));
+
+    // ── R6: 도메인 이벤트 리스너는 @TransactionalEventListener로 통일 ────────
+
+    @ArchTest
+    static final ArchRule R6_도메인_내_plain_EventListener_금지 = FreezingArchRule.freeze(
+            noMethods().that().areDeclaredInClassesThat()
+                    .resideInAPackage("com.tavemakers.surf.domain..")
+                    .should().beAnnotatedWith(EventListener.class)
+                    .as("R6: 도메인 이벤트 리스너는 @TransactionalEventListener(AFTER_COMMIT)를 사용한다 "
+                            + "(plain @EventListener 금지)"));
+}
