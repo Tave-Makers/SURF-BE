@@ -51,8 +51,8 @@ public class ActivityRecordUsecase {
     /** 다수 회원의 활동기록 생성 및 점수 반영 */
     @Transactional
     public void createActivityRecordList(ActivityRecordReqDTO dto) {
-        // 다수의 활동 점수 -> 감점 + 가점 -> 누적합과 함께 활동기록 생성
-        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
+        // 다수의 활동 점수 -> 감점 + 가점 -> 누적합과 함께 활동기록 생성 (행 잠금으로 동시 갱신 직렬화)
+        List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIdsForUpdate(dto.memberIdList());
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
                     BigDecimal prefixSum = personalScore.updateScore(dto.activityName());
@@ -74,7 +74,7 @@ public class ActivityRecordUsecase {
             if (dto.isTeam()) {
 
                 List<PersonalActivityScore> teamScoreList =
-                        personalScoreGetService.getTeamScoreListByIds(dto.teamIdList());
+                        personalScoreGetService.getTeamScoreListByIdsForUpdate(dto.teamIdList());
 
                 List<ActivityRecord> recordList = teamScoreList.stream()
                         .map(teamScore -> {
@@ -101,7 +101,7 @@ public class ActivityRecordUsecase {
             }
 
             List<PersonalActivityScore> scoreList =
-                    personalScoreGetService.getPersonalScoreListByIds(dto.memberIdList());
+                    personalScoreGetService.getPersonalScoreListByIdsForUpdate(dto.memberIdList());
 
             List<ActivityRecord> recordList = scoreList.stream()
                     .map(personalScore -> {
@@ -216,12 +216,12 @@ public class ActivityRecordUsecase {
         return ActivityType.getDtoListByCategory(activityCategory);
     }
 
-    /** 활동기록의 대상(개인/팀)에 해당하는 점수 엔티티 조회 */
+    /** 활동기록의 대상(개인/팀)에 해당하는 점수 엔티티 조회 (점수 갱신용 — 행 잠금) */
     private PersonalActivityScore findScoreByRecord(ActivityRecord record) {
         if (record.getTeamId() != null) {
-            return personalScoreGetService.getTeamScoreListByIds(List.of(record.getTeamId())).get(0);
+            return personalScoreGetService.getTeamScoreListByIdsForUpdate(List.of(record.getTeamId())).get(0);
         }
-        return personalScoreGetService.getPersonalScore(record.getMemberId());
+        return personalScoreGetService.getPersonalScoreForUpdate(record.getMemberId());
     }
 
     /** 이미 삭제된 활동기록 검증 */
