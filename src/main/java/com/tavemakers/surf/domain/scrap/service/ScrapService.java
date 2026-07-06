@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.service.like.PostLikeGetService;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.domain.scrap.entity.Scrap;
+import com.tavemakers.surf.domain.scrap.exception.ScrapAlreadyExistsException;
 import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventContext;
@@ -42,17 +43,28 @@ public class ScrapService {
             @LogParam("post_id") Long postId) {
         Member member = memberGetService.getMember(memberId);
         Post post = postGetService.getPost(postId);
+
+        // 재클릭(순차 중복)은 여기서 멱등 종료 — 아래 insert의 unique 위반 경로를 애초에 타지 않게 한다
+        if (scrapRepository.existsByMemberIdAndPostId(memberId, postId)) {
+            return;
+        }
+
         try {
-            scrapRepository.save(Scrap.of(member, post));
-            // 버전 기반 단일 UPDATE (+재시도)
-            for (int i = 0; i < 3; i++) {
-                Long v = postGetService.findVersionById(postId);
-                if (v == null) throw new PostNotFoundException();
-                if (postGetService.increaseScrapCount(postId, v) > 0) break;
-                if (i == 2) throw new OptimisticLockException("scrapCount 증가 충돌");
-            }
+            // 즉시 flush해 동시 중복 요청의 unique 위반을 커밋 전에 감지 (커밋 시점 예외는
+            // 트랜잭션을 rollback-only로 만들어 UnexpectedRollbackException을 유발)
+            scrapRepository.saveAndFlush(Scrap.of(member, post));
         } catch (DataIntegrityViolationException e) {
-            // 이미 스크랩되어 있으면 무시(멱등)
+            // 동시 중복 스크랩 race의 패자 — flush 예외로 트랜잭션이 rollback-only가 되어
+            // 성공 응답이 불가능하므로 도메인 예외(409)로 전파 (순차 재클릭은 위 exists에서 걸러짐)
+            throw new ScrapAlreadyExistsException();
+        }
+
+        // 버전 기반 단일 UPDATE (+재시도)
+        for (int i = 0; i < 3; i++) {
+            Long v = postGetService.findVersionById(postId);
+            if (v == null) throw new PostNotFoundException();
+            if (postGetService.increaseScrapCount(postId, v) > 0) break;
+            if (i == 2) throw new OptimisticLockException("scrapCount 증가 충돌");
         }
     }
 
