@@ -94,6 +94,14 @@ R5는 정적 근사치다(직접 의존만 탐지). 간접 호출은 PR 리뷰(a
 | 3 | notification, score, letter | 이벤트 리스너 패턴 정리의 중심 |
 | 4 | board, schedule, activity, reservation, team, home, feedback, login | 상대적으로 단순 |
 
+### 구조 전환 체크리스트 (badge 파일럿에서 확립)
+
+1. main과 **test 소스 트리를 동일하게** `git mv` (sed로 패키지 선언만 바꾸면 IDE에서 깨짐 — Gradle은 통과하므로 빌드만 믿지 말 것)
+2. 패키지/임포트 치환 순서: 구체 클래스(GetService FQCN) → 일반 패키지 순. 와일드카드 import는 명시 import로 분해
+3. 구조 이동으로 동결 위반의 FQCN이 바뀌면: `freeze.refreeze=true` 일시 추가 → 테스트 1회 → 플래그 제거 → 재실행 확인. 스토어 diff가 순수 rename인지 커밋 전 확인
+4. 위반 라인을 움직인 커밋에서 스토어 갱신을 함께 커밋
+5. **query 반환 DTO 소속**: query 서비스는 presentation DTO를 반환해도 된다(허용 트레이드오프 — record 매핑 계층을 별도로 만들지 않는다). 단 도메인 서비스(domain/service)는 DTO를 몰라야 한다
+
 ### 도메인 전환 사이클 (도메인당)
 
 ```
