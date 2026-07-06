@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.comment.entity.Comment;
+import com.tavemakers.surf.domain.comment.exception.CommentLikeAlreadyExistsException;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -85,7 +86,8 @@ class CommentLikeConcurrencyTest {
                     .board(board).name("잡담").slug("chat").build();
             entityManager.persist(category);
 
-            Member author = persistMember("author@test.com");
+            // 클래스 트랜잭션이 없어 테스트 간 데이터가 남으므로, 이메일은 실행마다 고유하게 만든다 (unique 충돌 방지)
+            Member author = persistMember("author" + System.nanoTime() + "@test.com");
 
             Post post = Post.builder()
                     .title("제목").content("내용")
@@ -100,7 +102,7 @@ class CommentLikeConcurrencyTest {
 
             memberIds = new ArrayList<>();
             for (int i = 0; i < CONCURRENT_MEMBERS; i++) {
-                Member m = persistMember("liker" + i + "@test.com");
+                Member m = persistMember("liker" + i + "_" + System.nanoTime() + "@test.com");
                 memberIds.add(m.getId());
             }
 
@@ -161,6 +163,39 @@ class CommentLikeConcurrencyTest {
         assertThat(likeCount)
                 .as("동시 좋아요 %d건이 lost update 없이 반영되어야 한다", CONCURRENT_MEMBERS)
                 .isEqualTo((long) CONCURRENT_MEMBERS);
+    }
+
+    @Test
+    @DisplayName("같은 회원이 동시에 좋아요를 중복 등록하면 도메인 예외로 처리되고 카운트·row 정합성이 유지된다")
+    void 동일_회원_동시_중복_등록시_도메인_예외와_정합성_유지() throws InterruptedException {
+        Long memberId = memberIds.get(0);
+
+        ConcurrencyTestHelper.Result result = ConcurrencyTestHelper.runConcurrently(
+                5,
+                () -> commentLikeService.toggleLike(commentId, memberId)
+        );
+
+        // 토글 특성상 인터리빙에 따라 최종 상태는 좋아요(1) 또는 취소(0) 둘 다 가능하다.
+        // 불변식: ① 실패는 전부 도메인 예외(CommentLikeAlreadyExistsException)여야 하고
+        //         (DataIntegrityViolationException/UnexpectedRollbackException 이 새면 회귀)
+        //         ② likeCount 와 CommentLike row 수는 항상 일치하며 0 또는 1 이어야 한다.
+        assertThat(result.failures())
+                .allSatisfy(t -> assertThat(t).isInstanceOf(CommentLikeAlreadyExistsException.class));
+
+        Long likeCount = loadInReadTx(Comment.class, commentId).getLikeCount();
+        Long rowCount = countLikeRowsInReadTx();
+
+        assertThat(likeCount).isEqualTo(rowCount);
+        assertThat(likeCount).isBetween(0L, 1L);
+    }
+
+    /** CommentLike row 수를 새 읽기 트랜잭션에서 조회한다. */
+    private Long countLikeRowsInReadTx() {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        return tx.execute(status -> entityManager
+                .createQuery("select count(cl) from CommentLike cl where cl.comment.id = :cid", Long.class)
+                .setParameter("cid", commentId)
+                .getSingleResult());
     }
 
     /** 스레드마다 서로 다른 memberId 로 toggleLike 를 호출하도록 분배한다. */

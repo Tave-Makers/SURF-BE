@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.comment.dto.response.CommentLikeMemberResDTO;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.entity.CommentLike;
 import com.tavemakers.surf.domain.comment.event.CommentLikedEvent;
+import com.tavemakers.surf.domain.comment.exception.CommentLikeAlreadyExistsException;
 import com.tavemakers.surf.domain.comment.exception.CommentNotFoundException;
 import com.tavemakers.surf.domain.comment.repository.CommentLikeRepository;
 import com.tavemakers.surf.domain.comment.repository.CommentRepository;
@@ -63,7 +64,8 @@ public class CommentLikeService {
             // 즉시 flush해 unique 제약 위반(동시 중복 등록)을 커밋 전에 감지
             commentLikeRepository.saveAndFlush(CommentLike.of(comment, member));
         } catch (DataIntegrityViolationException e) {
-            return true; // 이미 저장되어 있던 상태 (중복 insert 방어)
+            // flush 예외로 트랜잭션이 rollback-only가 되므로 성공 응답은 불가능 — 도메인 예외로 전파해 전체 롤백
+            throw new CommentLikeAlreadyExistsException();
         }
 
         commentRepository.increaseLikeCount(commentId);

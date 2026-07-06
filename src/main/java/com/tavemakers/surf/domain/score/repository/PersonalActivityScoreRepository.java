@@ -20,12 +20,12 @@ public interface PersonalActivityScoreRepository extends JpaRepository<PersonalA
 
     List<PersonalActivityScore> findAllByTeamIdIn(List<Long> teamIds);
 
-    /** 점수 갱신용 행 잠금 조회 — id 순 잠금으로 데드락 방지 */
+    /** 점수 갱신용 행 잠금 조회 — 경합 트랜잭션이 모두 같은 인덱스 경로로 잠가 상호 순서가 일관됨 */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from PersonalActivityScore s where s.member.id in :memberIds order by s.id")
     List<PersonalActivityScore> findAllByMemberIdInForUpdate(@Param("memberIds") List<Long> memberIds);
 
-    /** 점수 갱신용 행 잠금 조회 — id 순 잠금으로 데드락 방지 */
+    /** 점수 갱신용 행 잠금 조회 — 경합 트랜잭션이 모두 같은 인덱스 경로로 잠가 상호 순서가 일관됨 */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from PersonalActivityScore s where s.team.id in :teamIds order by s.id")
     List<PersonalActivityScore> findAllByTeamIdInForUpdate(@Param("teamIds") List<Long> teamIds);
