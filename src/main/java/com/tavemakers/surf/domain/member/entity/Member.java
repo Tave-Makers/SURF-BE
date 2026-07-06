@@ -174,13 +174,11 @@ public class Member extends BaseEntity {
     /**
      * OAuth provider 정보로 REGISTERING 상태의 회원을 생성한다 (D1, D5).
      * Kakao 는 닉네임이 일반적으로 채워져 있고, Apple 은 첫 로그인 시 nickname/profileImageUrl 이 null 일 수 있다.
+     * provider 이메일 유무에 의존하지 않는다 — provider 이메일은 SocialAccount.providerEmail 에 저장되며 없을 수 있다(Apple 미제공 등).
      */
     public static Member createRegisteringFromOAuth(Provider provider, OAuthUserInfoDTO info) {
         if (provider == null) {
             throw new IllegalStateException("provider 는 필수입니다.");
-        }
-        if (info.email() == null || info.email().isBlank()) {
-            throw new IllegalStateException(provider + " 계정의 이메일 권한이 필요합니다.");
         }
         if (info.oauthId() == null || info.oauthId().isBlank()) {
             throw new IllegalStateException(provider + " 식별자(oauthId)가 비어 있습니다.");
@@ -196,12 +194,13 @@ public class Member extends BaseEntity {
             }
         }
 
+        // 통합 이메일(Member.email)은 온보딩 입력값으로만 채운다. REGISTERING 단계에서는 값 없음(null).
+        // provider 가 준 이메일은 SocialAccount.providerEmail 에만 저장된다.
         return Member.builder()
                 .provider(provider)
                 .providerId(info.oauthId())
                 .kakaoId(legacyKakaoId)
                 .name(info.nickname())
-                .email(info.email())
                 .phoneNumberPublic(false)
                 .profileImageUrl(info.profileImageUrl())
                 .status(MemberStatus.REGISTERING)
