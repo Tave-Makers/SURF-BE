@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.member.usecase;
 
 import com.tavemakers.surf.domain.activity.repository.ActivityRecordRepository;
-import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
+import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.comment.service.CommentLikeService;
 import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
