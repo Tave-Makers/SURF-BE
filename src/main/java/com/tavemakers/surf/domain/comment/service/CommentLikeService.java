@@ -48,8 +48,8 @@ public class CommentLikeService {
         // 좋아요 이미 존재하면 취소
         int removed = commentLikeRepository.deleteByCommentAndMember(comment, member);
         if (removed > 0) {
-            comment.decreaseLikeCount();
-            commentRepository.save(comment);
+            // 엔티티 메모리 증감은 동시 요청 시 lost update가 발생하므로 DB 원자적 UPDATE 사용
+            commentRepository.decreaseLikeCount(commentId);
 
             logEventEmitter.emit("comment.like.toggle", Map.of(
                     "comment_id", commentId,
@@ -60,20 +60,21 @@ public class CommentLikeService {
         }
 
         try {
-            commentLikeRepository.save(CommentLike.of(comment, member));
-            comment.increaseLikeCount();
-            commentRepository.save(comment);
-            createNotificationAtCommentLike(member, commentId, post.getBoard().getId(), post.getId());
-
-            logEventEmitter.emit("comment.like.toggle", Map.of(
-                    "comment_id", commentId,
-                    "liked", true
-            ));
-
-            return true; // 새로 좋아요 등록
+            // 즉시 flush해 unique 제약 위반(동시 중복 등록)을 커밋 전에 감지
+            commentLikeRepository.saveAndFlush(CommentLike.of(comment, member));
         } catch (DataIntegrityViolationException e) {
             return true; // 이미 저장되어 있던 상태 (중복 insert 방어)
         }
+
+        commentRepository.increaseLikeCount(commentId);
+        createNotificationAtCommentLike(member, commentId, post.getBoard().getId(), post.getId());
+
+        logEventEmitter.emit("comment.like.toggle", Map.of(
+                "comment_id", commentId,
+                "liked", true
+        ));
+
+        return true; // 새로 좋아요 등록
     }
 
     /** 댓글의 총 좋아요 수 */
@@ -110,9 +111,8 @@ public class CommentLikeService {
     public void removeAllByMemberId(Long memberId) {
         for (CommentLike commentLike : commentLikeRepository.findAllByMemberId(memberId)) {
             Comment comment = commentLike.getComment();
-            comment.decreaseLikeCount();
             commentLikeRepository.delete(commentLike);
-            commentRepository.save(comment);
+            commentRepository.decreaseLikeCount(comment.getId());
         }
     }
 

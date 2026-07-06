@@ -92,15 +92,5 @@ public class Comment extends BaseEntity {
     public void markAsRoot() {
         if (this.depth == 0 && this.rootId == null) this.rootId = this.id;
     }
-
-    /** 좋아요 증가 */
-    public void increaseLikeCount() {
-        this.likeCount++;
-    }
-
-    /** 좋아요 감소 */
-    public void decreaseLikeCount() {
-        if (this.likeCount > 0) this.likeCount--;
-    }
 }
 

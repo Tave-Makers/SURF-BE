@@ -45,4 +45,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
         where c.parent.id = :parentId
     """)
     void detachChildren(@Param("parentId") Long parentId);
+
+    /** 좋아요 수 원자적 증가 (동시 요청 lost update 방지) */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Comment c set c.likeCount = c.likeCount + 1 where c.id = :commentId")
+    void increaseLikeCount(@Param("commentId") Long commentId);
+
+    /** 좋아요 수 원자적 감소 (0 미만 방지) */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Comment c set c.likeCount = c.likeCount - 1 where c.id = :commentId and c.likeCount > 0")
+    void decreaseLikeCount(@Param("commentId") Long commentId);
 }
