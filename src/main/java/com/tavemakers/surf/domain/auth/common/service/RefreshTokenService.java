@@ -8,9 +8,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -24,6 +26,13 @@ public class RefreshTokenService {
 
     /** Redis key: refresh:{memberId}:{deviceId} */
     private static final String KEY_PREFIX = "refresh:";
+
+    // GET + DEL 원자적 실행 — 동시 refresh 경합 시 정확히 한 요청만 회전에 성공하게 한다
+    // (AppleOAuthStateService의 검증된 패턴 재사용)
+    private static final DefaultRedisScript<String> GET_AND_DEL_SCRIPT = new DefaultRedisScript<>(
+            "local v = redis.call('GET', KEYS[1]); if v then redis.call('DEL', KEYS[1]) end; return v",
+            String.class
+    );
 
     /** 로그인 시 refresh 발급 + 저장 + 쿠키 반환 (WEB 흐름) */
     public ResponseCookie issue(Long memberId, String deviceId) {
@@ -69,7 +78,10 @@ public class RefreshTokenService {
         String key = key(memberId, deviceId);
         log.debug("[RTR][ROTATE] redisKey generated");
 
-        String stored = redisTemplate.opsForValue().get(key);
+        // 조회+삭제를 원자적으로 실행: GET→비교→DELETE→SET 비원자 시퀀스에서는 동시 refresh 2건이
+        // 모두 회전에 성공해 이후 회전에서 오탐 REUSE_DETECTED(전 세션 폐기)가 발생할 수 있다.
+        // 원자화하면 경합 패자는 stored=null(NOT_FOUND, 해당 디바이스 재로그인)로 격하된다.
+        String stored = redisTemplate.execute(GET_AND_DEL_SCRIPT, List.of(key));
 
         if (stored == null) {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_NOT_FOUND.getMessage());
@@ -82,9 +94,9 @@ public class RefreshTokenService {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_REUSE_DETECTED.getMessage());
         }
 
-        // ROTATION
-        log.info("[RTR][ROTATE] rotation allowed, deleting old token");
-        redisTemplate.delete(key);
+        // ROTATION — 같은 key에 SET overwrite 하므로 별도 delete가 필요 없고,
+        // delete→save 사이 장애로 세션이 유실되는 창도 없다
+        log.info("[RTR][ROTATE] rotation allowed");
 
         String newRefresh = jwtService.createRefreshToken(memberId, deviceId);
         save(newRefresh);
