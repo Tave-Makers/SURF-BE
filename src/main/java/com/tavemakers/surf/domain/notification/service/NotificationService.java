@@ -44,20 +44,14 @@ public class NotificationService {
         return notificationGetService.toDtoList(notifications);
     }
 
-    /** 알림 읽음 처리 */
+    /** 알림 읽음 처리 — 본인 소유 알림만 조회·갱신한다 */
     @Transactional
     public void markAsRead(Long notificationId, Long memberId) {
-        Notification notification = notificationRepository.findById(notificationId).orElse(null);
-        boolean previousIsRead = notification != null && notification.isRead();
+        Notification notification = notificationRepository.findByIdAndMemberId(notificationId, memberId)
+                .orElseThrow(NotificationNotFoundException::new);
+        boolean previousIsRead = notification.isRead();
 
-        int updated = notificationRepository.markAsRead(notificationId, memberId);
-
-        if (updated == 0) {
-            boolean exists = notificationRepository.existsByIdAndMemberId(notificationId, memberId);
-            if (!exists) {
-                throw new NotificationNotFoundException();
-            }
-        }
+        notificationRepository.markAsRead(notificationId, memberId);
 
         logEventEmitter.emit("notification.read", Map.of(
                 "notification_id", notificationId,

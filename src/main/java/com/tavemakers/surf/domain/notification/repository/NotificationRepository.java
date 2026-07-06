@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
@@ -29,6 +30,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     int markAsRead(@Param("id") Long id, @Param("memberId") Long memberId);
 
     boolean existsByIdAndMemberId(Long id, Long memberId);
+
+    Optional<Notification> findByIdAndMemberId(Long id, Long memberId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM Notification n WHERE n.memberId = :memberId")
