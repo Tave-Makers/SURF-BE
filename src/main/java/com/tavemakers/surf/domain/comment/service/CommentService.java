@@ -17,6 +17,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
+import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class CommentService {
     private final CommentMentionService commentMentionService;
     private final CommentLikeService commentLikeService;
     private final CommentLikeRepository commentLikeRepository;
+    private final PostCommentCountService postCommentCountService;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -111,8 +113,8 @@ public class CommentService {
         // 멘션 등록
         commentMentionService.createMentions(saved, req.mentionMemberIds());
 
-        // 댓글 수 증가
-        post.increaseCommentCount();
+        // 댓글 수 증가 — 동시 요청 lost update 방지 위해 원자적 UPDATE
+        postCommentCountService.increase(postId);
 
         // 응답 DTO (멘션, 좋아요 포함)
         List<MentionResDTO> mentions = commentMentionService.getMentions(saved.getId());
@@ -134,9 +136,6 @@ public class CommentService {
         if (!comment.getPost().getId().equals(postId) || !comment.getMember().getId().equals(memberId))
             throw new NotMyCommentException();
 
-        // 삭제 전에 post 참조를 영속성 컨텍스트에 확보
-        Post post = postGetService.getPost(postId);
-
         // 자식 댓글 parent 끊기
         commentRepository.detachChildren(commentId);
 
@@ -147,8 +146,8 @@ public class CommentService {
         // 댓글 하드 삭제
         commentRepository.delete(comment);
 
-        // 게시글 댓글 수 감소
-        post.decreaseCommentCount();
+        // 게시글 댓글 수 감소 — 동시 요청 lost update 방지 위해 원자적 UPDATE
+        postCommentCountService.decrease(postId);
     }
 
     /** 댓글 목록 조회 */

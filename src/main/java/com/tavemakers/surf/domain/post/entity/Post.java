@@ -125,14 +125,6 @@ public class Post extends BaseEntity {
         if (category != null) this.categoryName = category.getName();
     }
 
-    public void increaseCommentCount() {
-        this.commentCount++;
-    }
-
-    public void decreaseCommentCount() {
-        if (this.commentCount > 0) this.commentCount--;
-    }
-
     public void publish() {
         this.isReserved = false;
         this.postedAt = LocalDateTime.now();

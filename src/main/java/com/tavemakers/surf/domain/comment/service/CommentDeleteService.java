@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.repository.CommentLikeRepository;
 import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
 import com.tavemakers.surf.domain.comment.repository.CommentRepository;
+import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class CommentDeleteService {
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final CommentMentionRepository commentMentionRepository;
+    private final PostCommentCountService postCommentCountService;
 
     /** 게시글의 모든 댓글 삭제 (연관 데이터 먼저 삭제) */
     @Transactional
@@ -41,10 +43,12 @@ public class CommentDeleteService {
     /** 댓글 단건 강제 삭제 */
     @Transactional
     public void deleteComment(Comment comment) {
-        comment.getPost().decreaseCommentCount();
+        Long postId = comment.getPost().getId();
         commentRepository.detachChildren(comment.getId());
         commentLikeRepository.deleteAllByComment(comment);
         commentMentionRepository.deleteAllByComment(comment);
         commentRepository.delete(comment);
+        // 동시 요청 lost update 방지 위해 원자적 UPDATE
+        postCommentCountService.decrease(postId);
     }
 }

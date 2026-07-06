@@ -64,6 +64,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update Post p
+        set p.commentCount = p.commentCount + 1
+        where p.id = :postId
+    """)
+    void increaseCommentCount(@Param("postId") Long postId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update Post p
         set p.commentCount = p.commentCount - 1
         where p.id = :postId
           and p.commentCount > 0
