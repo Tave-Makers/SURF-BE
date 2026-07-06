@@ -15,7 +15,9 @@ public enum ErrorMessage {
 
     BOARD_CATEGORY_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 [게시판]에 이미 존재하는 [슬러그]입니다."),
 
-    INVALID_CATEGORY_MAPPING(HttpStatus.BAD_REQUEST, "유효하지 않은 [게시판]과 [카테고리] 조합입니다.");
+    INVALID_CATEGORY_MAPPING(HttpStatus.BAD_REQUEST, "유효하지 않은 [게시판]과 [카테고리] 조합입니다."),
+
+    CATEGORY_HAS_POSTS(HttpStatus.CONFLICT, "하위 [게시글]이 존재하여 [카테고리]를 삭제할 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -63,6 +63,12 @@ public class PostGetService {
                 .orElseThrow(PostNotFoundException::new);
     }
 
+    /** 특정 카테고리에 속한 게시글 존재 여부 */
+    @Transactional(readOnly = true)
+    public boolean existsByCategory(Long categoryId) {
+        return postRepository.existsByCategoryId(categoryId);
+    }
+
     /** 게시글 상세 조회 (DTO 반환) */
     @Transactional
     public PostDetailResDTO getPostDetail(Long postId, Long memberId) {
