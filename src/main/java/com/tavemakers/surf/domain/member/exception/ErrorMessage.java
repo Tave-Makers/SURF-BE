@@ -23,7 +23,9 @@ public enum ErrorMessage {
     MIS_MATCH_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     ADMIN_PAGE_ROLE_EXCEPTION(HttpStatus.BAD_REQUEST, "관리자만 접근 가능합니다."),
 
-    INVALID_SIGNUP_LIST(HttpStatus.BAD_REQUEST, "[회원 가입 요청 목록]이 올바르지 않습니다.")
+    INVALID_SIGNUP_LIST(HttpStatus.BAD_REQUEST, "[회원 가입 요청 목록]이 올바르지 않습니다."),
+
+    ROLE_CHANGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "본인보다 낮은 권한만 부여하거나 변경할 수 있습니다.")
     ;
 
     private final HttpStatus status;

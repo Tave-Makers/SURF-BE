@@ -12,6 +12,7 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.exception.AdminPageRoleException;
 import com.tavemakers.surf.domain.member.service.*;
+import com.tavemakers.surf.domain.member.validator.RoleChangeValidator;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
@@ -55,6 +56,7 @@ public class MemberAdminUsecase {
     private final TrackGetService trackGetService;
     private final MemberWithdrawService memberWithdrawService;
     private final LogEventEmitter logEventEmitter;
+    private final RoleChangeValidator roleChangeValidator;
     //</editor-fold>
 
     /** 회원 권한 변경 */
@@ -64,7 +66,9 @@ public class MemberAdminUsecase {
             @LogParam("member_id") Long memberId,
             @LogParam("role") MemberRole role
     ) {
+        Member actor = SecurityUtils.getCurrentMember();
         Member member = memberGetService.getMember(memberId);
+        roleChangeValidator.validate(actor, member, role);
         memberPatchService.grantRole(member, role);
     }
 
@@ -75,7 +79,9 @@ public class MemberAdminUsecase {
             @LogParam("member_ids") List<Long> memberIds,
             @LogParam("role") MemberRole role
     ) {
+        Member actor = SecurityUtils.getCurrentMember();
         List<Member> members = memberGetService.findMembersByIds(memberIds);
+        members.forEach(member -> roleChangeValidator.validate(actor, member, role));
         memberPatchService.grantRoleV2(members, role);
     }
 
