@@ -19,4 +19,8 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     @Query("DELETE FROM DeviceToken d WHERE d.memberId = :memberId")
     void deleteByMemberId(@Param("memberId") Long memberId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE DeviceToken d SET d.enabled = false WHERE d.token IN :tokens")
+    void disableAllByTokenIn(@Param("tokens") List<String> tokens);
+
 }

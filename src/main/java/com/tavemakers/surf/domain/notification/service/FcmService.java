@@ -3,9 +3,11 @@ package com.tavemakers.surf.domain.notification.service;
 import com.google.firebase.messaging.*;
 import com.tavemakers.surf.domain.notification.entity.DeviceToken;
 import com.tavemakers.surf.domain.notification.repository.DeviceTokenRepository;
+import com.tavemakers.surf.domain.notification.usecase.DeviceTokenUsecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -13,6 +15,7 @@ import java.util.List;
 public class FcmService {
 
     private final DeviceTokenRepository deviceTokenRepository;
+    private final DeviceTokenUsecase deviceTokenUsecase;
 
     /** 회원에게 FCM 푸시 알림 전송 */
     public void sendToMember(Long memberId, String body, String deeplink, Long notificationId) {
@@ -37,19 +40,21 @@ public class FcmService {
 
             // 실패한 토큰 처리
             List<SendResponse> responses = response.getResponses();
+            List<String> invalidTokens = new ArrayList<>();
             for (int i = 0; i < responses.size(); i++) {
                 SendResponse r = responses.get(i);
                 if (r.isSuccessful()) continue;
 
                 FirebaseMessagingException ex = r.getException();
-                String failedToken = tokenStrings.get(i);
 
                 // 흔한 무효 토큰 케이스: UNREGISTERED / INVALID_ARGUMENT 등
                 if (isInvalidToken(ex)) {
-                    deviceTokenRepository.findByToken(failedToken)
-                            .ifPresent(DeviceToken::disable);
+                    invalidTokens.add(tokenStrings.get(i));
                 }
             }
+            // 트랜잭션 밖에서 detached 엔티티를 수정하면 저장되지 않으므로,
+            // 트랜잭션 경계(usecase) 안의 벌크 UPDATE로 비활성화한다.
+            deviceTokenUsecase.disableTokens(invalidTokens);
         } catch (FirebaseMessagingException e) {
             // 여기서는 일단 런타임으로 던져서 로그/모니터링 하게 하는 게 보통
             throw new RuntimeException("FCM send failed", e);

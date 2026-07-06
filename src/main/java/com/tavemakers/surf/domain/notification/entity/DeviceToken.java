@@ -43,10 +43,6 @@ public class DeviceToken {
         this.lastSeenAt = LocalDateTime.now();
     }
 
-    public void disable() {
-        this.enabled = false;
-    }
-
     public void touch() {
         this.lastSeenAt = LocalDateTime.now();
         this.enabled = true;
