@@ -61,19 +61,29 @@ R5는 정적 근사치다(직접 의존만 탐지). 간접 호출은 PR 리뷰(a
 | Phase | 내용 | 상태 |
 |-------|------|------|
 | 0 | ArchUnit R1~R6 + 베이스라인, 동시성 테스트 헬퍼(`support/ConcurrencyTestHelper`), 본 문서 | ✅ |
-| 1 | P0 버그 6건 수정 (재현 테스트 → 수정 → 통과, 건별 PR) | |
+| 1 | P0 버그 수정 — 확정 4건 수정·커밋, 2건은 검증 결과 오탐 종결 (arch-reviewer APPROVE) | ✅ |
 | 2 | badge 도메인 파일럿 전환 → 4계층 템플릿 + 도메인 점검 체크리스트 확립 | |
 | 3 | 도메인별 전환 + 전 로직 점검 (아래 Wave 순서) | |
 | 4 | global 정리, 베이스라인 0건 달성, FreezingArchRule 해제 | |
 
-### Phase 1 — P0 버그 목록
+### Phase 1 — P0 버그 결과 (2026-07-07 완료)
 
-1. 댓글 좋아요 lost update — `CommentLikeService` 메모리 증감 → 원자적 UPDATE (Post의 @Version 패턴 재사용)
-2. 활동 점수 lost update — `PersonalActivityScore.updateScore()` 메모리 누적 → 원자적 UPDATE 또는 락
-3. 배지 부여 race — `MemberBadgeAssignService` check-then-act + @Transactional 부재
-4. @Transactional 누락 일괄 — 배지 회수 / 예약 생성 / 활동기록 saveAll / `FcmService`의 토큰 비활성화(dirty checking이 저장 안 됨)
-5. 알림 권한 검증 순서 — `NotificationService.markAsRead`가 소유권 확인 전 타인 알림 조회
-6. 쪽지 메일 예외 삼킴 — `LetterFacade`의 MailException 무시
+1. ✅ 댓글 좋아요 lost update — `likeCount` 원자적 UPDATE + 중복 등록 race는 `CommentLikeAlreadyExistsException`(409)으로 전환
+2. ✅ 활동 점수 lost update — 쓰기 경로에 PESSIMISTIC_WRITE `ForUpdate` 조회 도입 (읽기 경로는 무잠금 유지)
+3. ✅ 배지 부여 race — `saveAllAndFlush`로 unique 위반을 커밋 전 감지, 도메인 예외로 변환 (트랜잭션은 원래 usecase에 있었음 — 스캔 오탐 정정)
+4. ✅ FCM 무효 토큰 비활성화 유실 — `DeviceTokenUsecase`(@Transactional) 벌크 UPDATE로 교체.
+   배지 회수/예약 생성/활동기록의 "@Transactional 누락" 주장은 usecase 트랜잭션 존재로 오탐 종결
+5. ✅ 알림 읽음 처리 — `findByIdAndMemberId`로 소유권 필터 조회
+6. ✖️ 쪽지 메일 예외 삼킴 — 오탐 (이미 에러 로그 + `LetterMailSendFailException` throw 중)
+
+### Phase 3 이관 항목 (Phase 1 리뷰에서 도출, non-blocking)
+
+- `PersonalScoreGetService`의 ForUpdate 메서드는 "GetService = 읽기" 계약을 흐림 → score 도메인 command 포트로 이관
+- `FcmService → DeviceTokenUsecase` 계층 역행 → 개명 또는 이벤트 분리
+- `LetterFacade`: 메일 발송(외부 API)이 @Transactional 안 + 저장 전 발송 순서 (R5, Phase 2 트랜잭션 경계 정리 대상)
+- `ReservationUsecase`: 트랜잭션 커밋 전 스케줄 등록 → 롤백 시 좀비 job (Codex 지적과 동일, Phase 2)
+- `ActivityRecordUsecase.scoreCalculator` 미사용 필드 (데드코드)
+- `removeAllByMemberId` 류 반복 delete → 벌크 전환
 
 ### Phase 3 — 도메인 전환 Wave
 
