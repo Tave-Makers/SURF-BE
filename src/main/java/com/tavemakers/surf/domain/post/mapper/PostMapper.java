@@ -15,8 +15,8 @@ public class PostMapper {
     public PostViewUpdateDto toUpdateDto(String key, String value) {
         try {
             Long postId = extractPostId(key);
-            int viewCount = Integer.parseInt(value);
-            return new PostViewUpdateDto(postId, viewCount);
+            int viewCountDelta = Integer.parseInt(value);
+            return new PostViewUpdateDto(postId, viewCountDelta);
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             log.warn("유효하지 않은 Key, Value 형식입니다. key={}, value={}", key, value);
             return null;

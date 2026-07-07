@@ -18,12 +18,12 @@ public class PostJdbcRepositoryImpl implements PostJdbcRepository {
     public void viewCountBulkUpdate(List<PostViewUpdateDto> updateDtoList) {
         String bulkUpdateSql =
                 "UPDATE post " +
-                "SET view_count = ? " +
+                "SET view_count = view_count + ? " +
                 "WHERE post_id = ?";
 
         jdbcTemplate.batchUpdate(bulkUpdateSql, updateDtoList, updateDtoList.size(),
                 (PreparedStatement ps, PostViewUpdateDto dto) -> {
-                    ps.setInt(1, dto.viewCount());
+                    ps.setInt(1, dto.viewCountDelta());
                     ps.setLong(2, dto.postId());
                 });
     }
