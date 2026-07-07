@@ -25,7 +25,7 @@ public interface CommentMentionRepository extends JpaRepository<CommentMention, 
     List<CommentMention> findAllByMentionedMember(Member member);
 
     @Transactional
-    @Modifying(clearAutomatically = true)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM CommentMention cm WHERE cm.mentionedMember.id = :memberId")
     void deleteAllByMentionedMemberId(@Param("memberId") Long memberId);
 

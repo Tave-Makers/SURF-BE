@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,9 +15,15 @@ import java.util.List;
 @Repository
 public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, Long> {
 
-    void deleteByMemberId(Long memberId);
+    // 파생 delete(SELECT 후 개별 remove 큐잉)는 flush가 지연되어 다른 리스너의
+    // clearAutomatically에 의해 취소될 수 있으므로 벌크 JPQL로 즉시 실행한다
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM ActivityRecord ar WHERE ar.memberId = :memberId")
+    void deleteByMemberId(@Param("memberId") Long memberId);
 
-    void deleteByTeamId(Long teamId);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM ActivityRecord ar WHERE ar.teamId = :teamId")
+    void deleteByTeamId(@Param("teamId") Long teamId);
 
     @Query("SELECT ar " +
             "FROM ActivityRecord ar " +

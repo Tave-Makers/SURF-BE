@@ -38,8 +38,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,8 +59,9 @@ import static org.mockito.BDDMockito.given;
  * 실패하면 이미 삭제된 다른 도메인 데이터와 member row 까지 전부 되돌아와야 한다.
  *
  * <p>이를 재현하기 위해 테스트 전용 실패 리스너({@link FailingListenerConfig})를 @Import 로 등록한다.
- * 이 리스너는 MemberDismissedEvent 를 <b>가장 늦게(LOWEST_PRECEDENCE)</b> 받아 RuntimeException 을
- * 던진다 — 정상 리스너들이 먼저 delete 를 수행한 뒤 예외가 나므로, 그 삭제까지 롤백되는지 검증하는
+ * 이 리스너가 "가장 늦게" 실행되는 근거는 @Order 가 아니라(LOWEST_PRECEDENCE 는 무순서 리스너의
+ * 기본값과 동률이라 상대 순서를 보장하지 못한다) @Import 배열에서 정상 리스너들보다 뒤에 등록되는
+ * 순서다 — 정상 리스너들이 먼저 delete 를 수행한 뒤 예외가 나므로, 그 삭제까지 롤백되는지 검증하는
  * 가장 엄격한 시나리오다. 실패 리스너는 이 클래스에만 격리되어 완전성 테스트에는 영향을 주지 않는다.
  *
  * <p>dismiss 가 @Transactional 이므로 실제 롤백을 검증하려면 클래스 트랜잭션을 NOT_SUPPORTED 로
@@ -89,11 +88,11 @@ class MemberDismissRollbackTest {
 
     /**
      * MemberDismissedEvent 를 마지막에 받아 예외를 던지는 테스트 전용 리스너.
-     * static @TestConfiguration 이라 이 테스트 클래스 컨텍스트에만 등록된다.
+     * static @TestConfiguration 이라 이 테스트 클래스 컨텍스트에만 등록되며,
+     * "마지막 실행"은 @Import 배열의 등록 순서(정상 리스너들 뒤)로 확보한다.
      */
     @TestConfiguration
     static class FailingListenerConfig {
-        @Order(Ordered.LOWEST_PRECEDENCE)
         @EventListener
         public void failOnDismiss(MemberDismissedEvent event) {
             throw new IllegalStateException(BOOM);

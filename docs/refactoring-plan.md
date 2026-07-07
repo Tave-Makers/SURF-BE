@@ -112,7 +112,7 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 
 | Wave | 도메인 | 비고 |
 |------|--------|------|
-| 1 | badge(파일럿), member + auth | MemberDismissUsecase 해체 → MemberWithdrawnEvent로 각 도메인이 자기 데이터 정리 |
+| 1 | badge(파일럿), member + auth | MemberDismissUsecase 해체 → MemberDismissedEvent 동기 리스너로 각 도메인이 자기 데이터 정리 (✅ D1 완료) |
 | 2 | post, comment, scrap | 트래픽 핵심, 멱등성 이슈 밀집. scrap↔post 순환 의존 해소 포함 |
 | 3 | notification, score, letter | 이벤트 리스너 패턴 정리의 중심 |
 | 4 | board, schedule, activity, reservation, team, home, feedback, login | 상대적으로 단순 |
