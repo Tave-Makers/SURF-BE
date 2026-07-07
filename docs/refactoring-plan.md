@@ -76,6 +76,24 @@ R5는 정적 근사치다(직접 의존만 탐지). 간접 호출은 PR 리뷰(a
 5. ✅ 알림 읽음 처리 — `findByIdAndMemberId`로 소유권 필터 조회
 6. ✖️ 쪽지 메일 예외 삼킴 — 오탐 (이미 에러 로그 + `LetterMailSendFailException` throw 중)
 
+### 설계 결정 (2026-07-07 확정)
+
+**D1. MemberDismissUsecase 해체 — 동기 인-트랜잭션 이벤트 하이브리드 (비동기 이벤트 아님)**
+계정 삭제(제명)는 "전부 성공 또는 전부 롤백"이어야 하므로 정합성이 결합도보다 우선한다.
+AFTER_COMMIT 비동기 이벤트로 내부 정리를 하면 회원 row는 지워졌는데 리스너 실패 시 고아 데이터가
+남아 되돌릴 수 없다 → 채택하지 않는다.
+- 내부 독립 정리(badge/notification/deviceToken/score/letter/activity/commentMention/recentSearch):
+  `MemberWithdrawnEvent`를 트랜잭션 안에서 발행하고 각 도메인이 **동기 `@EventListener`**(같은 트랜잭션)로
+  자기 데이터를 삭제. 예외 시 전체 롤백. member가 타 도메인을 컴파일 타임에 의존하지 않게 됨.
+- 외부 효과(Kakao/Apple 연결 해제): AFTER_COMMIT `@Async` (이미 적용, 외부·비트랜잭션·best-effort라 적합).
+- 순서·데이터 의존부(deleteOwnedPosts → deletedPostIds → 댓글 정리, 팀 리더 위임): 명시적
+  오케스트레이션 유지하되 Repository 직접 주입을 각 도메인 cleanup 서비스 호출로 교체(R3 위반 제거).
+
+**D2. 탈퇴/퇴출 회원 연관 데이터 = 현행 정책 유지 (의도된 설계)**
+expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원") + soft delete만 하고 게시글/댓글/
+좋아요/스크랩/팀소속은 보존한다. 전체 정리는 dismiss(제명)만 수행한다. 이는 "콘텐츠 보존 + 계정 차단"
+의도이므로 감사에서 결함으로 재플래그하지 않는다.
+
 ### Phase 3 이관 항목 (Phase 1 리뷰에서 도출, non-blocking)
 
 - `PersonalScoreGetService`의 ForUpdate 메서드는 "GetService = 읽기" 계약을 흐림 → score 도메인 command 포트로 이관
