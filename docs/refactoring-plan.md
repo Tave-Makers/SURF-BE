@@ -107,12 +107,13 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 - `ReservationUsecase`: 트랜잭션 커밋 전 스케줄 등록 → 롤백 시 좀비 job (Codex 지적과 동일, Phase 2)
 - `ActivityRecordUsecase.scoreCalculator` 미사용 필드 (데드코드)
 - `removeAllByMemberId` 류 반복 delete → 벌크 전환
+- **R2 사각지대 (Wave 1 구조 이동 리뷰에서 발견)**: `*ApiClient`가 infrastructure로 이동하면서 타 도메인의 infrastructure 의존(예: `MemberDisconnectedListener → AppleApiClient`)이 R2 매칭 대상에서 벗어남. Phase 4에서 R2를 `.infrastructure`까지 확장하거나 auth revoke 창구를 이벤트로 정리
 
 ### Phase 3 — 도메인 전환 Wave
 
 | Wave | 도메인 | 비고 |
 |------|--------|------|
-| 1 | badge(파일럿), member + auth | MemberDismissUsecase 해체 → MemberDismissedEvent 동기 리스너로 각 도메인이 자기 데이터 정리 (✅ D1 완료) |
+| 1 | badge(파일럿), member + auth | MemberDismissUsecase 해체(✅ D1), auth·member 4계층 구조 이동(✅ be77c698, 182bf06a — arch-reviewer APPROVE) |
 | 2 | post, comment, scrap | 트래픽 핵심, 멱등성 이슈 밀집. scrap↔post 순환 의존 해소 포함 |
 | 3 | notification, score, letter | 이벤트 리스너 패턴 정리의 중심 |
 | 4 | board, schedule, activity, reservation, team, home, feedback, login | 상대적으로 단순 |
