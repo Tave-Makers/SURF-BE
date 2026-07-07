@@ -4,7 +4,6 @@ import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.domain.post.exception.PostNotFoundException;
 import com.tavemakers.surf.domain.post.service.like.PostLikeGetService;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 import com.tavemakers.surf.domain.scrap.entity.Scrap;
@@ -13,7 +12,6 @@ import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventContext;
 import com.tavemakers.surf.global.logging.LogParam;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
@@ -59,13 +57,8 @@ public class ScrapService {
             throw new ScrapAlreadyExistsException();
         }
 
-        // 버전 기반 단일 UPDATE (+재시도)
-        for (int i = 0; i < 3; i++) {
-            Long v = postGetService.findVersionById(postId);
-            if (v == null) throw new PostNotFoundException();
-            if (postGetService.increaseScrapCount(postId, v) > 0) break;
-            if (i == 2) throw new OptimisticLockException("scrapCount 증가 충돌");
-        }
+        // 엔티티 메모리 증감은 동시 요청 시 lost update가 발생하므로 DB 원자적 UPDATE 사용
+        postGetService.increaseScrapCount(postId);
     }
 
     /** 게시글 스크랩 삭제 */
@@ -76,12 +69,7 @@ public class ScrapService {
             @LogParam("post_id") Long postId) {
         int deleted = scrapRepository.deleteByMemberIdAndPostId(memberId, postId);
         if (deleted > 0) {
-            for (int i = 0; i < 3; i++) {
-                Long v = postGetService.findVersionById(postId);
-                if (v == null) throw new PostNotFoundException();
-                if (postGetService.decreaseScrapCount(postId, v) > 0) break;
-                if (i == 2) throw new OptimisticLockException("scrapCount 감소 충돌");
-            }
+            postGetService.decreaseScrapCount(postId);
         }
     }
 

@@ -94,19 +94,14 @@ public class PostGetService {
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, fileUrlList, reservedAt, viewCount);
     }
 
-    /** 게시글 버전 조회 (낙관적 락용) */
-    public Long findVersionById(Long postId) {
-        return postRepository.findVersionById(postId);
+    /** 스크랩 수 원자적 증가 */
+    public void increaseScrapCount(Long postId) {
+        postRepository.increaseScrapCount(postId);
     }
 
-    /** 스크랩 수 증가 (낙관적 락) */
-    public int increaseScrapCount(Long postId, Long version) {
-        return postRepository.increaseScrapCount(postId, version);
-    }
-
-    /** 스크랩 수 감소 (낙관적 락) */
-    public int decreaseScrapCount(Long postId, Long version) {
-        return postRepository.decreaseScrapCount(postId, version);
+    /** 스크랩 수 원자적 감소 */
+    public void decreaseScrapCount(Long postId) {
+        postRepository.decreaseScrapCount(postId);
     }
 
     /** 게시글 예약을 위한 Post 조회 */

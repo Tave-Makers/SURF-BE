@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willAnswer;
 
 /**
  * ScrapService.addScrap 멱등성/동시성 회귀 테스트.
@@ -121,12 +122,12 @@ class ScrapAddConcurrencyTest {
         given(postGetService.getPost(anyLong()))
                 .willAnswer(inv -> loadInReadTx(Post.class, inv.getArgument(0)));
 
-        // scrapCount 원자적 증가(version 기반 UPDATE)는 실제 PostRepository로 위임해 실제 DB 상태를 반영한다.
+        // scrapCount 원자적 증가(UPDATE)는 실제 PostRepository로 위임해 실제 DB 상태를 반영한다.
         // @Modifying UPDATE는 활성 트랜잭션을 요구하는데, addScrap이 연 트랜잭션 안에서 호출되므로 그대로 참여한다.
-        given(postGetService.findVersionById(anyLong()))
-                .willAnswer(inv -> postRepository.findVersionById(inv.getArgument(0)));
-        given(postGetService.increaseScrapCount(anyLong(), anyLong()))
-                .willAnswer(inv -> postRepository.increaseScrapCount(inv.getArgument(0), inv.getArgument(1)));
+        willAnswer(inv -> {
+            postRepository.increaseScrapCount(inv.getArgument(0));
+            return null;
+        }).given(postGetService).increaseScrapCount(anyLong());
     }
 
     /** mock 응답용: 새 읽기 트랜잭션에서 엔티티를 로드해 detached로 반환한다. */

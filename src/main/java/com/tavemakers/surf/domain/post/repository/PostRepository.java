@@ -24,28 +24,27 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Slice<Post> findByMemberId(Long memberId, Pageable pageable);
 
-    @Query("select p.version from Post p where p.id = :id")
-    Long findVersionById(@Param("id") Long id);
-
+    /** 스크랩 수 원자적 증가 (동시 요청 lost update 방지) */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.scrapCount = p.scrapCount + 1, p.version = p.version + 1 " +
-            "where p.id = :id and p.version = :version")
-    int increaseScrapCount(@Param("id") Long id, @Param("version") Long version);
+    @Query("update Post p set p.scrapCount = p.scrapCount + 1 where p.id = :id")
+    void increaseScrapCount(@Param("id") Long id);
 
+    /** 스크랩 수 원자적 감소 (0 미만 방지) */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.scrapCount = p.scrapCount - 1, p.version = p.version + 1 " +
-            "where p.id = :id and p.version = :version and p.scrapCount > 0")
-    int decreaseScrapCount(@Param("id") Long id, @Param("version") Long version);
+    @Query("update Post p set p.scrapCount = p.scrapCount - 1 " +
+            "where p.id = :id and p.scrapCount > 0")
+    void decreaseScrapCount(@Param("id") Long id);
 
+    /** 좋아요 수 원자적 증가 (동시 요청 lost update 방지) */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.likeCount = p.likeCount + 1, p.version = p.version + 1 " +
-            "where p.id = :id and p.version = :version")
-    int increaseLikeCount(@Param("id") Long postId, @Param("version") Long version);
+    @Query("update Post p set p.likeCount = p.likeCount + 1 where p.id = :id")
+    void increaseLikeCount(@Param("id") Long postId);
 
+    /** 좋아요 수 원자적 감소 (0 미만 방지) */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Post p set p.likeCount = p.likeCount - 1, p.version   = p.version + 1" +
-            " where p.id = :id and p.version = :version and p.likeCount > 0")
-    int decreaseLikeCount(@Param("id") Long postId, @Param("version") Long version);
+    @Query("update Post p set p.likeCount = p.likeCount - 1" +
+            " where p.id = :id and p.likeCount > 0")
+    void decreaseLikeCount(@Param("id") Long postId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Post p SET p.likeCount = GREATEST(p.likeCount - 1, 0) WHERE p.id IN :postIds")
