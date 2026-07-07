@@ -23,6 +23,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
   
     Optional<Member> findByEmail(String email);
 
+    /** 통합(계정 매칭) 판단 기준 — 온보딩 입력 전화번호로 기존 회원 조회 (Phase 3, §3.5). */
+    Optional<Member> findByPhoneNumber(String phoneNumber);
+
     //현재 활동 중 + 특정 이름을 가진 회원 리스트 반환
     List<Member> findByActivityStatusAndNameAndStatusNot(Boolean activityStatus, String name, MemberStatus status);
 

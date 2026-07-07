@@ -2,6 +2,9 @@ package com.tavemakers.surf.global.common.advice;
 
 import com.tavemakers.surf.domain.auth.common.exception.EmailConflictException;
 import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.domain.member.exception.AccountIntegrationAvailableException;
+import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
+import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.global.common.exception.BaseException;
 import com.tavemakers.surf.global.common.exception.ErrorCode;
 import com.tavemakers.surf.global.common.exception.ErrorDetail;
@@ -42,6 +45,21 @@ public class GlobalExceptionHandler {
         logWarning(e, e.getStatus().value());
         Map<String, String> data = Map.of("existingProvider", e.getExistingProvider().name());
         return responseException(e.getStatus(), e.getMessage(), data);
+    }
+
+    /** 온보딩 통합 필요 감지 (case B, §3.5). message 로 프론트가 분기하며, integrationToken 등 data 페이로드는 Phase 4 에서 추가한다. */
+    @ExceptionHandler(AccountIntegrationAvailableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccountIntegrationAvailable(AccountIntegrationAvailableException e) {
+        logWarning(e, e.getStatus().value());
+        return responseException(e.getStatus(), "ACCOUNT_INTEGRATION_REQUIRED", null);
+    }
+
+    /** 온보딩 부분 일치 차단 (case C, §3.5 / §3.6.2). 어느 필드가 일치했는지는 노출하지 않는다(계정 존재 유추 방지). */
+    @ExceptionHandler({EmailAlreadyUsedException.class, PhoneAlreadyUsedException.class})
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleOnboardingConflict(BaseException e) {
+        logWarning(e, e.getStatus().value());
+        Map<String, String> data = Map.of("reason", "EMAIL_OR_PHONE_PARTIAL_MATCH");
+        return responseException(e.getStatus(), "ACCOUNT_CONFLICT_BLOCKED", data);
     }
 
     @ExceptionHandler(BaseException.class)
