@@ -82,12 +82,17 @@ R5는 정적 근사치다(직접 의존만 탐지). 간접 호출은 PR 리뷰(a
 계정 삭제(제명)는 "전부 성공 또는 전부 롤백"이어야 하므로 정합성이 결합도보다 우선한다.
 AFTER_COMMIT 비동기 이벤트로 내부 정리를 하면 회원 row는 지워졌는데 리스너 실패 시 고아 데이터가
 남아 되돌릴 수 없다 → 채택하지 않는다.
-- 내부 독립 정리(badge/notification/deviceToken/score/letter/activity/commentMention/recentSearch):
-  `MemberWithdrawnEvent`를 트랜잭션 안에서 발행하고 각 도메인이 **동기 `@EventListener`**(같은 트랜잭션)로
+- 내부 독립 정리(badge/notification/deviceToken/score/letter/activity/commentMention):
+  `MemberDismissedEvent`를 트랜잭션 안에서 발행하고 각 도메인이 **동기 `@EventListener`**(같은 트랜잭션)로
   자기 데이터를 삭제. 예외 시 전체 롤백. member가 타 도메인을 컴파일 타임에 의존하지 않게 됨.
-- 외부 효과(Kakao/Apple 연결 해제): AFTER_COMMIT `@Async` (이미 적용, 외부·비트랜잭션·best-effort라 적합).
-- 순서·데이터 의존부(deleteOwnedPosts → deletedPostIds → 댓글 정리, 팀 리더 위임): 명시적
-  오케스트레이션 유지하되 Repository 직접 주입을 각 도메인 cleanup 서비스 호출로 교체(R3 위반 제거).
+  (이벤트명 주의: withdraw/expel에서는 발행되지 않으므로 Withdrawn이 아니라 Dismissed)
+- 외부 효과: Kakao/Apple 연결 해제는 `MemberDisconnectedEvent`(AFTER_COMMIT `@Async`),
+  Redis 최근검색 정리는 `RecentSearchCleanupListener`(AFTER_COMMIT) — 외부·비트랜잭션·best-effort.
+- 순서·데이터 의존부: 팀 리더 위임 → team의 `TeamMemberCleanupService`(팀 삭제 부속 정리는
+  `TeamDeletedEvent` 동기 리스너), 게시글 일괄 삭제 → `PostDeleteUsecase.deleteAllOwnedBy`
+  (deletedPostIds 반환 → 댓글 정리에 전달). Repository 직접 주입 제거 (R3 -33건).
+- R6 규칙 정교화: 금지 대상은 `@Async` + plain `@EventListener`(커밋 전 별도 스레드로 새는 부수효과).
+  동기 인-트랜잭션 정리 리스너는 허용. **✅ 구현 완료 (889d4f87)**
 
 **D2. 탈퇴/퇴출 회원 연관 데이터 = 현행 정책 유지 (의도된 설계)**
 expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원") + soft delete만 하고 게시글/댓글/
