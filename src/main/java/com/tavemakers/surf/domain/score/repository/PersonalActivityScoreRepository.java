@@ -42,7 +42,10 @@ public interface PersonalActivityScoreRepository extends JpaRepository<PersonalA
     @Query("delete from PersonalActivityScore s where s.member.id = :memberId")
     void deleteByMemberId(@Param("memberId") Long memberId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    // clearAutomatically 금지: 팀 순회 루프(TeamMemberCleanupService) 안의 TeamDeletedEvent
+    // 리스너가 호출하므로, clear하면 아직 순회하지 않은 팀이 detach되어 리더 위임
+    // dirty checking이 유실된다. flush는 선행 pending 반영을 위해 유지.
+    @Modifying(flushAutomatically = true)
     @Query("delete from PersonalActivityScore s where s.team.id = :teamId")
     void deleteByTeamId(@Param("teamId") Long teamId);
 

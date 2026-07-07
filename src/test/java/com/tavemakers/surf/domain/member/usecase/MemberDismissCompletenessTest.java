@@ -74,17 +74,18 @@ import static org.mockito.BDDMockito.given;
  * 검증은 항상 memberId 기준으로 조회한다.
  */
 @DataJpaTest
-// 리스너 등록 순서를 의도적으로 "적대적 순열"(Score 먼저, clearAutomatically 벌크 삭제의 Comment
-// 나중)로 배치한다 — 리스너 정합성이 빈 등록 순서에 의존하면(예: 파생 삭제의 지연 flush 큐가 뒤
-// 리스너의 clear 로 취소) 이 테스트가 실패해 회귀를 잡는다. 알파벳순으로 "정리"하지 말 것.
+// 리스너 등록 순서를 의도적으로 "적대적 순열"로 배치한다: Score 직후에 Comment(clearAutomatically
+// 벌크 삭제)가 **인접**해야 감지력이 있다 — Score 가 파생 삭제(지연 flush 큐잉)로 회귀하면 바로 뒤
+// Comment 의 clear 가 큐를 취소해 이 테스트가 실패한다. 사이에 flushAutomatically 벌크 리스너가
+// 끼면 큐가 미리 flush 되어 감지하지 못하므로, 인접 배치를 유지하고 알파벳순으로 "정리"하지 말 것.
 @Import({
         MemberDismissUsecase.class,
         TeamMemberCleanupService.class,
         ScoreMemberDismissListener.class,
+        CommentMemberDismissListener.class,
         NotificationMemberDismissListener.class,
         BadgeMemberDismissListener.class,
         LetterMemberDismissListener.class,
-        CommentMemberDismissListener.class,
         // NOTE: ActivityMemberDismissListener 는 의도적으로 제외한다.
         // ActivityRecord 엔티티의 컬럼 정의(columnDefinition = "TINYINT(1) default 0")를 H2 2.x 가
         // MODE=MySQL 에서도 파싱하지 못해 activity_record 테이블 DDL 생성이 실패한다(운영 MySQL 에서는 정상).
