@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.badge.application.event;
 
 import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

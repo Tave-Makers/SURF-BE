@@ -1,0 +1,46 @@
+package com.tavemakers.surf.domain.member.domain.service;
+
+import com.tavemakers.surf.domain.member.presentation.dto.request.ProfileUpdateReqDTO;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
+import com.tavemakers.surf.domain.member.domain.exception.MemberNotFoundException;
+import com.tavemakers.surf.domain.member.domain.repository.MemberRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class MemberPatchService {
+
+    private final MemberRepository memberRepository;
+
+    /** 회원 프로필 정보 수정 */
+    @Transactional
+    public void updateProfile(Member member, ProfileUpdateReqDTO dto) {
+        member.updateProfile(dto);
+    }
+
+    @Transactional
+    public void grantRole(Member member, MemberRole role) {
+        //유저 권한 부여
+        member.exchangeRole(role);
+    }
+
+    /** 약관 동의 처리 */
+    @Transactional
+    public void agreeTerms(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(MemberNotFoundException::new);
+        member.agreeTerms();
+    }
+
+    /** 여러 회원의 권한을 일괄 변경 version 2*/
+    @Transactional
+    public void grantRoleV2(List<Member> members, MemberRole role) {
+        members.forEach(member -> member.exchangeRole(role));
+
+    }
+}

@@ -9,8 +9,8 @@ import com.tavemakers.surf.domain.auth.common.presentation.dto.LoginPayloadResDT
 import com.tavemakers.surf.domain.auth.common.presentation.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.auth.common.domain.service.LoginTokenIssuer;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberUpsertService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.service.MemberUpsertService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

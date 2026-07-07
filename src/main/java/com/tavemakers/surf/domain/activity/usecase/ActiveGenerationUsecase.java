@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.activity.usecase;
 import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveGenerationMemberResDTO;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationPutService;
-import com.tavemakers.surf.domain.member.service.MemberGenerationSyncService;
+import com.tavemakers.surf.domain.member.domain.service.MemberGenerationSyncService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

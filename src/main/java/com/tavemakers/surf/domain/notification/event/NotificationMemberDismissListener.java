@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.notification.event;
 
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import com.tavemakers.surf.domain.notification.repository.DeviceTokenRepository;
 import com.tavemakers.surf.domain.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;

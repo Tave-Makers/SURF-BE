@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.score.dto.response;
 
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.enums.Part;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.Part;
 
 import java.math.BigDecimal;
 

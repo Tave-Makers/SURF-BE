@@ -5,13 +5,13 @@ import com.tavemakers.surf.domain.badge.domain.entity.MemberBadge;
 import com.tavemakers.surf.domain.badge.domain.exception.MemberBadgeAlreadyExistsException;
 import com.tavemakers.surf.domain.badge.domain.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import com.tavemakers.surf.domain.badge.domain.exception.BadgeNotFoundException;
-import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
+import com.tavemakers.surf.domain.member.domain.exception.MemberNotFoundException;
 
 import java.util.List;
 

@@ -4,7 +4,7 @@ import com.tavemakers.surf.domain.auth.common.presentation.dto.ClientType;
 import com.tavemakers.surf.domain.auth.common.presentation.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.presentation.dto.LoginResDTO;
 import com.tavemakers.surf.domain.auth.common.presentation.dto.OAuthUserInfoDTO;
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.global.jwt.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

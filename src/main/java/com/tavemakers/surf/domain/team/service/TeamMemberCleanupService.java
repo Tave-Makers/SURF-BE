@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.team.service;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamMember;
 import com.tavemakers.surf.domain.team.event.TeamDeletedEvent;

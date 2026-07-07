@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.notification.service;
 
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.notification.dto.response.NotificationResDTO;
 import com.tavemakers.surf.domain.notification.entity.Notification;
 import lombok.RequiredArgsConstructor;

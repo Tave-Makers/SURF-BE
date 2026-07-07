@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.notification.entity.Notification;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.notification.event.NotificationCreatedEvent;

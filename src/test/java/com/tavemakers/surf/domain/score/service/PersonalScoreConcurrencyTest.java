@@ -1,10 +1,10 @@
 package com.tavemakers.surf.domain.score.service;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.entity.enums.MemberType;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberType;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.support.ConcurrencyTestHelper;

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.schedule.service;
 
-import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
 import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;

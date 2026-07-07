@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.team.dto.response;
 
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamType;
-import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
+import com.tavemakers.surf.domain.member.presentation.dto.response.TrackResDTO;
 
 import java.util.List;
 

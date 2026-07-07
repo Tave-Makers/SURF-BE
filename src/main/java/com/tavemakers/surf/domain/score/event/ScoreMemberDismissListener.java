@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.event;
 
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.domain.team.event.TeamDeletedEvent;
 import lombok.RequiredArgsConstructor;

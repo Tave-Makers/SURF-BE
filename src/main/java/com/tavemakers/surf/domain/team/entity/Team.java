@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.team.entity;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.team.exception.AlreadyExistingTeamMemberException;
 import com.tavemakers.surf.domain.team.exception.CannotRemoveTeamLeaderException;
 import com.tavemakers.surf.domain.team.exception.TeamMemberNotFoundException;

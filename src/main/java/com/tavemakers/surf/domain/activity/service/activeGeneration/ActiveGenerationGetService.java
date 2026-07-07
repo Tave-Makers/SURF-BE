@@ -5,7 +5,7 @@ import com.tavemakers.surf.domain.activity.dto.activeGeneration.response.ActiveG
 import com.tavemakers.surf.domain.activity.entity.ActiveGeneration;
 import com.tavemakers.surf.domain.activity.exception.ActiveGenerationNotInitializedException;
 import com.tavemakers.surf.domain.activity.repository.ActiveGenerationRepository;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

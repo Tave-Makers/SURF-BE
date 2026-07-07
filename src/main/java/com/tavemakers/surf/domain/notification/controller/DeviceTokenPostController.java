@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.notification.controller;
 
 import static com.tavemakers.surf.domain.notification.controller.ResponseMessage.DEVICE_TOKEN_SUCCESS;
 
-import com.tavemakers.surf.domain.member.entity.CustomUserDetails;
+import com.tavemakers.surf.domain.member.domain.entity.CustomUserDetails;
 import com.tavemakers.surf.domain.notification.dto.request.DeviceTokenReqDTO;
 import com.tavemakers.surf.domain.notification.service.DeviceTokenRegisterService;
 import com.tavemakers.surf.global.common.response.ApiResponse;

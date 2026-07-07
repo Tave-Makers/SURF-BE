@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.scrap.service;
 
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.exception.PostNotFoundException;

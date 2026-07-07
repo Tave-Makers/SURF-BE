@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.post.dto.response;
 
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.post.entity.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

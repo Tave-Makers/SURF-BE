@@ -3,9 +3,9 @@ package com.tavemakers.surf.domain.comment.service;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.entity.CommentMention;
 import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.comment.dto.response.MentionResDTO;
 import com.tavemakers.surf.domain.comment.dto.response.MentionSearchResDTO;
 

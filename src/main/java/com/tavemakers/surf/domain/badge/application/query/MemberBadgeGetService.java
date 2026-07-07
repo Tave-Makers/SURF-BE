@@ -4,7 +4,7 @@ import com.tavemakers.surf.domain.badge.presentation.dto.response.MemberOwnedBad
 import com.tavemakers.surf.domain.badge.domain.entity.MemberBadge;
 import com.tavemakers.surf.domain.badge.domain.repository.BadgeRepository;
 import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.comment.entity;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;

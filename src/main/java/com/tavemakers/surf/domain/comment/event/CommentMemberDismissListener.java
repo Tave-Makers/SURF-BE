@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.comment.event;
 
 import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

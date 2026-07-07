@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.dto.response;
 
-import com.tavemakers.surf.domain.member.dto.response.MemberLikeListResDTO;
+import com.tavemakers.surf.domain.member.presentation.dto.response.MemberLikeListResDTO;
 import java.util.List;
 import lombok.Builder;
 

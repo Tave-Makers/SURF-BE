@@ -5,8 +5,8 @@ import com.tavemakers.surf.domain.auth.common.presentation.dto.RefreshTokenResDT
 import com.tavemakers.surf.domain.auth.common.domain.exception.TokenErrorMessage;
 import com.tavemakers.surf.domain.auth.common.domain.service.RefreshTokenService;
 import com.tavemakers.surf.domain.auth.common.domain.service.RefreshTokenService.RotateResult;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;

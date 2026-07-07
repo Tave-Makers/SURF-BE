@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.badge.domain.entity;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

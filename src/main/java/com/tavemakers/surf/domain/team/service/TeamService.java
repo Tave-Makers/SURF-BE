@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.team.service;
 
-import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
+import com.tavemakers.surf.domain.member.domain.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.team.dto.request.TeamUpsertReqDTO;
 import com.tavemakers.surf.domain.team.dto.response.*;
 import com.tavemakers.surf.domain.team.entity.Team;
@@ -11,11 +11,11 @@ import com.tavemakers.surf.domain.team.exception.TeamLeaderNotInMemberException;
 import com.tavemakers.surf.domain.team.exception.TeamMemberDuplicatedException;
 import com.tavemakers.surf.domain.team.exception.TeamNotFoundException;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
-import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.Track;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
-import com.tavemakers.surf.domain.member.service.TrackGetService;
+import com.tavemakers.surf.domain.member.presentation.dto.response.TrackResDTO;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Track;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
+import com.tavemakers.surf.domain.member.application.query.TrackGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

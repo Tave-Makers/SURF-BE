@@ -8,8 +8,8 @@ import com.tavemakers.surf.domain.comment.exception.CommentLikeAlreadyExistsExce
 import com.tavemakers.surf.domain.comment.exception.CommentNotFoundException;
 import com.tavemakers.surf.domain.comment.repository.CommentLikeRepository;
 import com.tavemakers.surf.domain.comment.repository.CommentRepository;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
 

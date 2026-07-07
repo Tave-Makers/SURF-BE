@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.repository;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.post.entity.PostLike;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;

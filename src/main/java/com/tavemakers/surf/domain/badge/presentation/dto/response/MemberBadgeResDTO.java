@@ -1,9 +1,9 @@
 package com.tavemakers.surf.domain.badge.presentation.dto.response;
 
 import com.tavemakers.surf.domain.badge.domain.entity.MemberBadge;
-import com.tavemakers.surf.domain.member.dto.response.TrackResDTO;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.Track;
+import com.tavemakers.surf.domain.member.presentation.dto.response.TrackResDTO;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Track;
 
 import java.time.LocalDate;
 import java.util.Comparator;

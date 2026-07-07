@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.activity.dto.activeGeneration.response;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 
 public record ActiveGenerationMemberResDTO(
         Long memberId,

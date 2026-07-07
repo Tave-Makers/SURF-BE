@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.comment.dto.response;
 
 import com.tavemakers.surf.domain.comment.entity.Comment;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;

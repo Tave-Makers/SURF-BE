@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.service;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.domain.team.entity.Team;

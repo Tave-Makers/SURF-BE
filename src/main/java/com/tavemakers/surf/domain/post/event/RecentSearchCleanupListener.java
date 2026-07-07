@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.event;
 
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import com.tavemakers.surf.domain.post.service.search.RecentSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

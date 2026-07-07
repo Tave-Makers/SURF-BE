@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.post.service.like;
 
 import com.tavemakers.surf.domain.board.entity.BoardType;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.PostLike;
 import com.tavemakers.surf.domain.post.event.PostLikedEvent;

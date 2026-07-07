@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.service.like;
 
-import com.tavemakers.surf.domain.member.dto.response.MemberLikeListResDTO;
+import com.tavemakers.surf.domain.member.presentation.dto.response.MemberLikeListResDTO;
 import com.tavemakers.surf.domain.post.dto.response.PostLikeListResDTO;
 import com.tavemakers.surf.domain.post.repository.PostLikeRepository;
 import java.util.Collection;

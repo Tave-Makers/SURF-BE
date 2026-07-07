@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.comment.dto.response;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "멘션 검색 시 반환되는 회원 정보 응답 DTO")

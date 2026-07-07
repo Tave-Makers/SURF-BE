@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.notification.service;
 
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.post.entity.Post;
 import java.util.List;

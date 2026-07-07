@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.comment.dto.response;
 
-import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "댓글 좋아요한 회원 조회를 위한 응답 DTO")

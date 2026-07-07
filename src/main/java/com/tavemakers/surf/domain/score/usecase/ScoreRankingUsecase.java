@@ -1,10 +1,10 @@
 package com.tavemakers.surf.domain.score.usecase;
 
 import com.tavemakers.surf.domain.activity.dto.activityRecord.response.TeamMemberScoreListResDTO;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.Track;
-import com.tavemakers.surf.domain.member.entity.enums.Part;
-import com.tavemakers.surf.domain.member.service.MemberGetService;
+import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.domain.entity.Track;
+import com.tavemakers.surf.domain.member.domain.entity.enums.Part;
+import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.score.dto.response.MemberScoreRankingResDTO;
 import com.tavemakers.surf.domain.score.dto.response.MemberScoreRankingSliceResDTO;
 import com.tavemakers.surf.domain.score.dto.response.TeamScoreRankingResDTO;
