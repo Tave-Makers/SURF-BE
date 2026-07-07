@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.service;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;

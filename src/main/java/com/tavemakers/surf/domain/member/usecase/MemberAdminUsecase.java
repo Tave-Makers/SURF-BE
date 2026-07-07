@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.usecase;
 
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.common.domain.service.RefreshTokenService;
 import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.domain.member.dto.request.PasswordReqDTO;

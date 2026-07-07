@@ -1,6 +1,6 @@
 package com.tavemakers.surf.global.config;
 
-import com.tavemakers.surf.domain.auth.common.resolver.ClientTypeArgumentResolver;
+import com.tavemakers.surf.domain.auth.common.presentation.resolver.ClientTypeArgumentResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;

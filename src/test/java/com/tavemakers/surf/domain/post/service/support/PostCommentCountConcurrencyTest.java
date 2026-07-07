@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.service.support;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;

@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.repository;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

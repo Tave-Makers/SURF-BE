@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.presentation.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;

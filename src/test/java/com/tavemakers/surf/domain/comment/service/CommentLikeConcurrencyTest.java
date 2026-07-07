@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.comment.service;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.exception.CommentLikeAlreadyExistsException;
 import com.tavemakers.surf.domain.member.entity.Member;

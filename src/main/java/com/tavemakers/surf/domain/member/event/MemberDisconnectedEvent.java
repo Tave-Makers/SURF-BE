@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.event;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 
 /**
  * 회원 연결 해제 이벤트 — 탈퇴/퇴출/제명 시 발행.

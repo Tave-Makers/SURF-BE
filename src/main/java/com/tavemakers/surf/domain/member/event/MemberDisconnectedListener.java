@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.member.event;
 
-import com.tavemakers.surf.domain.auth.apple.service.AppleApiClient;
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
+import com.tavemakers.surf.domain.auth.apple.infrastructure.AppleApiClient;
+import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
+import com.tavemakers.surf.domain.auth.common.domain.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
