@@ -1,65 +1,56 @@
 package com.tavemakers.surf.domain.member.usecase;
 
-import com.tavemakers.surf.domain.activity.repository.ActivityRecordRepository;
-import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.comment.service.CommentLikeService;
-import com.tavemakers.surf.domain.comment.repository.CommentMentionRepository;
-import com.tavemakers.surf.domain.letter.repository.LetterRepository;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberBlacklistActionType;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
 import com.tavemakers.surf.domain.member.exception.MemberDismissNotAllowedException;
 import com.tavemakers.surf.domain.member.repository.CareerRepository;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
 import com.tavemakers.surf.domain.member.service.MemberBlacklistCreateService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
-import com.tavemakers.surf.domain.notification.repository.DeviceTokenRepository;
-import com.tavemakers.surf.domain.notification.repository.NotificationRepository;
-import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.post.PostDeleteUsecase;
-import com.tavemakers.surf.domain.post.service.search.RecentSearchService;
-import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.domain.scrap.service.ScrapService;
-import com.tavemakers.surf.domain.team.entity.Team;
-import com.tavemakers.surf.domain.team.entity.TeamMember;
-import com.tavemakers.surf.domain.team.repository.TeamMemberRepository;
-import com.tavemakers.surf.domain.team.repository.TeamRepository;
-import java.util.List;
+import com.tavemakers.surf.domain.team.service.TeamMemberCleanupService;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 회원 제명 오케스트레이션 (D1 설계 — docs/refactoring-plan.md).
+ *
+ * <p>제명은 "전부 성공 또는 전부 롤백"이어야 하므로 단일 트랜잭션을 유지한다.
+ * <ul>
+ *   <li>순서·데이터 의존이 있는 정리(팀 리더 위임, 게시글 삭제 → deletedPostIds → 댓글 정리,
+ *       좋아요/스크랩 카운트 정리)는 여기서 명시적으로 호출한다.</li>
+ *   <li>독립적인 정리(멘션/쪽지/배지/활동기록/알림/점수)는 {@link MemberDismissedEvent}를 받은
+ *       각 도메인의 동기 리스너가 같은 트랜잭션에서 수행한다 — member가 해당 도메인들을
+ *       컴파일 타임에 의존하지 않는다.</li>
+ *   <li>외부 효과(Kakao/Apple 연결 해제, Redis 검색기록)는 AFTER_COMMIT 리스너가 커밋 후 수행한다.</li>
+ * </ul>
+ */
 @Service
 @RequiredArgsConstructor
 public class MemberDismissUsecase {
 
     private final MemberRepository memberRepository;
-    private final TeamRepository teamRepository;
-    private final TeamMemberRepository teamMemberRepository;
     private final CareerRepository careerRepository;
     private final TrackRepository trackRepository;
-    private final ActivityRecordRepository activityRecordRepository;
-    private final NotificationRepository notificationRepository;
-    private final DeviceTokenRepository deviceTokenRepository;
-    private final MemberBadgeRepository memberBadgeRepository;
-    private final PersonalActivityScoreRepository personalActivityScoreRepository;
-    private final LetterRepository letterRepository;
-    private final CommentMentionRepository commentMentionRepository;
     private final MemberBlacklistCreateService memberBlacklistCreateService;
     private final MemberWithdrawService memberWithdrawService;
-    private final RecentSearchService recentSearchService;
-    private final PostRepository postRepository;
+    private final TeamMemberCleanupService teamMemberCleanupService;
     private final PostDeleteUsecase postDeleteUsecase;
     private final PostLikeService postLikeService;
     private final ScrapService scrapService;
     private final CommentDeleteService commentDeleteService;
     private final CommentLikeService commentLikeService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 회원 제명 오케스트레이션 — 블랙리스트 등록, 연결 해제, 데이터 정리 */
     @Transactional
@@ -67,25 +58,19 @@ public class MemberDismissUsecase {
         validateDismissible(member);
 
         memberBlacklistCreateService.createIfAbsent(member, MemberBlacklistActionType.DISMISS, processedBy);
-        memberWithdrawService.disconnectMember(member);
-        recentSearchService.clearAll(member.getId());
+        memberWithdrawService.disconnectMember(member); // 외부 연결 해제 — AFTER_COMMIT 리스너가 수행
 
-        cleanupTeams(member);
-        teamMemberRepository.deleteAllByMemberId(member.getId());
+        teamMemberCleanupService.cleanupOnDismiss(member);
 
-        Set<Long> deletedPostIds = deleteOwnedPosts(member.getId());
+        Set<Long> deletedPostIds = postDeleteUsecase.deleteAllOwnedBy(member.getId());
         postLikeService.unlikeAllByMemberId(member.getId());
         scrapService.removeAllByMemberId(member.getId());
         commentLikeService.removeAllByMemberId(member.getId());
         commentDeleteService.deleteAllByMemberId(member.getId(), deletedPostIds);
-        commentMentionRepository.deleteAllByMentionedMemberId(member.getId());
 
-        letterRepository.deleteByMemberId(member.getId());
-        memberBadgeRepository.deleteByMemberId(member.getId());
-        activityRecordRepository.deleteByMemberId(member.getId());
-        notificationRepository.deleteByMemberId(member.getId());
-        deviceTokenRepository.deleteByMemberId(member.getId());
-        personalActivityScoreRepository.deleteByMemberId(member.getId());
+        // 독립 정리(멘션/쪽지/배지/활동기록/알림/점수)는 동기 리스너가 같은 트랜잭션에서 수행
+        eventPublisher.publishEvent(new MemberDismissedEvent(member.getId()));
+
         careerRepository.deleteAll(careerRepository.findByMemberId(member.getId()));
         trackRepository.deleteAll(trackRepository.findByMemberId(member.getId()));
         memberRepository.delete(member);
@@ -95,36 +80,5 @@ public class MemberDismissUsecase {
         if (member.getStatus() != MemberStatus.APPROVED) {
             throw new MemberDismissNotAllowedException();
         }
-    }
-
-    private void cleanupTeams(Member member) {
-        for (Team team : teamRepository.findAllByMemberIdForDismissal(member.getId())) {
-            List<Member> otherMembers = team.getTeamMembers().stream()
-                    .map(TeamMember::getMember)
-                    .filter(teamMember -> !teamMember.getId().equals(member.getId()))
-                    .toList();
-
-            if (team.getLeader().getId().equals(member.getId())) {
-                if (otherMembers.isEmpty()) {
-                    activityRecordRepository.deleteByTeamId(team.getId());
-                    personalActivityScoreRepository.deleteByTeamId(team.getId());
-                    teamRepository.delete(team);
-                    continue;
-                }
-                team.changeLeader(otherMembers.get(0));
-            }
-
-            team.removeMember(member.getId());
-        }
-    }
-
-    private Set<Long> deleteOwnedPosts(Long memberId) {
-        List<Post> posts = postRepository.findAllByMemberId(memberId);
-
-        for (Post post : posts) {
-            postDeleteUsecase.forceDeletePost(post);
-        }
-
-        return posts.stream().map(Post::getId).collect(Collectors.toSet());
     }
 }

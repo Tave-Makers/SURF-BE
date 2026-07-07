@@ -2,9 +2,13 @@ package com.tavemakers.surf.domain.post.service.post;
 
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
 import com.tavemakers.surf.domain.schedule.service.ScheduleDeleteService;
 import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +20,7 @@ public class PostDeleteUsecase {
 
     private final PostDeleteService postDeleteService;
     private final PostGetService postGetService;
+    private final PostRepository postRepository;
     private final CommentDeleteService commentDeleteService;
     private final ScheduleDeleteService scheduleDeleteService;
     private final ScrapGetService scrapGetService;
@@ -44,5 +49,15 @@ public class PostDeleteUsecase {
         scrapGetService.deleteByPostId(post.getId());
         commentDeleteService.deleteAllByPostId(post.getId());
         postDeleteService.forceDeletePost(post);
+    }
+
+    /** 회원 소유 게시글 전체 강제 삭제 — dismiss 전용. 삭제된 게시글 ID 집합을 반환한다 */
+    @Transactional
+    public Set<Long> deleteAllOwnedBy(Long memberId) {
+        List<Post> posts = postRepository.findAllByMemberId(memberId);
+        for (Post post : posts) {
+            forceDeletePost(post);
+        }
+        return posts.stream().map(Post::getId).collect(Collectors.toSet());
     }
 }

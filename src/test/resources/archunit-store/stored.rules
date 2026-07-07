@@ -1,6 +1,6 @@
 #
-#Mon Jul 06 23:47:42 KST 2026
-R6\:\ \uB3C4\uBA54\uC778\ \uC774\uBCA4\uD2B8\ \uB9AC\uC2A4\uB108\uB294\ @TransactionalEventListener(AFTER_COMMIT)\uB97C\ \uC0AC\uC6A9\uD55C\uB2E4\ (plain\ @EventListener\ \uAE08\uC9C0)=73d99c81-a5d8-4dad-ad4c-e1ea2b82640b
+#Tue Jul 07 10:06:38 KST 2026
+R6\:\ \uBE44\uB3D9\uAE30(@Async)\ \uBD80\uC218\uD6A8\uACFC\ \uB9AC\uC2A4\uB108\uB294\ @TransactionalEventListener(AFTER_COMMIT)\uB97C\ \uC0AC\uC6A9\uD55C\uB2E4\ (@Async\ +\ plain\ @EventListener\ \uAE08\uC9C0)=257ec6be-a245-4db1-a7ac-db987747c04f
 R3\:\ \uD0C0\ \uB3C4\uBA54\uC778\uC758\ Repository\uB97C\ \uC9C1\uC811\ \uCC38\uC870\uD560\ \uC218\ \uC5C6\uB2E4=8fc1840e-b747-47ca-a329-3953aebca7f6
 R1a\:\ Controller\uB294\ Repository\uC5D0\ \uC9C1\uC811\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4=4f29391d-1bff-4c3b-a775-83a141d6d4fe
 R5\:\ \uD2B8\uB79C\uC7AD\uC158\uC744\ \uC5EC\uB294\ \uD074\uB798\uC2A4\uB294\ \uC678\uBD80\ API\ \uD074\uB77C\uC774\uC5B8\uD2B8\uC5D0\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4\ (\uCEE4\uBC0B\ \uD6C4\ @TransactionalEventListener(AFTER_COMMIT)\uB85C\ \uBD84\uB9AC)=ade82c0c-2d7e-4f41-8d3f-4d76ba65cdb7

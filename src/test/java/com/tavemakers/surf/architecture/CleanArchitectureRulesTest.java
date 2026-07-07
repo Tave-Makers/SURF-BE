@@ -12,6 +12,7 @@ import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.freeze.FreezingArchRule;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
@@ -162,13 +163,17 @@ public class CleanArchitectureRulesTest {
                     .as("R5: 트랜잭션을 여는 클래스는 외부 API 클라이언트에 의존할 수 없다 "
                             + "(커밋 후 @TransactionalEventListener(AFTER_COMMIT)로 분리)"));
 
-    // ── R6: 도메인 이벤트 리스너는 @TransactionalEventListener로 통일 ────────
+    // ── R6: 비동기 부수효과 리스너는 @TransactionalEventListener로 통일 ──────
+    // 동기 인-트랜잭션 정리 리스너(plain @EventListener, @Async 없음)는 발행자 트랜잭션에
+    // 참여해 함께 롤백되므로 허용한다 (D1 결정 — docs/refactoring-plan.md).
+    // 금지 대상은 커밋 전에 별도 스레드로 새는 부수효과(@Async + plain @EventListener)다.
 
     @ArchTest
-    static final ArchRule R6_도메인_내_plain_EventListener_금지 = FreezingArchRule.freeze(
+    static final ArchRule R6_비동기_plain_EventListener_금지 = FreezingArchRule.freeze(
             noMethods().that().areDeclaredInClassesThat()
                     .resideInAPackage("com.tavemakers.surf.domain..")
+                    .and().areAnnotatedWith(Async.class)
                     .should().beAnnotatedWith(EventListener.class)
-                    .as("R6: 도메인 이벤트 리스너는 @TransactionalEventListener(AFTER_COMMIT)를 사용한다 "
-                            + "(plain @EventListener 금지)"));
+                    .as("R6: 비동기(@Async) 부수효과 리스너는 @TransactionalEventListener(AFTER_COMMIT)를 "
+                            + "사용한다 (@Async + plain @EventListener 금지)"));
 }
