@@ -23,7 +23,7 @@ public class TrackService {
     private final MemberGenerationSyncService memberGenerationSyncService;
 
     /** 트랙 추가 (관리자만 가능) */
-    @PreAuthorize("hasAnyRole('ROOT','PRESIDENT','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','PRESIDENT','MANAGER')")
     @Transactional
     public void addTrackToMember(Long memberId, Integer generation, Part part) {
         Member member = memberRepository.findById(memberId)
@@ -33,7 +33,7 @@ public class TrackService {
     }
 
     /** 트랙 수정 (관리자만 가능) */
-    @PreAuthorize("hasAnyRole('ROOT','PRESIDENT','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','PRESIDENT','MANAGER')")
     @Transactional
     public void updateTrack(Long trackId, Integer generation, Part part) {
         Track track = trackRepository.findById(trackId)
@@ -43,7 +43,7 @@ public class TrackService {
     }
 
     /** 트랙 삭제 (관리자만 가능) */
-    @PreAuthorize("hasAnyRole('ROOT','PRESIDENT','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN','PRESIDENT','MANAGER')")
     @Transactional
     public void deleteTrack(Long trackId) {
         Track track = trackRepository.findById(trackId)
