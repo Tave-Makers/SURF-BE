@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.schedule.entity;
 
 import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
 import com.tavemakers.surf.domain.schedule.dto.request.ScheduleUpdateReqDTO;
-import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.schedule.exception.ScheduleTimeException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.Column;

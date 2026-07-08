@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.scrap.presentation.controller;
 
-import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
+import com.tavemakers.surf.domain.post.presentation.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.scrap.application.usecase.ScrapUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;

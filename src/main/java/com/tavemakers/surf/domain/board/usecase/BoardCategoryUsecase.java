@@ -10,7 +10,7 @@ import com.tavemakers.surf.domain.board.exception.InvalidCategoryMappingExceptio
 import com.tavemakers.surf.domain.board.service.BoardCategoryGetService;
 import com.tavemakers.surf.domain.board.service.BoardCategoryService;
 import com.tavemakers.surf.domain.board.service.BoardGetService;
-import com.tavemakers.surf.domain.post.service.post.PostGetService;
+import com.tavemakers.surf.domain.post.application.query.PostGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

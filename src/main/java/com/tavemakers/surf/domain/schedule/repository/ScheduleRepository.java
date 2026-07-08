@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.schedule.repository;
 
-import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
 import java.time.LocalDateTime;
 import java.util.List;

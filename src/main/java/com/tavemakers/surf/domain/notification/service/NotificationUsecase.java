@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.notification.service;
 
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
-import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;

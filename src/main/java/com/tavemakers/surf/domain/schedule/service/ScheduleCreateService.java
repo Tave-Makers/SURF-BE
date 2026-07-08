@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.schedule.service;
 
 import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
-import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
 import com.tavemakers.surf.domain.schedule.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import com.tavemakers.surf.domain.comment.domain.entity.Comment;
 import com.tavemakers.surf.domain.comment.domain.repository.CommentLikeRepository;
 import com.tavemakers.surf.domain.comment.domain.repository.CommentMentionRepository;
 import com.tavemakers.surf.domain.comment.domain.repository.CommentRepository;
-import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
+import com.tavemakers.surf.domain.post.domain.service.support.PostCommentCountService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

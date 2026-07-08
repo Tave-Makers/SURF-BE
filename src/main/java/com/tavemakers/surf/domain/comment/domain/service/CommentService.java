@@ -15,9 +15,9 @@ import com.tavemakers.surf.domain.comment.domain.repository.CommentLikeRepositor
 import com.tavemakers.surf.domain.comment.domain.repository.CommentRepository;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
-import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.domain.post.service.post.PostGetService;
-import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
+import com.tavemakers.surf.domain.post.application.query.PostGetService;
+import com.tavemakers.surf.domain.post.domain.service.support.PostCommentCountService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;

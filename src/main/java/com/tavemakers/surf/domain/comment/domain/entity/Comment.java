@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.comment.domain.entity;
 
 import com.tavemakers.surf.domain.member.domain.entity.Member;
-import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
