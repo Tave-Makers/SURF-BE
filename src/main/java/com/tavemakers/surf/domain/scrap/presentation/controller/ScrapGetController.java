@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.scrap.controller;
+package com.tavemakers.surf.domain.scrap.presentation.controller;
 
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
-import com.tavemakers.surf.domain.scrap.usecase.ScrapUsecase;
+import com.tavemakers.surf.domain.scrap.application.usecase.ScrapUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,7 +14,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.scrap.controller.ResponseMessage.*;
+import static com.tavemakers.surf.domain.scrap.presentation.controller.ResponseMessage.*;
 
 @RestController
 @RequiredArgsConstructor

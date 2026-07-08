@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.scrap.usecase;
+package com.tavemakers.surf.domain.scrap.application.usecase;
 
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
-import com.tavemakers.surf.domain.scrap.service.ScrapService;
+import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;

@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.scrap.repository;
+package com.tavemakers.surf.domain.scrap.domain.repository;
 
 import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.domain.scrap.entity.Scrap;
+import com.tavemakers.surf.domain.scrap.domain.entity.Scrap;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;

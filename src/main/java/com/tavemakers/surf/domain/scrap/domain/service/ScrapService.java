@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.scrap.service;
+package com.tavemakers.surf.domain.scrap.domain.service;
 
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
@@ -6,9 +6,9 @@ import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.service.like.PostLikeGetService;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
-import com.tavemakers.surf.domain.scrap.entity.Scrap;
-import com.tavemakers.surf.domain.scrap.exception.ScrapAlreadyExistsException;
-import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
+import com.tavemakers.surf.domain.scrap.domain.entity.Scrap;
+import com.tavemakers.surf.domain.scrap.domain.exception.ScrapAlreadyExistsException;
+import com.tavemakers.surf.domain.scrap.domain.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventContext;
 import com.tavemakers.surf.global.logging.LogParam;

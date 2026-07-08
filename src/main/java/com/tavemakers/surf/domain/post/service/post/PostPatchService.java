@@ -31,7 +31,7 @@ import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
 import com.tavemakers.surf.domain.reservation.entity.Reservation;
 import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
-import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;

@@ -14,7 +14,7 @@ import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.post.PostDeleteUsecase;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.event.ScoreMemberDismissListener;
-import com.tavemakers.surf.domain.scrap.service.ScrapService;
+import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamType;
 import com.tavemakers.surf.domain.team.service.TeamMemberCleanupService;

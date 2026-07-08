@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.post.service.support;
 import com.tavemakers.surf.domain.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostLikeRepository;
-import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -12,7 +12,7 @@ import com.tavemakers.surf.domain.post.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.service.support.ViewCountService;
 import com.tavemakers.surf.domain.reservation.entity.Reservation;
 import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
-import com.tavemakers.surf.domain.scrap.service.ScrapGetService;
+import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

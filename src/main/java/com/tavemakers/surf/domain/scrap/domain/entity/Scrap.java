@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.scrap.entity;
+package com.tavemakers.surf.domain.scrap.domain.entity;
 
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.post.entity.Post;

@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.scrap.service;
+package com.tavemakers.surf.domain.scrap.application.query;
 
-import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
+import com.tavemakers.surf.domain.scrap.domain.repository.ScrapRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

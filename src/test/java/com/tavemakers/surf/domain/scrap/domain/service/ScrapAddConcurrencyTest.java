@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.scrap.service;
+package com.tavemakers.surf.domain.scrap.domain.service;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
@@ -13,8 +13,8 @@ import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.like.PostLikeGetService;
 import com.tavemakers.surf.domain.post.service.post.PostGetService;
-import com.tavemakers.surf.domain.scrap.exception.ScrapAlreadyExistsException;
-import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
+import com.tavemakers.surf.domain.scrap.domain.exception.ScrapAlreadyExistsException;
+import com.tavemakers.surf.domain.scrap.domain.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.support.ConcurrencyTestHelper;
 import jakarta.persistence.EntityManager;

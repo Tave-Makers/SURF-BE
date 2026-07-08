@@ -12,6 +12,5 @@ Class <com.tavemakers.surf.domain.post.service.post.PostPatchService> is annotat
 Class <com.tavemakers.surf.domain.post.service.post.PostUsecase> is annotated with @Transactional in (PostUsecase.java:0)
 Class <com.tavemakers.surf.domain.post.service.search.PostSearchService> is annotated with @Transactional in (PostSearchService.java:0)
 Class <com.tavemakers.surf.domain.schedule.service.ScheduleGetService> is annotated with @Transactional in (ScheduleGetService.java:0)
-Class <com.tavemakers.surf.domain.scrap.service.ScrapGetService> is annotated with @Transactional in (ScrapGetService.java:0)
-Class <com.tavemakers.surf.domain.scrap.service.ScrapService> is annotated with @Transactional in (ScrapService.java:0)
+Class <com.tavemakers.surf.domain.scrap.domain.service.ScrapService> is annotated with @Transactional in (ScrapService.java:0)
 Class <com.tavemakers.surf.domain.team.service.TeamGetService> is annotated with @Transactional in (TeamGetService.java:0)
