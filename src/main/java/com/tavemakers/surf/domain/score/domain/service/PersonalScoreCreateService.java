@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.score.domain.service;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.domain.repository.PersonalActivityScoreRepository;
-import com.tavemakers.surf.domain.team.entity.Team;
+import com.tavemakers.surf.domain.team.domain.entity.Team;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

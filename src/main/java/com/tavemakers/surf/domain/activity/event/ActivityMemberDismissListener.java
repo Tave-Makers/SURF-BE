@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.activity.event;
 
 import com.tavemakers.surf.domain.activity.repository.ActivityRecordRepository;
 import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
-import com.tavemakers.surf.domain.team.event.TeamDeletedEvent;
+import com.tavemakers.surf.domain.team.domain.event.TeamDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

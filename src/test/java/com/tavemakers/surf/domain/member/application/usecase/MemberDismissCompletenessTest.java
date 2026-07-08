@@ -36,7 +36,7 @@ import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.domain.event.ScoreMemberDismissListener;
 import com.tavemakers.surf.domain.score.domain.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
-import com.tavemakers.surf.domain.team.service.TeamMemberCleanupService;
+import com.tavemakers.surf.domain.team.domain.service.TeamMemberCleanupService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -3,7 +3,7 @@ package com.tavemakers.surf.domain.score.domain.entity;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
-import com.tavemakers.surf.domain.team.entity.Team;
+import com.tavemakers.surf.domain.team.domain.entity.Team;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

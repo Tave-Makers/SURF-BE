@@ -15,7 +15,7 @@ import com.tavemakers.surf.domain.member.domain.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.post.domain.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.application.usecase.PostDeleteUsecase;
 import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
-import com.tavemakers.surf.domain.team.service.TeamMemberCleanupService;
+import com.tavemakers.surf.domain.team.domain.service.TeamMemberCleanupService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

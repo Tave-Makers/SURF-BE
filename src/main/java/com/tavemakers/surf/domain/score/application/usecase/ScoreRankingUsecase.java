@@ -11,8 +11,8 @@ import com.tavemakers.surf.domain.score.presentation.dto.response.TeamScoreRanki
 import com.tavemakers.surf.domain.score.presentation.dto.response.TeamScoreRankingSliceResDTO;
 import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.application.query.PersonalScoreGetService;
-import com.tavemakers.surf.domain.team.entity.Team;
-import com.tavemakers.surf.domain.team.service.TeamGetService;
+import com.tavemakers.surf.domain.team.domain.entity.Team;
+import com.tavemakers.surf.domain.team.application.query.TeamGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.SliceImpl;

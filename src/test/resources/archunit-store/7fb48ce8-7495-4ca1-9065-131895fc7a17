@@ -7,4 +7,3 @@ Class <com.tavemakers.surf.domain.post.domain.service.post.PostListService> is a
 Class <com.tavemakers.surf.domain.post.domain.service.post.PostPatchService> is annotated with @Transactional in (PostPatchService.java:0)
 Class <com.tavemakers.surf.domain.post.domain.service.search.PostSearchService> is annotated with @Transactional in (PostSearchService.java:0)
 Class <com.tavemakers.surf.domain.scrap.domain.service.ScrapService> is annotated with @Transactional in (ScrapService.java:0)
-Class <com.tavemakers.surf.domain.team.service.TeamGetService> is annotated with @Transactional in (TeamGetService.java:0)
