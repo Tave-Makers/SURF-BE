@@ -110,6 +110,8 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 - **R2 사각지대 (Wave 1 구조 이동 리뷰에서 발견)**: `*ApiClient`가 infrastructure로 이동하면서 타 도메인의 infrastructure 의존(예: `MemberDisconnectedListener → AppleApiClient`)이 R2 매칭 대상에서 벗어남. Phase 4에서 R2를 `.infrastructure`까지 확장하거나 auth revoke 창구를 이벤트로 정리
 - **ScrapGetService.deleteByPostId (Wave 2 scrap 구조 이동에서 발견)**: query(application/query) 계층에 쓰기 메서드 `deleteByPostId`가 `@Transactional`(readOnly=false)로 존재 — "query=읽기" 계약 위반. usecase 또는 domain service로 재배치 필요(동작 동일성이 자명하지 않아 구조 이동에서 미처리)
 - **R7 역의존 청산 (Wave 2 구조 이동 리뷰에서 신설)**: R7 규칙 추가 — domain 계층은 같은 도메인 application(usecase/query)·presentation(controller/dto)에 의존 금지. 기존 179건 동결(엔티티가 request DTO 수신: Post.update(PostUpdateReqDTO)/Member/Career 등, domain 서비스→GetService, 일부 repository→DTO 프로젝션). 신규 유입만 차단. Phase 4에서 청산: 엔티티 생성/수정을 원시 값 파라미터로, domain이 필요로 하는 조회를 domain repository로 하강
+- **ActivityRecord.prefixSum 스냅샷 미보정 (Wave 3 심사 non-blocking)**: 833c7774이 PersonalActivityScore 누적합은 고쳤으나, ActivityRecord 행마다 저장되는 prefixSum 스냅샷은 patch/delete 후 여전히 갱신 안 됨. 스냅샷 컬럼의 실제 소비처 추적 후 보정 여부 결정 (소비처 없으면 데드 컬럼 정리)
+- **ScoreCalculator/ScoreComputable 데드코드**: 구현체 없는 인터페이스 + ActivityRecordUsecase의 미사용 주입 필드 — Phase 4 정리
 - **viewCount 후속 (Wave 2 post 버그 리뷰 non-blocking)**: ① `ViewCountService` Redis 장애 폴백(`post.increaseViewCount()` dirty write)을 `@Modifying` 원자 UPDATE로 전환 — increment 이후 예외 시 off-by-one + 스케줄러 합산과 교차 유실 창 제거. ② `ViewCountScheduler` 클래스 `@Transactional` 하에서 배치 여러 개가 한 트랜잭션 → 뒤 배치 JDBC 실패 시 GET+DEL로 이미 회수·삭제된 앞 배치 델타까지 전량 유실. 배치 단위 트랜잭션 분리 또는 재적재 검토
 
 ### Phase 3 — 도메인 전환 Wave
@@ -118,7 +120,7 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 |------|--------|------|
 | 1 | badge(파일럿), member + auth | MemberDismissUsecase 해체(✅ D1), auth·member 4계층 구조 이동(✅ be77c698, 182bf06a — arch-reviewer APPROVE) |
 | 2 | post, comment, scrap | 트래픽 핵심, 멱등성 이슈 밀집. scrap↔post 순환 의존 해소 포함 |
-| 3 | notification, score, letter | 이벤트 리스너 패턴 정리의 중심 |
+| 3 | notification, score, letter | ✅ 완료 — 알림 리스너 5종 AFTER_COMMIT(R6 0건), letter 저장먼저·메일 트랜잭션 밖(R5), score prefixSum 정합성, 구조 이동 3커밋, R1c 신설 |
 | 4 | board, schedule, activity, reservation, team, home, feedback, login | 상대적으로 단순 |
 
 ### 구조 전환 체크리스트 (badge 파일럿에서 확립)
