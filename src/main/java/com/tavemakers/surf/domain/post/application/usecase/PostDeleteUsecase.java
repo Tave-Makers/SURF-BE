@@ -5,7 +5,7 @@ import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.repository.PostRepository;
 import com.tavemakers.surf.domain.post.domain.service.post.PostDeleteService;
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
-import com.tavemakers.surf.domain.reservation.domain.repository.ReservationRepository;
+import com.tavemakers.surf.domain.reservation.domain.service.ReservationDeleteService;
 import com.tavemakers.surf.domain.schedule.domain.service.ScheduleDeleteService;
 import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import java.util.List;
@@ -26,7 +26,7 @@ public class PostDeleteUsecase {
     private final CommentDeleteService commentDeleteService;
     private final ScheduleDeleteService scheduleDeleteService;
     private final ScrapGetService scrapGetService;
-    private final ReservationRepository reservationRepository;
+    private final ReservationDeleteService reservationDeleteService;
 
     /** 게시글 및 연관 데이터 삭제 */
     @Transactional
@@ -35,7 +35,7 @@ public class PostDeleteUsecase {
 
         // 연관 데이터 먼저 삭제
         scheduleDeleteService.deleteByPost(post);
-        reservationRepository.deleteByPostId(postId);
+        reservationDeleteService.deleteByPostId(postId);
         scrapGetService.deleteByPostId(postId);
         commentDeleteService.deleteAllByPostId(postId);
 
@@ -47,7 +47,7 @@ public class PostDeleteUsecase {
     @Transactional
     public void forceDeletePost(Post post) {
         scheduleDeleteService.deleteByPost(post);
-        reservationRepository.deleteByPostId(post.getId());
+        reservationDeleteService.deleteByPostId(post.getId());
         scrapGetService.deleteByPostId(post.getId());
         commentDeleteService.deleteAllByPostId(post.getId());
         postDeleteService.forceDeletePost(post);
