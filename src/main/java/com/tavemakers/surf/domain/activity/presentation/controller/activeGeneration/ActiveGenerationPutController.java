@@ -1,0 +1,31 @@
+package com.tavemakers.surf.domain.activity.presentation.controller.activeGeneration;
+
+import com.tavemakers.surf.domain.activity.presentation.dto.activeGeneration.request.ActiveGenerationUpdateReqDTO;
+import com.tavemakers.surf.domain.activity.application.usecase.ActiveGenerationUsecase;
+import com.tavemakers.surf.global.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import static com.tavemakers.surf.domain.activity.presentation.controller.ResponseMessage.ACTIVE_GENERATION_UPDATED;
+
+@RestController
+@RequiredArgsConstructor
+@Tag(name = "활동기수")
+public class ActiveGenerationPutController {
+
+    private final ActiveGenerationUsecase activeGenerationUsecase;
+
+    @Operation(summary = "현재 활동 기수 변경")
+    @PutMapping("/v1/admin/active-generation")
+    public ApiResponse<Void> updateActiveGeneration(
+            @RequestBody @Valid ActiveGenerationUpdateReqDTO dto) {
+        activeGenerationUsecase.updateActiveGeneration(dto.activeGeneration());
+        return ApiResponse.response(HttpStatus.OK, ACTIVE_GENERATION_UPDATED.getMessage(), null);
+    }
+}

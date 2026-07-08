@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.application.usecase;
 
-import com.tavemakers.surf.domain.activity.dto.activityRecord.response.TeamMemberScoreListResDTO;
+import com.tavemakers.surf.domain.activity.presentation.dto.activityRecord.response.TeamMemberScoreListResDTO;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.Track;
 import com.tavemakers.surf.domain.member.domain.entity.enums.Part;

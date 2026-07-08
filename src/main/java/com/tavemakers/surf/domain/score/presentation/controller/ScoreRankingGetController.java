@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.presentation.controller;
 
-import com.tavemakers.surf.domain.activity.dto.activityRecord.response.TeamMemberScoreListResDTO;
+import com.tavemakers.surf.domain.activity.presentation.dto.activityRecord.response.TeamMemberScoreListResDTO;
 import com.tavemakers.surf.domain.score.presentation.dto.response.MemberScoreRankingSliceResDTO;
 import com.tavemakers.surf.domain.score.presentation.dto.response.TeamScoreRankingSliceResDTO;
 import com.tavemakers.surf.domain.score.application.usecase.ScoreRankingUsecase;

@@ -1,9 +1,9 @@
 package com.tavemakers.surf.domain.score.application.usecase;
 
-import com.tavemakers.surf.domain.activity.dto.activityRecord.response.ActivityRecordSummaryResDTO;
-import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
-import com.tavemakers.surf.domain.activity.mapper.ActivityRecordMapper;
-import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordGetService;
+import com.tavemakers.surf.domain.activity.presentation.dto.activityRecord.response.ActivityRecordSummaryResDTO;
+import com.tavemakers.surf.domain.activity.domain.entity.ActivityRecord;
+import com.tavemakers.surf.domain.activity.application.mapper.ActivityRecordMapper;
+import com.tavemakers.surf.domain.activity.application.query.ActivityRecordGetService;
 import com.tavemakers.surf.domain.score.presentation.dto.response.PersonalScoreWithPinnedResDto;
 import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
 import com.tavemakers.surf.domain.score.application.query.PersonalScoreGetService;

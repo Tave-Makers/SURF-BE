@@ -1,6 +1,4 @@
-Method <com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService.getActiveGeneration()> is annotated with @Transactional in (ActiveGenerationGetService.java:24)
-Method <com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService.getActiveGenerationMembers()> is annotated with @Transactional in (ActiveGenerationGetService.java:31)
-Method <com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationPutService.updateActiveGeneration(java.lang.Integer)> is annotated with @Transactional in (ActiveGenerationPutService.java:18)
+Method <com.tavemakers.surf.domain.activity.domain.service.activeGeneration.ActiveGenerationPutService.updateActiveGeneration(java.lang.Integer)> is annotated with @Transactional in (ActiveGenerationPutService.java:18)
 Method <com.tavemakers.surf.domain.board.domain.service.BoardCategoryService.createBoardCategory(com.tavemakers.surf.domain.board.domain.entity.Board, com.tavemakers.surf.domain.board.presentation.dto.request.BoardCategoryCreateReqDTO)> is annotated with @Transactional in (BoardCategoryService.java:25)
 Method <com.tavemakers.surf.domain.board.domain.service.BoardCategoryService.deleteBoardCategory(com.tavemakers.surf.domain.board.domain.entity.BoardCategory)> is annotated with @Transactional in (BoardCategoryService.java:43)
 Method <com.tavemakers.surf.domain.board.domain.service.BoardService.createBoard(com.tavemakers.surf.domain.board.presentation.dto.request.BoardCreateReqDTO)> is annotated with @Transactional in (BoardService.java:27)

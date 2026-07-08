@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.domain.service;
 
-import com.tavemakers.surf.domain.activity.service.activeGeneration.ActiveGenerationGetService;
+import com.tavemakers.surf.domain.activity.application.query.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.Track;
 import com.tavemakers.surf.domain.member.domain.entity.enums.Part;

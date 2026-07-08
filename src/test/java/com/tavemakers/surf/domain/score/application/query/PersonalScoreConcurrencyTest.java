@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.score.application.query;
 
-import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
+import com.tavemakers.surf.domain.activity.domain.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
