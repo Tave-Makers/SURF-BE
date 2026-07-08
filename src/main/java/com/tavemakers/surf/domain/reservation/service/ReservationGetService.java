@@ -32,4 +32,10 @@ public class ReservationGetService {
                 .orElse(null);
     }
 
+    /** 게시글 ID로 예약 정보 잠금 조회 (예약 변경 직렬화용) */
+    public Reservation findByPostIdAndStatusForUpdate(Long postId) {
+        return reservationRepository.findByPostIdAndStatusForUpdate(postId, ReservationStatus.RESERVED)
+                .orElse(null);
+    }
+
 }

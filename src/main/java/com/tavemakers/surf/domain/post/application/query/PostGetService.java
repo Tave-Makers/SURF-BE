@@ -49,6 +49,12 @@ public class PostGetService {
                 .orElse(null);
     }
 
+    /** 게시글 행 잠금 조회 — postId 단위 직렬화가 필요한 작업(예약 변경)용. 호출자 트랜잭션에서 잠금 유지 */
+    public Post getPostForUpdate(Long id) {
+        return postRepository.findByIdForUpdate(id)
+                .orElseThrow(PostNotFoundException::new);
+    }
+
     /** 게시글 읽기 전용 조회 */
     @Transactional(readOnly = true)
     public Post readPost(Long id) {

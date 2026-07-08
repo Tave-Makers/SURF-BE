@@ -1,6 +1,9 @@
 package com.tavemakers.surf.domain.reservation.usecase;
 
+import com.tavemakers.surf.domain.post.application.query.PostGetService;
+import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.reservation.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.exception.ReservationAlreadyPublishedException;
 import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
 import com.tavemakers.surf.domain.reservation.service.ReservationCreateService;
 import com.tavemakers.surf.domain.reservation.service.ReservationScheduleService;
@@ -21,6 +24,7 @@ public class ReservationUsecase {
     private final ReservationCreateService reservationCreateService;
     private final ReservationGetService reservationGetService;
     private final ReservationScheduleService scheduleService;
+    private final PostGetService postGetService;
 
     /** 게시글 예약 발행 등록 */
     @Transactional
@@ -48,7 +52,13 @@ public class ReservationUsecase {
     /** 예약 발행 시간 변경 */
     @Transactional
     public void updateReservationPost(Long postId, LocalDateTime changedAt) {
-        Reservation existed = reservationGetService.findByPostIdAndStatus(postId);
+        // 게시글 행 락으로 postId 단위 직렬화 — 동시 예약 변경이 RESERVED 를 중복 생성하는 것을 방지
+        Post post = postGetService.getPostForUpdate(postId);
+        if (!post.isReserved()) {
+            throw new ReservationAlreadyPublishedException(); // 발행 완료 글 재예약 → 재발행 방지
+        }
+
+        Reservation existed = reservationGetService.findByPostIdAndStatusForUpdate(postId);
         if(existed != null) {
             existed.cancel();
         }
