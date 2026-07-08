@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.post.service.post;
 
-import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
+import com.tavemakers.surf.domain.comment.domain.service.CommentDeleteService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;

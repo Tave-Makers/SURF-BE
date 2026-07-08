@@ -1,8 +1,8 @@
 package com.tavemakers.surf.domain.notification.service;
 
-import com.tavemakers.surf.domain.comment.event.CommentCreatedEvent;
-import com.tavemakers.surf.domain.comment.event.CommentLikedEvent;
-import com.tavemakers.surf.domain.comment.event.CommentReplyEvent;
+import com.tavemakers.surf.domain.comment.domain.event.CommentCreatedEvent;
+import com.tavemakers.surf.domain.comment.domain.event.CommentLikedEvent;
+import com.tavemakers.surf.domain.comment.domain.event.CommentReplyEvent;
 import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.post.entity.Post;

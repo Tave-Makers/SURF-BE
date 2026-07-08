@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.member.application.usecase;
 
-import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
-import com.tavemakers.surf.domain.comment.service.CommentLikeService;
+import com.tavemakers.surf.domain.comment.domain.service.CommentDeleteService;
+import com.tavemakers.surf.domain.comment.domain.service.CommentLikeService;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberBlacklistActionType;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
