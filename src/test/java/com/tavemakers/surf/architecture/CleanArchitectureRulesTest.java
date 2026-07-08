@@ -46,6 +46,16 @@ public class CleanArchitectureRulesTest {
         return dot == -1 ? rest : rest.substring(0, dot);
     }
 
+    /**
+     * 패키지가 특정 도메인의 특정 계층(presentation/application/domain/infrastructure)에 속하는지.
+     * "domain"이 도메인 루트(com.tavemakers.surf.domain)와 계층 이름으로 중복되므로
+     * 도메인 세그먼트 뒤의 계층 세그먼트를 정확히 대조한다.
+     */
+    private static boolean isLayer(String packageName, String domain, String layer) {
+        String base = DOMAIN_ROOT + domain + "." + layer;
+        return packageName.equals(base) || packageName.startsWith(base + ".");
+    }
+
     // ── R1: Controller는 application 계층(usecase/query)만 호출 ──────────────
 
     @ArchTest
@@ -176,4 +186,34 @@ public class CleanArchitectureRulesTest {
                     .should().beAnnotatedWith(EventListener.class)
                     .as("R6: 비동기(@Async) 부수효과 리스너는 @TransactionalEventListener(AFTER_COMMIT)를 "
                             + "사용한다 (@Async + plain @EventListener 금지)"));
+
+    // ── R7: domain 계층은 같은 도메인의 application/presentation에 의존 금지 ──
+    // 계층 방향성(presentation → application → domain)을 강제한다. domain 계층이
+    // 같은 도메인의 application(usecase/query)이나 presentation(controller/dto)을
+    // 참조하면 역방향 의존이다. 타 도메인 접근은 R2/R3가 담당한다.
+    // 4계층 전환으로 드러난 기존 결합(예: PostDeleteService→PostGetService,
+    // PostPatchService→presentation DTO)은 동결하고 신규 유입만 차단한다.
+
+    @ArchTest
+    static final ArchRule R7_domain_계층은_application_presentation_역의존_금지 = FreezingArchRule.freeze(
+            noClasses().should(new ArchCondition<>("같은 도메인의 application/presentation 계층에 의존한다") {
+                @Override
+                public void check(JavaClass clazz, ConditionEvents events) {
+                    String domain = domainOf(clazz.getPackageName());
+                    if (domain == null || !isLayer(clazz.getPackageName(), domain, "domain")) {
+                        return;
+                    }
+                    for (Dependency dep : clazz.getDirectDependenciesFromSelf()) {
+                        String targetPkg = dep.getTargetClass().getPackageName();
+                        if (!domain.equals(domainOf(targetPkg))) {
+                            continue;
+                        }
+                        if (isLayer(targetPkg, domain, "application")
+                                || isLayer(targetPkg, domain, "presentation")) {
+                            events.add(SimpleConditionEvent.satisfied(clazz, dep.getDescription()));
+                        }
+                    }
+                }
+            }).as("R7: domain 계층은 같은 도메인의 application(usecase/query) 또는 "
+                    + "presentation(controller/dto)에 의존할 수 없다"));
 }
