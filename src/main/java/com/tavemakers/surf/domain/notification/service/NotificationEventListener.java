@@ -51,7 +51,7 @@ public class NotificationEventListener {
      * 댓글 생성 알림 - 게시글 작성자에게
      */
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentCreated(CommentCreatedEvent event) {
         notificationCreateService.createAndSend(
                 event.getReceiverId(),
@@ -70,7 +70,7 @@ public class NotificationEventListener {
      * 대댓글 생성 알림 - 부모 댓글 작성자에게
      */
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentReply(CommentReplyEvent event) {
         notificationCreateService.createAndSend(
                 event.getReceiverId(),
@@ -89,7 +89,7 @@ public class NotificationEventListener {
      * 댓글 좋아요 알림 - 댓글 작성자에게
      */
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentLiked(CommentLikedEvent event) {
         notificationCreateService.createAndSend(
                 event.getReceiverId(),
@@ -108,7 +108,7 @@ public class NotificationEventListener {
      * 게시글 좋아요 알림 - 게시글 작성자에게
      */
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostLiked(PostLikedEvent event) {
         notificationCreateService.createAndSend(
                 event.getReceiverId(),
@@ -127,7 +127,7 @@ public class NotificationEventListener {
      * 쪽지 발송 알림 - 쪽지 수신자에게
      */
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleLetterSent(LetterSentEvent event) {
         logEventEmitter.emit("letter_notification_requested", Map.of(
                 "sender_id", event.getSenderId(),
