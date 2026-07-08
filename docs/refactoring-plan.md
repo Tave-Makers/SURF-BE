@@ -154,6 +154,24 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 - [ ] soft delete 정합성: 탈퇴 회원/삭제 게시글의 연관 데이터 처리
 - [ ] 예외: 삼킴 없음 / 시간: 타임존 명시
 
+### Wave 4 감사 발견 — 정책 결정 필요 항목 (2026-07-08, 즉시 수정 불가)
+
+- **board 삭제 FK 500 (높음, 칩 발행)**: `BoardService.deleteBoard`가 하위 카테고리/게시글 검증 없이 deleteById → FK 위반 500. 차단(하위 존재 시 409) vs 캐스케이드 정책 결정 필요
+- **schedule 단독 삭제 dangling (중간)**: `ScheduleUsecase.deleteSchedule`이 연동 게시글의 scheduleId/hasSchedule을 초기화하지 않음 (deleteScheduleAtPost와 비대칭). 연동 일정의 단독 삭제 허용 여부 정책
+- **board rename 시 Post.boardName stale (중간)**: 비정규화 컬럼 전파 vs 수용 결정
+- **schedule category 자유문자열 (중간, 추정)**: "regular"/"other" 하드코딩 필터 vs 자유 입력("정규행사" 예시) — enum화 필요하나 기존 데이터 정본 확인 필요
+- **feedback 일 3회 제한 동시성 우회 (중간)**: check-then-act. 제한 구현 방식(락/원자 카운터) 결정
+- **타임존 미지정 (낮음, 전역)**: schedule/home/feedback의 LocalDateTime.now()가 서버 기본 존 의존 — JVM TZ 운영 정책 확인 후 전역 지정
+- **home displayOrder 경합, HomeContent 최초 insert 경합 (낮음)**: 관리자 전용 저빈도 — 후순위
+- **reservation 인메모리 태스크 핸들 미보관 (중간)**: 예약 변경/게시글 삭제 시 이전 태스크 미취소(재시작 재등록은 ReservationStartupLoader가 있어 정상). 태스크 핸들 관리 설계 필요
+- **PostPublishRunner 발행 race (중간, Wave 4 심사 발견)**: publishPost가 post·reservation을 무잠금 조회 + 상태 가드 없이 publish() — 발행 시각과 예약 변경 tx가 겹치면 취소된 예약을 발행하는 창. 후속: post 행 락 앵커 + 상태 재검증 (3b155e6e와 동일 패턴)
+- **락 순서 규약 (낮음)**: 제명/팀삭제 리스너에 @Order로 activity(record)→score 순서 고정 — patch/delete 경로와 정렬해 이론적 데드락 창 제거. 잠금 조회(getPostForUpdate 등)가 query 계층에 노출되는 오염 반복 — 잠금 조회 소속 계층 원칙 수립 필요
+- **reservation PUBLISHED 재예약 가드/중복 RESERVED**: Wave 4에서 수정 진행 중
+- **activity ActivityRecord.prefixSum 행 스냅샷 미갱신 (중간)**: patch/delete 후 후속 기록 행들의 스냅샷이 옛 값 — 사용자 활동내역 화면 누적합 열 불일치. 재계산 정책 필요 (위 "prefixSum 스냅샷" 항목과 동일 건, 사용자 노출 확인됨)
+- **admin/manager 경로 권한 미분리 (중간)**: `/v1/admin/**`와 `/v1/manager/**`가 동일하게 ADMIN/PRESIDENT/MANAGER 허용(PermitUrlConfig) — MANAGER가 admin 전용 의도 기능(활동기록 삭제 등)에 접근 가능. 분리 여부 정책
+- **ActiveGeneration 기수 전환 직렬화 부재 (낮음)**: 단일 행 갱신+전 회원 동기화에 락 없음 — 동시 전환 시 부분 동기화. 관리자 저빈도
+- **activity V1 생성 category no-op 삼항식 + V2와 표시 불일치 (낮음)**: V1 기록은 category=null로 저장돼 목록 표시가 V2와 다름 — 표시 정책 확인 후 정리
+
 ## 운영 규칙
 
 - **dev에 직접 머지 금지** — 모든 작업은 `refactor/*` 브랜치, 머지는 팀 리뷰 후 결정
