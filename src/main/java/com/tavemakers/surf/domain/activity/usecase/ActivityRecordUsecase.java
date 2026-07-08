@@ -141,6 +141,7 @@ public class ActivityRecordUsecase {
 
     /** 회원의 활동기록 목록 페이징 조회 */
     @LogEvent(value = "activity.records.list", message = "활동 기록 목록 조회")
+    @Transactional(readOnly = true)
     public ActivityRecordSliceResDTO getActivityRecordList(
             Long memberId,
             @LogParam("score_type") ScoreType scoreType,
@@ -174,7 +175,9 @@ public class ActivityRecordUsecase {
     /** 활동기록 수정 (activityType, activityDate) */
     @Transactional
     public void patchActivityRecord(Long activityRecordId, ActivityRecordPatchReqDTO dto) {
-        ActivityRecord record = activityRecordGetService.findById(activityRecordId);
+        // 행 잠금 조회로 동시 삭제/수정을 직렬화 — 락 없는 조회 후 isDeleted 검사는
+        // 선행 트랜잭션의 커밋을 보지 못해 점수 보정이 중복 적용될 수 있다
+        ActivityRecord record = activityRecordGetService.findByIdForUpdate(activityRecordId);
         validateNotDeleted(record);
 
         if (dto.activityType() != null) {
@@ -196,7 +199,9 @@ public class ActivityRecordUsecase {
     /** 활동기록 소프트 삭제 */
     @Transactional
     public void deleteActivityRecord(Long activityRecordId) {
-        ActivityRecord record = activityRecordGetService.findById(activityRecordId);
+        // 행 잠금 조회로 동시 삭제를 직렬화 — 락 없는 조회 후 isDeleted 검사는
+        // 선행 트랜잭션의 커밋을 보지 못해 점수가 이중 차감될 수 있다
+        ActivityRecord record = activityRecordGetService.findByIdForUpdate(activityRecordId);
         validateNotDeleted(record);
 
         activityRecordDeleteService.softDelete(record);

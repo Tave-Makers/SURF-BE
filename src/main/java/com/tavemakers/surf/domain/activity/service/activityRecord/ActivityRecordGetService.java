@@ -38,6 +38,12 @@ public class ActivityRecordGetService {
                 .orElseThrow(ActivityRecordNotFoundException::new);
     }
 
+    /** 활동기록 단건 행 잠금 조회 (삭제/수정 직렬화용 — 최신 isDeleted 상태 보장) */
+    public ActivityRecord findByIdForUpdate(Long activityRecordId) {
+        return activityRecordRepository.findByIdForUpdate(activityRecordId)
+                .orElseThrow(ActivityRecordNotFoundException::new);
+    }
+
     /** 회원의 전체 활동기록 페이징 조회 (scoreType 필터 없이) */
     public Slice<ActivityRecord> findAllActiveByMemberId(Long memberId, Pageable pageable) {
         return activityRecordRepository.findAllActiveByMemberId(memberId, pageable);

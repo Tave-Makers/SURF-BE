@@ -2,18 +2,26 @@ package com.tavemakers.surf.domain.activity.repository;
 
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, Long> {
+
+    /** 활동기록 행 잠금 조회 — 삭제/수정 경로를 직렬화하고 커밋된 최신 isDeleted 상태를 읽는다 */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT ar FROM ActivityRecord ar WHERE ar.id = :id")
+    Optional<ActivityRecord> findByIdForUpdate(@Param("id") Long id);
 
     // 파생 delete(SELECT 후 개별 remove 큐잉)는 flush가 지연되어 다른 리스너의
     // clearAutomatically에 의해 취소될 수 있으므로 벌크 JPQL로 즉시 실행한다

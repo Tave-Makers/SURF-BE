@@ -94,7 +94,7 @@ class ActivityRecordPrefixSumRegressionTest {
                 .isDeleted(false)
                 .build();
 
-        given(activityRecordGetService.findById(RECORD_ID)).willReturn(record);
+        given(activityRecordGetService.findByIdForUpdate(RECORD_ID)).willReturn(record);
         given(personalScoreGetService.getPersonalScoreForUpdate(MEMBER_ID)).willReturn(score);
     }
 

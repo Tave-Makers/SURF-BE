@@ -26,12 +26,22 @@ public record ActivityRecordReqDTOV2(
         LocalDate activityDate
 ) {
 
-    @AssertTrue(message = "memberIdList와 teamIdList 둘 중 하나만 존재해야 합니다.")
+    @AssertTrue(message = "memberIdList와 teamIdList 둘 중 하나만 존재해야 하며, appliedTarget과 일치해야 합니다.")
     public boolean isAppliedIdListValid() {
         boolean hasMember = (memberIdList != null && !memberIdList.isEmpty());
         boolean hasTeam = (teamIdList != null && !teamIdList.isEmpty());
 
-        return hasMember ^ hasTeam;
+        if (!(hasMember ^ hasTeam)) {
+            return false;
+        }
+        // 분기는 리스트 종류로 결정되므로, appliedTarget이 오면 리스트 종류와 일치해야 한다
+        if (appliedTarget == AppliedTarget.TEAM) {
+            return hasTeam;
+        }
+        if (appliedTarget == AppliedTarget.INDIVIDUAL) {
+            return hasMember;
+        }
+        return true;
     }
 
     public boolean isTeam() {
