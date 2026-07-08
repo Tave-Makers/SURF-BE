@@ -55,6 +55,11 @@ public class PostGetService {
                 .orElseThrow(PostNotFoundException::new);
     }
 
+    /** 게시글 행 잠금 조회 (없으면 Optional.empty) — 삭제된 게시글을 호출자가 직접 처리할 때 사용 */
+    public Optional<Post> findPostForUpdate(Long id) {
+        return postRepository.findByIdForUpdate(id);
+    }
+
     /** 게시글 읽기 전용 조회 */
     @Transactional(readOnly = true)
     public Post readPost(Long id) {
