@@ -12,8 +12,8 @@ import com.tavemakers.surf.domain.member.domain.service.MemberBlacklistCreateSer
 import com.tavemakers.surf.domain.member.domain.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.post.domain.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.application.usecase.PostDeleteUsecase;
-import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
-import com.tavemakers.surf.domain.score.event.ScoreMemberDismissListener;
+import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
+import com.tavemakers.surf.domain.score.domain.event.ScoreMemberDismissListener;
 import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.domain.team.entity.TeamType;

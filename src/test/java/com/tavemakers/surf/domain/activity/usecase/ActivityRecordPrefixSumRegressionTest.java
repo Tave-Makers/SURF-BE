@@ -7,9 +7,9 @@ import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecord
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordDeleteService;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordGetService;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordPatchService;
-import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
-import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
-import com.tavemakers.surf.domain.score.utils.ScoreCalculator;
+import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
+import com.tavemakers.surf.domain.score.application.query.PersonalScoreGetService;
+import com.tavemakers.surf.domain.score.domain.util.ScoreCalculator;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

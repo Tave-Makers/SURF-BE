@@ -20,7 +20,7 @@ import com.tavemakers.surf.domain.member.domain.service.CareerDeleteService;
 import com.tavemakers.surf.domain.member.domain.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.domain.service.MemberService;
 import com.tavemakers.surf.domain.member.domain.service.MemberWithdrawService;
-import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
+import com.tavemakers.surf.domain.score.application.query.PersonalScoreGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;

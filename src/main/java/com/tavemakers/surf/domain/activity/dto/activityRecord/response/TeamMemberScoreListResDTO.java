@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.activity.dto.activityRecord.response;
 
-import com.tavemakers.surf.domain.score.dto.response.MemberScoreRankingResDTO;
+import com.tavemakers.surf.domain.score.presentation.dto.response.MemberScoreRankingResDTO;
 import lombok.Builder;
 
 import java.util.List;

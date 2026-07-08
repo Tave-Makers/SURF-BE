@@ -32,9 +32,9 @@ import com.tavemakers.surf.domain.notification.repository.NotificationRepository
 import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.application.usecase.PostDeleteUsecase;
-import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
-import com.tavemakers.surf.domain.score.event.ScoreMemberDismissListener;
-import com.tavemakers.surf.domain.score.repository.PersonalActivityScoreRepository;
+import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
+import com.tavemakers.surf.domain.score.domain.event.ScoreMemberDismissListener;
+import com.tavemakers.surf.domain.score.domain.repository.PersonalActivityScoreRepository;
 import com.tavemakers.surf.domain.scrap.domain.service.ScrapService;
 import com.tavemakers.surf.domain.team.service.TeamMemberCleanupService;
 import jakarta.persistence.EntityManager;

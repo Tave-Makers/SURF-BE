@@ -16,7 +16,7 @@ import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.Track;
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.member.application.query.TrackGetService;
-import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
+import com.tavemakers.surf.domain.score.domain.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

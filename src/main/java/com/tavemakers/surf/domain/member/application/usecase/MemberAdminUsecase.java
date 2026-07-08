@@ -20,9 +20,9 @@ import com.tavemakers.surf.domain.member.domain.service.MemberBlacklistCreateSer
 import com.tavemakers.surf.domain.member.domain.service.MemberDismissService;
 import com.tavemakers.surf.domain.member.domain.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.member.domain.validator.RoleChangeValidator;
-import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
-import com.tavemakers.surf.domain.score.service.PersonalScoreGetService;
-import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
+import com.tavemakers.surf.domain.score.domain.entity.PersonalActivityScore;
+import com.tavemakers.surf.domain.score.application.query.PersonalScoreGetService;
+import com.tavemakers.surf.domain.score.domain.service.PersonalScoreCreateService;
 import com.tavemakers.surf.global.jwt.JwtService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
