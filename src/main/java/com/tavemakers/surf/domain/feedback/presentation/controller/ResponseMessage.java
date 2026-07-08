@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.feedback.controller;
+package com.tavemakers.surf.domain.feedback.presentation.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,10 +1,10 @@
-package com.tavemakers.surf.domain.feedback.service;
+package com.tavemakers.surf.domain.feedback.domain.service;
 
-import com.tavemakers.surf.domain.feedback.dto.request.FeedbackCreateReqDTO;
-import com.tavemakers.surf.domain.feedback.dto.response.FeedbackResDTO;
-import com.tavemakers.surf.domain.feedback.entity.Feedback;
-import com.tavemakers.surf.domain.feedback.exception.TooManyFeedbackException;
-import com.tavemakers.surf.domain.feedback.repository.FeedbackRepository;
+import com.tavemakers.surf.domain.feedback.presentation.dto.request.FeedbackCreateReqDTO;
+import com.tavemakers.surf.domain.feedback.presentation.dto.response.FeedbackResDTO;
+import com.tavemakers.surf.domain.feedback.domain.entity.Feedback;
+import com.tavemakers.surf.domain.feedback.domain.exception.TooManyFeedbackException;
+import com.tavemakers.surf.domain.feedback.domain.repository.FeedbackRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

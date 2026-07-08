@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.feedback.dto.response;
+package com.tavemakers.surf.domain.feedback.presentation.dto.response;
 
-import com.tavemakers.surf.domain.feedback.entity.Feedback;
+import com.tavemakers.surf.domain.feedback.domain.entity.Feedback;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;

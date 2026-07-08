@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.feedback.service;
+package com.tavemakers.surf.domain.feedback.domain.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

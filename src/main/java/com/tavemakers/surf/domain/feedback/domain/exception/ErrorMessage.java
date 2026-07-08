@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.feedback.exception;
+package com.tavemakers.surf.domain.feedback.domain.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

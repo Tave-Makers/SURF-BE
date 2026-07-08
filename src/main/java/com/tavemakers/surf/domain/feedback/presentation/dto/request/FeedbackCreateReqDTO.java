@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.feedback.dto.request;
+package com.tavemakers.surf.domain.feedback.presentation.dto.request;
 
 import com.tavemakers.surf.global.logging.LogPropsProvider;
 import io.swagger.v3.oas.annotations.media.Schema;

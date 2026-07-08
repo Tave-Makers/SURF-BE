@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.feedback.repository;
+package com.tavemakers.surf.domain.feedback.domain.repository;
 
-import com.tavemakers.surf.domain.feedback.entity.Feedback;
+import com.tavemakers.surf.domain.feedback.domain.entity.Feedback;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;

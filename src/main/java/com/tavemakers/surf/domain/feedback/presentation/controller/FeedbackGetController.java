@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.feedback.controller;
+package com.tavemakers.surf.domain.feedback.presentation.controller;
 
-import com.tavemakers.surf.domain.feedback.dto.response.FeedbackResDTO;
-import com.tavemakers.surf.domain.feedback.usecase.FeedbackUsecase;
+import com.tavemakers.surf.domain.feedback.presentation.dto.response.FeedbackResDTO;
+import com.tavemakers.surf.domain.feedback.application.usecase.FeedbackUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.feedback.controller.ResponseMessage.FEEDBACK_READ;
+import static com.tavemakers.surf.domain.feedback.presentation.controller.ResponseMessage.FEEDBACK_READ;
 
 @RestController
 @RequiredArgsConstructor
