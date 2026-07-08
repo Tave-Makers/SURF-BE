@@ -1,5 +1,6 @@
 package com.tavemakers.surf.domain.score.service;
 
+import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
@@ -106,12 +107,12 @@ class PersonalScoreConcurrencyTest {
                 .isEqualByComparingTo(INITIAL_SCORE.add(BigDecimal.valueOf(CONCURRENT_UPDATES)));
     }
 
-    /** 스레드별 독립 트랜잭션: ForUpdate 조회 → updateScore(1) → 커밋 */
+    /** 스레드별 독립 트랜잭션: ForUpdate 조회 → applyDelta(+1) → 커밋 */
     private void updateScoreInOwnTx() {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.executeWithoutResult(status -> {
             PersonalActivityScore score = personalScoreGetService.getPersonalScoreForUpdate(memberId);
-            score.updateScore(BigDecimal.ONE);
+            score.applyDelta(BigDecimal.ONE, ScoreType.REWARD);
         });
     }
 

@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.score.entity;
 
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
+import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.team.entity.Team;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -39,23 +40,21 @@ public class PersonalActivityScore extends BaseEntity {
     @Column(precision = 19, scale = 1)
     private BigDecimal score = BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
 
-    public BigDecimal updateScore(BigDecimal score) {
-        this.score = this.score.add(score);
-        return this.score;
-    }
-
-    // TODO 상점 누적합, 벌점 누적합
-    public BigDecimal updateScore(ActivityType activityType) {
-        BigDecimal delta = BigDecimal.valueOf(activityType.getDelta());
+    /** 점수와 해당 유형(상점/벌점)의 누적합을 함께 가감 (수정/삭제 되돌리기 포함 모든 가감 경로 공용) */
+    public BigDecimal applyDelta(BigDecimal delta, ScoreType scoreType) {
         this.score = this.score.add(delta);
 
-        if (activityType.isReward()) {
+        if (scoreType == ScoreType.REWARD) {
             this.rewardPrefixSum = this.rewardPrefixSum.add(delta);
             return this.score;
         }
 
         this.penaltyPrefixSum = this.penaltyPrefixSum.add(delta);
         return this.score;
+    }
+
+    public BigDecimal updateScore(ActivityType activityType) {
+        return applyDelta(BigDecimal.valueOf(activityType.getDelta()), activityType.getScoreType());
     }
 
     public static PersonalActivityScore from(Member member) {

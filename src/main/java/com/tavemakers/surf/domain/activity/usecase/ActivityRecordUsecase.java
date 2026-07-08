@@ -178,9 +178,14 @@ public class ActivityRecordUsecase {
         validateNotDeleted(record);
 
         if (dto.activityType() != null) {
-            BigDecimal scoreDelta = activityRecordPatchService.updateActivityType(record, dto.activityType());
+            // 단일 델타 보정으로는 상·벌점 누적합 두 컬럼을 맞출 수 없으므로, 구(scoreType, appliedScore)를 되돌리고 신을 반영한다.
+            ScoreType oldScoreType = record.getScoreType();
+            BigDecimal oldAppliedScore = record.getAppliedScore();
+            activityRecordPatchService.updateActivityType(record, dto.activityType());
+
             PersonalActivityScore score = findScoreByRecord(record);
-            score.updateScore(scoreDelta);
+            score.applyDelta(oldAppliedScore.negate(), oldScoreType);
+            score.applyDelta(record.getAppliedScore(), record.getScoreType());
         }
 
         if (dto.activityDate() != null) {
@@ -197,7 +202,7 @@ public class ActivityRecordUsecase {
         activityRecordDeleteService.softDelete(record);
 
         PersonalActivityScore score = findScoreByRecord(record);
-        score.updateScore(record.getAppliedScore().negate());
+        score.applyDelta(record.getAppliedScore().negate(), record.getScoreType());
     }
 
     /** 모든 활동 종류 조회 */
