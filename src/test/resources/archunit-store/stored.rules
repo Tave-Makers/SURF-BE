@@ -1,8 +1,9 @@
 #
-#Wed Jul 08 18:34:09 KST 2026
+#Wed Jul 08 23:55:38 KST 2026
 R6\:\ \uBE44\uB3D9\uAE30(@Async)\ \uBD80\uC218\uD6A8\uACFC\ \uB9AC\uC2A4\uB108\uB294\ @TransactionalEventListener(AFTER_COMMIT)\uB97C\ \uC0AC\uC6A9\uD55C\uB2E4\ (@Async\ +\ plain\ @EventListener\ \uAE08\uC9C0)=257ec6be-a245-4db1-a7ac-db987747c04f
 R3\:\ \uD0C0\ \uB3C4\uBA54\uC778\uC758\ Repository\uB97C\ \uC9C1\uC811\ \uCC38\uC870\uD560\ \uC218\ \uC5C6\uB2E4=8fc1840e-b747-47ca-a329-3953aebca7f6
 R7\:\ domain\ \uACC4\uCE35\uC740\ \uAC19\uC740\ \uB3C4\uBA54\uC778\uC758\ application(usecase/query)\ \uB610\uB294\ presentation(controller/dto)\uC5D0\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4=9a8878ed-3866-447b-a5bf-2d3394e31bdb
+R1c\:\ Controller\uB294\ infrastructure\ \uACC4\uCE35(\uC678\uBD80\ \uC5B4\uB311\uD130)\uC5D0\ \uC9C1\uC811\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4\ (Wave\ 3\ \uC2EC\uC0AC\uC5D0\uC11C\ \uBC1C\uACAC\uB41C\ \uADDC\uCE59\ \uAC2D\ \u2014\ FcmService\ infra\ \uC774\uB3D9\uC73C\uB85C\ R1b\ \uBC94\uC704\ \uC774\uD0C8)=562ec66e-2664-4fc2-be9c-fe418647aa71
 R1a\:\ Controller\uB294\ Repository\uC5D0\ \uC9C1\uC811\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4=4f29391d-1bff-4c3b-a775-83a141d6d4fe
 R5\:\ \uD2B8\uB79C\uC7AD\uC158\uC744\ \uC5EC\uB294\ \uD074\uB798\uC2A4\uB294\ \uC678\uBD80\ API\ \uD074\uB77C\uC774\uC5B8\uD2B8\uC5D0\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4\ (\uCEE4\uBC0B\ \uD6C4\ @TransactionalEventListener(AFTER_COMMIT)\uB85C\ \uBD84\uB9AC)=ade82c0c-2d7e-4f41-8d3f-4d76ba65cdb7
 R4a\:\ @Transactional\ \uD074\uB798\uC2A4\uB294\ application\ \uACC4\uCE35(usecase/query)\uC5D0\uB9CC\ \uB454\uB2E4=7fb48ce8-7495-4ca1-9065-131895fc7a17

@@ -73,6 +73,13 @@ public class CleanArchitectureRulesTest {
                                     .and(not(simpleNameEndingWith("Usecase"))))
                     .as("R1b: Controller는 Usecase 또는 query(GetService)만 호출한다"));
 
+    @ArchTest
+    static final ArchRule R1c_controller_는_infrastructure_직접_의존_금지 = FreezingArchRule.freeze(
+            noClasses().that().resideInAPackage("..controller..")
+                    .should().dependOnClassesThat(resideInAPackage("..infrastructure.."))
+                    .as("R1c: Controller는 infrastructure 계층(외부 어댑터)에 직접 의존할 수 없다 "
+                            + "(Wave 3 심사에서 발견된 규칙 갭 — FcmService infra 이동으로 R1b 범위 이탈)"));
+
     // ── R2: 타 도메인 접근은 query(GetService) 또는 이벤트만 ────────────────
 
     @ArchTest
