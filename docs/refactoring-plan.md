@@ -185,6 +185,8 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 - **reservation 인메모리 태스크 핸들 미보관 (중간)**: 예약 변경/게시글 삭제 시 이전 태스크 미취소(재시작 재등록은 ReservationStartupLoader가 있어 정상). 태스크 핸들 관리 설계 필요
 - **PostPublishRunner 발행 race (중간, Wave 4 심사 발견)**: publishPost가 post·reservation을 무잠금 조회 + 상태 가드 없이 publish() — 발행 시각과 예약 변경 tx가 겹치면 취소된 예약을 발행하는 창. 후속: post 행 락 앵커 + 상태 재검증 (3b155e6e와 동일 패턴)
 - **락 순서 규약 (낮음)**: 제명/팀삭제 리스너에 @Order로 activity(record)→score 순서 고정 — patch/delete 경로와 정렬해 이론적 데드락 창 제거. 잠금 조회(getPostForUpdate 등)가 query 계층에 노출되는 오염 반복 — 잠금 조회 소속 계층 원칙 수립 필요
+- **발행 스킵 시 RESERVED 잔존 수렴 (낮음, Phase 4 심사)**: PostPublishRunner의 멱등 스킵 분기에서 예약이 RESERVED로 남으면 재기동마다 no-op 재스케줄 — 스킵 시 `cancel()`로 수렴 권장 (수정 후 경로에선 새로 안 생김, 기존 race 잔존 데이터만 해당)
+- **JwtService 빈 토큰 IllegalArgumentException (낮음, 확인 필요)**: extractMemberId가 빈 문자열 토큰이면 jjwt IllegalArgumentException 전파 — 필터 경로에서 실제 도달 가능한지 확인 후 catch 확장
 - **reservation PUBLISHED 재예약 가드/중복 RESERVED**: Wave 4에서 수정 진행 중
 - **activity ActivityRecord.prefixSum 행 스냅샷 미갱신 (중간)**: patch/delete 후 후속 기록 행들의 스냅샷이 옛 값 — 사용자 활동내역 화면 누적합 열 불일치. 재계산 정책 필요 (위 "prefixSum 스냅샷" 항목과 동일 건, 사용자 노출 확인됨)
 - **admin/manager 경로 권한 미분리 (중간)**: `/v1/admin/**`와 `/v1/manager/**`가 동일하게 ADMIN/PRESIDENT/MANAGER 허용(PermitUrlConfig) — MANAGER가 admin 전용 의도 기능(활동기록 삭제 등)에 접근 가능. 분리 여부 정책
