@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.reservation.exception;
+package com.tavemakers.surf.domain.reservation.domain.exception;
 
 import com.tavemakers.surf.global.common.exception.BaseException;
 
-import static com.tavemakers.surf.domain.reservation.exception.ErrorMessage.RESERVATION_NOT_FOUND;
+import static com.tavemakers.surf.domain.reservation.domain.exception.ErrorMessage.RESERVATION_NOT_FOUND;
 
 public class ReservationNotFoundException extends BaseException {
     public ReservationNotFoundException() {

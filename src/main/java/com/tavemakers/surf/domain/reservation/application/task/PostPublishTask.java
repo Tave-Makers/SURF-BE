@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.reservation.task;
+package com.tavemakers.surf.domain.reservation.application.task;
 
 public class PostPublishTask implements Runnable {
 

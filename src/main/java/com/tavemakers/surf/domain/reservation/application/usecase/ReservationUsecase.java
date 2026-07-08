@@ -1,12 +1,12 @@
-package com.tavemakers.surf.domain.reservation.usecase;
+package com.tavemakers.surf.domain.reservation.application.usecase;
 
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
 import com.tavemakers.surf.domain.post.domain.entity.Post;
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.exception.ReservationAlreadyPublishedException;
-import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
-import com.tavemakers.surf.domain.reservation.service.ReservationCreateService;
-import com.tavemakers.surf.domain.reservation.service.ReservationScheduleService;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.domain.exception.ReservationAlreadyPublishedException;
+import com.tavemakers.surf.domain.reservation.application.query.ReservationGetService;
+import com.tavemakers.surf.domain.reservation.domain.service.ReservationCreateService;
+import com.tavemakers.surf.domain.reservation.infrastructure.ReservationScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

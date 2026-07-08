@@ -3,7 +3,7 @@ import com.tavemakers.surf.domain.post.domain.service.post.PostPatchService;
 
 import com.tavemakers.surf.domain.post.presentation.dto.request.PostUpdateReqDTO;
 import com.tavemakers.surf.domain.post.presentation.dto.response.PostDetailResDTO;
-import com.tavemakers.surf.domain.reservation.usecase.ReservationUsecase;
+import com.tavemakers.surf.domain.reservation.application.usecase.ReservationUsecase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

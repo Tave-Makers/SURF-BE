@@ -1,11 +1,11 @@
-package com.tavemakers.surf.domain.reservation.task;
+package com.tavemakers.surf.domain.reservation.application.task;
 
 import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.repository.PostRepository;
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
 import com.tavemakers.surf.domain.post.domain.service.support.PostPublishedEvent;
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.application.query.ReservationGetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.Nullable;

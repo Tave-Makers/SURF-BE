@@ -1,9 +1,9 @@
-package com.tavemakers.surf.domain.reservation.service;
+package com.tavemakers.surf.domain.reservation.application.query;
 
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.entity.ReservationStatus;
-import com.tavemakers.surf.domain.reservation.exception.ReservationNotFoundException;
-import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.domain.entity.ReservationStatus;
+import com.tavemakers.surf.domain.reservation.domain.exception.ReservationNotFoundException;
+import com.tavemakers.surf.domain.reservation.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.reservation.entity;
+package com.tavemakers.surf.domain.reservation.domain.entity;
 
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;

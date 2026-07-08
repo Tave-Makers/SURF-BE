@@ -5,7 +5,7 @@ import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.repository.PostRepository;
 import com.tavemakers.surf.domain.post.domain.service.post.PostDeleteService;
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
-import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
+import com.tavemakers.surf.domain.reservation.domain.repository.ReservationRepository;
 import com.tavemakers.surf.domain.schedule.domain.service.ScheduleDeleteService;
 import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import java.util.List;

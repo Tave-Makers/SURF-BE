@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.reservation.service;
+package com.tavemakers.surf.domain.reservation.domain.service;
 
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.repository.ReservationRepository;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.domain.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

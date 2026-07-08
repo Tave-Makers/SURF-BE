@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.reservation.usecase;
+package com.tavemakers.surf.domain.reservation.application.usecase;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.board.domain.entity.Board;
@@ -14,12 +14,12 @@ import com.tavemakers.surf.domain.post.application.query.PostImageGetService;
 import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.service.like.PostLikeService;
 import com.tavemakers.surf.domain.post.domain.service.support.ViewCountService;
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.entity.ReservationStatus;
-import com.tavemakers.surf.domain.reservation.exception.ReservationAlreadyPublishedException;
-import com.tavemakers.surf.domain.reservation.service.ReservationCreateService;
-import com.tavemakers.surf.domain.reservation.service.ReservationGetService;
-import com.tavemakers.surf.domain.reservation.service.ReservationScheduleService;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.domain.entity.ReservationStatus;
+import com.tavemakers.surf.domain.reservation.domain.exception.ReservationAlreadyPublishedException;
+import com.tavemakers.surf.domain.reservation.domain.service.ReservationCreateService;
+import com.tavemakers.surf.domain.reservation.application.query.ReservationGetService;
+import com.tavemakers.surf.domain.reservation.infrastructure.ReservationScheduleService;
 import com.tavemakers.surf.domain.scrap.application.query.ScrapGetService;
 import com.tavemakers.surf.support.ConcurrencyTestHelper;
 import jakarta.persistence.EntityManager;

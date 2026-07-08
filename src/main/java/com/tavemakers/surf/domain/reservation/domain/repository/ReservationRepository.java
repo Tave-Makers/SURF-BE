@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.reservation.repository;
+package com.tavemakers.surf.domain.reservation.domain.repository;
 
-import com.tavemakers.surf.domain.reservation.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.entity.ReservationStatus;
+import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
+import com.tavemakers.surf.domain.reservation.domain.entity.ReservationStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

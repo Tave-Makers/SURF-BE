@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.reservation.exception;
+package com.tavemakers.surf.domain.reservation.domain.exception;
 
 import com.tavemakers.surf.global.common.exception.BaseException;
 
-import static com.tavemakers.surf.domain.reservation.exception.ErrorMessage.RESERVATION_CANCELED_EXCEPTION;
+import static com.tavemakers.surf.domain.reservation.domain.exception.ErrorMessage.RESERVATION_CANCELED_EXCEPTION;
 
 public class ReservationCanceledException extends BaseException {
     public ReservationCanceledException() {

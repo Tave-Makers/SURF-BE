@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.reservation.service;
+package com.tavemakers.surf.domain.reservation.infrastructure;
 
-import com.tavemakers.surf.domain.reservation.task.PostPublishRunner;
-import com.tavemakers.surf.domain.reservation.task.PostPublishTask;
+import com.tavemakers.surf.domain.reservation.application.task.PostPublishRunner;
+import com.tavemakers.surf.domain.reservation.application.task.PostPublishTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;
