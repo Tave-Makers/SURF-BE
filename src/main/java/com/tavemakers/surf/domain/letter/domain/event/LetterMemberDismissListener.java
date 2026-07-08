@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.letter.event;
+package com.tavemakers.surf.domain.letter.domain.event;
 
-import com.tavemakers.surf.domain.letter.repository.LetterRepository;
+import com.tavemakers.surf.domain.letter.domain.repository.LetterRepository;
 import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;

@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.letter.dto.response;
+package com.tavemakers.surf.domain.letter.presentation.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import com.tavemakers.surf.domain.letter.entity.Letter;
+import com.tavemakers.surf.domain.letter.domain.entity.Letter;
 
 import java.time.LocalDateTime;
 

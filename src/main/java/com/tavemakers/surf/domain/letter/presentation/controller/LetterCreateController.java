@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.letter.controller;
+package com.tavemakers.surf.domain.letter.presentation.controller;
 
-import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.domain.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.facade.LetterFacade;
+import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.domain.letter.presentation.dto.response.LetterResDTO;
+import com.tavemakers.surf.domain.letter.application.facade.LetterFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.letter.controller.ResponseMessage.LETTER_CREATED;
+import static com.tavemakers.surf.domain.letter.presentation.controller.ResponseMessage.LETTER_CREATED;
 
 @RestController
 @RequiredArgsConstructor

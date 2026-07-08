@@ -1,7 +1,7 @@
-package com.tavemakers.surf.domain.letter.controller;
+package com.tavemakers.surf.domain.letter.presentation.controller;
 
-import com.tavemakers.surf.domain.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.facade.LetterFacade;
+import com.tavemakers.surf.domain.letter.presentation.dto.response.LetterResDTO;
+import com.tavemakers.surf.domain.letter.application.facade.LetterFacade;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +11,7 @@ import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import static com.tavemakers.surf.domain.letter.controller.ResponseMessage.LETTER_SENT_READ;
+import static com.tavemakers.surf.domain.letter.presentation.controller.ResponseMessage.LETTER_SENT_READ;
 
 @RestController
 @RequiredArgsConstructor

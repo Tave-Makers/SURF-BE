@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.letter.service;
+package com.tavemakers.surf.domain.letter.domain.service;
 
-import com.tavemakers.surf.domain.letter.entity.Letter;
-import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
-import com.tavemakers.surf.domain.letter.repository.LetterRepository;
+import com.tavemakers.surf.domain.letter.domain.entity.Letter;
+import com.tavemakers.surf.domain.letter.domain.event.LetterSentEvent;
+import com.tavemakers.surf.domain.letter.domain.repository.LetterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;

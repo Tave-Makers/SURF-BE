@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.dto.request;
+package com.tavemakers.surf.domain.letter.presentation.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

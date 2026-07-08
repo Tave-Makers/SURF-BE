@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.controller;
+package com.tavemakers.surf.domain.letter.presentation.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

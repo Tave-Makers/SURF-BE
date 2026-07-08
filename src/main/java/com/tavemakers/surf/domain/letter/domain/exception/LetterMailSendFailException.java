@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.exception;
+package com.tavemakers.surf.domain.letter.domain.exception;
 
 import com.tavemakers.surf.global.common.exception.BaseException;
 

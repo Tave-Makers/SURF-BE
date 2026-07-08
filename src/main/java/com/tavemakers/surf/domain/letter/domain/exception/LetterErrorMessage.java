@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.exception;
+package com.tavemakers.surf.domain.letter.domain.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

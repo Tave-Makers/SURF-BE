@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.entity;
+package com.tavemakers.surf.domain.letter.domain.entity;
 
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.global.common.entity.BaseEntity;

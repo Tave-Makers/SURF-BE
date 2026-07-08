@@ -1,12 +1,12 @@
-package com.tavemakers.surf.domain.letter.facade;
+package com.tavemakers.surf.domain.letter.application.facade;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
-import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.domain.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
-import com.tavemakers.surf.domain.letter.service.LetterCreateService;
-import com.tavemakers.surf.domain.letter.service.LetterGetService;
+import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.domain.letter.presentation.dto.response.LetterResDTO;
+import com.tavemakers.surf.domain.letter.domain.event.LetterSentEvent;
+import com.tavemakers.surf.domain.letter.domain.exception.LetterMailSendFailException;
+import com.tavemakers.surf.domain.letter.domain.service.LetterCreateService;
+import com.tavemakers.surf.domain.letter.application.query.LetterGetService;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;

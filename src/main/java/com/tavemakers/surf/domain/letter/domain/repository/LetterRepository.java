@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.letter.repository;
+package com.tavemakers.surf.domain.letter.domain.repository;
 
-import com.tavemakers.surf.domain.letter.entity.Letter;
+import com.tavemakers.surf.domain.letter.domain.entity.Letter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;

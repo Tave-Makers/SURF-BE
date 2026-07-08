@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.event;
+package com.tavemakers.surf.domain.letter.domain.event;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

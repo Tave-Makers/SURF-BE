@@ -1,11 +1,11 @@
-package com.tavemakers.surf.domain.letter.facade;
+package com.tavemakers.surf.domain.letter.application.facade;
 
-import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.domain.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.entity.Letter;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
-import com.tavemakers.surf.domain.letter.service.LetterGetService;
-import com.tavemakers.surf.domain.letter.service.LetterCreateService;
+import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.domain.letter.presentation.dto.response.LetterResDTO;
+import com.tavemakers.surf.domain.letter.domain.entity.Letter;
+import com.tavemakers.surf.domain.letter.domain.exception.LetterMailSendFailException;
+import com.tavemakers.surf.domain.letter.application.query.LetterGetService;
+import com.tavemakers.surf.domain.letter.domain.service.LetterCreateService;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
