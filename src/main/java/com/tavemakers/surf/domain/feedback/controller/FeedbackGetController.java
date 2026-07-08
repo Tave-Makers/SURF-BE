@@ -27,7 +27,7 @@ public class FeedbackGetController {
     /** 피드백 조회 (운영진 전용) */
     @Operation(summary = "피드백 조회", description = "운영진이 피드백을 조회합니다.")
     @GetMapping("/v1/admin/feedbacks")
-    @PreAuthorize("hasAnyRole('ROOT','MANAGER','PRESIDENT')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PRESIDENT')")
     public ApiResponse<Slice<FeedbackResDTO>> getFeedbacks(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable

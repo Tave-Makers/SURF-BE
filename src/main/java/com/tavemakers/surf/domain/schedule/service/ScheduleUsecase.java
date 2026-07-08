@@ -27,6 +27,7 @@ public class ScheduleUsecase {
         Post post = postGetService.findPostById(postId);
         Long scheduleId = scheduleCreateService.createScheduleAtPost(dto, post);
         post.addScheduleId(scheduleId);
+        post.changeHasSchedule(true);
     }
 
     /** 캘린더에서 개별 일정 생성 */
