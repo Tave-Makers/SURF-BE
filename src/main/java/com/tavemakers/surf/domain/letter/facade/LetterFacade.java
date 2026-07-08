@@ -3,7 +3,6 @@ package com.tavemakers.surf.domain.letter.facade;
 import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.domain.letter.dto.response.LetterResDTO;
 import com.tavemakers.surf.domain.letter.entity.Letter;
-import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
 import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.domain.letter.service.LetterGetService;
 import com.tavemakers.surf.domain.letter.service.LetterCreateService;
@@ -12,12 +11,10 @@ import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,11 +27,9 @@ public class LetterFacade {
     private final LetterCreateService letterCreateService;
     private final EmailSender emailSender;
     private final LetterGetService letterGetService;
-    private final ApplicationEventPublisher eventPublisher;
     private final LogEventEmitter logEventEmitter;
 
-    /** 쪽지 생성 및 이메일 발송 */
-    @Transactional
+    /** 쪽지 생성(저장·커밋) 후 트랜잭션 밖에서 이메일 발송 */
     public LetterResDTO createLetter(Long senderId, LetterCreateReqDTO req) {
         logEventEmitter.emit("letter_send_api_called", Map.of(
                 "sender_id", senderId,
@@ -67,7 +62,20 @@ public class LetterFacade {
                 "validation_result", true
         ));
 
-        // 3) 이메일 본문 생성
+        // 3) 엔티티 생성
+        Letter letter = Letter.create(
+                req.title(),
+                req.content(),
+                req.sns(),
+                req.replyEmail(),
+                sender,
+                receiver
+        );
+
+        // 4) 저장 + 알림 이벤트 발행 (트랜잭션 커밋 → AFTER_COMMIT 리스너 발화)
+        Letter saved = letterCreateService.save(letter);
+
+        // 5) 이메일 본문 생성
         String emailBody = """
         [Surf에서 %s님이 보낸 쪽지입니다.]
 
@@ -83,7 +91,7 @@ public class LetterFacade {
                         req.sns() != null ? req.sns() : "-"
                 );
 
-        // 4) 이메일 전송 (실패 시 예외)
+        // 6) 이메일 전송 (트랜잭션 밖, 실패 시 예외 — 저장된 쪽지는 유지)
         boolean emailSent = false;
         try {
             emailSender.sendMail(receiver.getEmail(), req.title(), emailBody);
@@ -99,26 +107,6 @@ public class LetterFacade {
             throw new LetterMailSendFailException();
         }
 
-        // 5) 엔티티 생성
-        Letter letter = Letter.create(
-                req.title(),
-                req.content(),
-                req.sns(),
-                req.replyEmail(),
-                sender,
-                receiver
-        );
-
-        // 6) 저장
-        Letter saved = letterCreateService.save(letter);
-
-        // 7) 알림 이벤트 발행
-        eventPublisher.publishEvent(new LetterSentEvent(
-                receiver.getId(),
-                sender.getName(),
-                sender.getId()
-        ));
-
         logEventEmitter.emit("letter_send_api_succeeded", Map.of(
                 "sender_id", senderId,
                 "receiver_id", req.receiverId(),
@@ -126,12 +114,11 @@ public class LetterFacade {
                 "email_sent", emailSent
         ));
 
-        // 8) 저장된 엔티티 기반으로 Response 생성
+        // 7) 저장된 엔티티 기반으로 Response 생성
         return LetterResDTO.from(saved);
     }
 
     /** 발신한 쪽지 목록 조회 */
-    @Transactional
     public Slice<LetterResDTO> getSentLetters(Long senderId, Pageable pageable) {
         return letterGetService.getSentLetters(senderId, pageable)
                 .map(LetterResDTO::from);
