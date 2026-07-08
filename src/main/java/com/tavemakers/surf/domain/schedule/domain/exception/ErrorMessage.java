@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.schedule.exception;
+package com.tavemakers.surf.domain.schedule.domain.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.schedule.exception;
+package com.tavemakers.surf.domain.schedule.domain.exception;
 
-import static com.tavemakers.surf.domain.schedule.exception.ErrorMessage.SCHEDULE_NOT_FOUND;
+import static com.tavemakers.surf.domain.schedule.domain.exception.ErrorMessage.SCHEDULE_NOT_FOUND;
 
 import com.tavemakers.surf.global.common.exception.BaseException;
 

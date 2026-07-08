@@ -1,9 +1,9 @@
-package com.tavemakers.surf.domain.schedule.service;
+package com.tavemakers.surf.domain.schedule.domain.service;
 
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.request.ScheduleCreateReqDTO;
 import com.tavemakers.surf.domain.post.domain.entity.Post;
-import com.tavemakers.surf.domain.schedule.entity.Schedule;
-import com.tavemakers.surf.domain.schedule.repository.ScheduleRepository;
+import com.tavemakers.surf.domain.schedule.domain.entity.Schedule;
+import com.tavemakers.surf.domain.schedule.domain.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

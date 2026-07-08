@@ -1,11 +1,11 @@
-package com.tavemakers.surf.domain.schedule.service;
+package com.tavemakers.surf.domain.schedule.application.query;
 
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
-import com.tavemakers.surf.domain.schedule.entity.Schedule;
-import com.tavemakers.surf.domain.schedule.exception.ScheduleNotFoundException;
-import com.tavemakers.surf.domain.schedule.repository.ScheduleRepository;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleMonthlyResDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleResDTO;
+import com.tavemakers.surf.domain.schedule.domain.entity.Schedule;
+import com.tavemakers.surf.domain.schedule.domain.exception.ScheduleNotFoundException;
+import com.tavemakers.surf.domain.schedule.domain.repository.ScheduleRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogParam;
 import java.time.LocalDateTime;

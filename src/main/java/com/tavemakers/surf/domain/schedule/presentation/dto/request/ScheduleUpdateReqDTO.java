@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.schedule.dto.request;
+package com.tavemakers.surf.domain.schedule.presentation.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;

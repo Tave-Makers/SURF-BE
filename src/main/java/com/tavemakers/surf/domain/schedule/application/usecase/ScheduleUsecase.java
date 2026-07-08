@@ -1,11 +1,15 @@
-package com.tavemakers.surf.domain.schedule.service;
+package com.tavemakers.surf.domain.schedule.application.usecase;
 
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleUpdateReqDTO;
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.request.ScheduleCreateReqDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.request.ScheduleUpdateReqDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleMonthlyResDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleResDTO;
 import com.tavemakers.surf.domain.post.domain.entity.Post;
-import com.tavemakers.surf.domain.schedule.entity.Schedule;
+import com.tavemakers.surf.domain.schedule.domain.entity.Schedule;
+import com.tavemakers.surf.domain.schedule.application.query.ScheduleGetService;
+import com.tavemakers.surf.domain.schedule.domain.service.ScheduleCreateService;
+import com.tavemakers.surf.domain.schedule.domain.service.ScheduleDeleteService;
+import com.tavemakers.surf.domain.schedule.domain.service.SchedulePatchService;
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,8 @@
-package com.tavemakers.surf.domain.schedule.controller;
+package com.tavemakers.surf.domain.schedule.presentation.controller;
 
-import static com.tavemakers.surf.domain.schedule.controller.ResponseMessage.SCHEDULE_DELETED;
+import static com.tavemakers.surf.domain.schedule.presentation.controller.ResponseMessage.SCHEDULE_DELETED;
 
-import com.tavemakers.surf.domain.schedule.service.ScheduleUsecase;
+import com.tavemakers.surf.domain.schedule.application.usecase.ScheduleUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

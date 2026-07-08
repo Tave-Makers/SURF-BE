@@ -1,6 +1,6 @@
-package com.tavemakers.surf.domain.schedule.dto.response;
+package com.tavemakers.surf.domain.schedule.presentation.dto.response;
 
-import com.tavemakers.surf.domain.schedule.entity.Schedule;
+import com.tavemakers.surf.domain.schedule.domain.entity.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;

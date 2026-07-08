@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.schedule.controller;
+package com.tavemakers.surf.domain.schedule.presentation.controller;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

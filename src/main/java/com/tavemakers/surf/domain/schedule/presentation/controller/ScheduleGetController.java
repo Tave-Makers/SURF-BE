@@ -1,12 +1,12 @@
-package com.tavemakers.surf.domain.schedule.controller;
+package com.tavemakers.surf.domain.schedule.presentation.controller;
 
-import static com.tavemakers.surf.domain.schedule.controller.ResponseMessage.SCHEDULE_CALENDAR_READ;
-import static com.tavemakers.surf.domain.schedule.controller.ResponseMessage.SCHEDULE_POST_READ;
-import static com.tavemakers.surf.domain.schedule.controller.ResponseMessage.SCHEDULE_READ;
+import static com.tavemakers.surf.domain.schedule.presentation.controller.ResponseMessage.SCHEDULE_CALENDAR_READ;
+import static com.tavemakers.surf.domain.schedule.presentation.controller.ResponseMessage.SCHEDULE_POST_READ;
+import static com.tavemakers.surf.domain.schedule.presentation.controller.ResponseMessage.SCHEDULE_READ;
 
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleMonthlyResDTO;
-import com.tavemakers.surf.domain.schedule.dto.response.ScheduleResDTO;
-import com.tavemakers.surf.domain.schedule.service.ScheduleUsecase;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleMonthlyResDTO;
+import com.tavemakers.surf.domain.schedule.presentation.dto.response.ScheduleResDTO;
+import com.tavemakers.surf.domain.schedule.application.usecase.ScheduleUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
