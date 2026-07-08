@@ -89,6 +89,8 @@ public class LogEventEmitterImpl implements LogEventEmitter {
             }
         }
 
+        ctx.events.clear(); // 방출된 이벤트 제거 (풀드 스레드 재사용 시 중복 방출 방지)
+
         if (forwardingService != null && !jsonLines.isEmpty()) {
             forwardingService.forward(jsonLines);
         }

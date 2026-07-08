@@ -6,7 +6,6 @@ import com.tavemakers.surf.global.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,19 +32,7 @@ public class SecurityConfig {
 
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
-    private final RedisTemplate<String, String> redisTemplate;
     private final PermitUrlConfig permitUrlConfig;
-
-
-    // 인증 없이 접근 가능한 URL 정의
-    private static final String[] PERMITTED_URLS = {
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-
-            "/kakao/login",
-            "/login/oauth2/code/kakao",
-            "/login/**"
-    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -67,7 +54,7 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form.disable()) // 우리는 소셜 로그인 + JWT 사용 → formLogin 비활성화
                 .httpBasic(basic -> basic.disable()) // Basic Auth 비활성화
-                .headers(h -> h.frameOptions(f -> f.disable())); // H2 console 접근 허용 필요 시
+                .headers(h -> h.frameOptions(f -> f.sameOrigin())); // 클릭재킹 방지 (X-Frame-Options: SAMEORIGIN)
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
