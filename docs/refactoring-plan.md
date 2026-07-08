@@ -108,6 +108,7 @@ expel(퇴출)·withdraw(자진 탈퇴)는 회원을 익명화("탈퇴한 회원"
 - `ActivityRecordUsecase.scoreCalculator` 미사용 필드 (데드코드)
 - `removeAllByMemberId` 류 반복 delete → 벌크 전환
 - **R2 사각지대 (Wave 1 구조 이동 리뷰에서 발견)**: `*ApiClient`가 infrastructure로 이동하면서 타 도메인의 infrastructure 의존(예: `MemberDisconnectedListener → AppleApiClient`)이 R2 매칭 대상에서 벗어남. Phase 4에서 R2를 `.infrastructure`까지 확장하거나 auth revoke 창구를 이벤트로 정리
+- **viewCount 후속 (Wave 2 post 버그 리뷰 non-blocking)**: ① `ViewCountService` Redis 장애 폴백(`post.increaseViewCount()` dirty write)을 `@Modifying` 원자 UPDATE로 전환 — increment 이후 예외 시 off-by-one + 스케줄러 합산과 교차 유실 창 제거. ② `ViewCountScheduler` 클래스 `@Transactional` 하에서 배치 여러 개가 한 트랜잭션 → 뒤 배치 JDBC 실패 시 GET+DEL로 이미 회수·삭제된 앞 배치 델타까지 전량 유실. 배치 단위 트랜잭션 분리 또는 재적재 검토
 
 ### Phase 3 — 도메인 전환 Wave
 
