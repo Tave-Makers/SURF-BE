@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.post.domain.entity;
 
-import com.tavemakers.surf.domain.board.entity.Board;
-import com.tavemakers.surf.domain.board.entity.BoardCategory;
+import com.tavemakers.surf.domain.board.domain.entity.Board;
+import com.tavemakers.surf.domain.board.domain.entity.BoardCategory;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.post.presentation.dto.request.PostCreateReqDTO;
 import com.tavemakers.surf.domain.post.presentation.dto.request.PostUpdateReqDTO;

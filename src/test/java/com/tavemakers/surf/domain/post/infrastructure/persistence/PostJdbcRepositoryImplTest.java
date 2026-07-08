@@ -1,9 +1,9 @@
 package com.tavemakers.surf.domain.post.infrastructure.persistence;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
-import com.tavemakers.surf.domain.board.entity.Board;
-import com.tavemakers.surf.domain.board.entity.BoardCategory;
-import com.tavemakers.surf.domain.board.entity.BoardType;
+import com.tavemakers.surf.domain.board.domain.entity.Board;
+import com.tavemakers.surf.domain.board.domain.entity.BoardCategory;
+import com.tavemakers.surf.domain.board.domain.entity.BoardType;
 import com.tavemakers.surf.domain.member.domain.entity.Member;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;

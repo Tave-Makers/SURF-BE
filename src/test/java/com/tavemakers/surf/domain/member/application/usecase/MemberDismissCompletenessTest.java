@@ -5,9 +5,9 @@ import com.tavemakers.surf.domain.badge.application.event.BadgeMemberDismissList
 import com.tavemakers.surf.domain.badge.domain.entity.Badge;
 import com.tavemakers.surf.domain.badge.domain.entity.MemberBadge;
 import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
-import com.tavemakers.surf.domain.board.entity.Board;
-import com.tavemakers.surf.domain.board.entity.BoardCategory;
-import com.tavemakers.surf.domain.board.entity.BoardType;
+import com.tavemakers.surf.domain.board.domain.entity.Board;
+import com.tavemakers.surf.domain.board.domain.entity.BoardCategory;
+import com.tavemakers.surf.domain.board.domain.entity.BoardType;
 import com.tavemakers.surf.domain.comment.domain.entity.Comment;
 import com.tavemakers.surf.domain.comment.domain.entity.CommentMention;
 import com.tavemakers.surf.domain.comment.domain.event.CommentMemberDismissListener;
