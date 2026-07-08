@@ -146,7 +146,9 @@ public class CleanArchitectureRulesTest {
             "org.springframework.web.reactive.function.client.WebClient",
             "org.springframework.mail.javamail.JavaMailSender",
             "com.google.firebase.messaging.FirebaseMessaging",
-            "com.amazonaws.services.s3.AmazonS3");
+            "com.amazonaws.services.s3.AmazonS3",
+            // 래퍼를 통한 외부 I/O도 감지 (Wave 3 letter R5 수정에서 드러난 사각지대)
+            "com.tavemakers.surf.global.util.EmailSender");
 
     private static final DescribedPredicate<JavaClass> 트랜잭션_보유_클래스 =
             new DescribedPredicate<>("@Transactional을 클래스 또는 메서드에 선언한 클래스") {
