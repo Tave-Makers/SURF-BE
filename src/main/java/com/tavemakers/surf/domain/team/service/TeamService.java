@@ -9,6 +9,7 @@ import com.tavemakers.surf.domain.team.entity.TeamType;
 import com.tavemakers.surf.domain.team.exception.TeamLeaderNotFoundException;
 import com.tavemakers.surf.domain.team.exception.TeamLeaderNotInMemberException;
 import com.tavemakers.surf.domain.team.exception.TeamMemberDuplicatedException;
+import com.tavemakers.surf.domain.team.event.TeamDeletedEvent;
 import com.tavemakers.surf.domain.team.exception.TeamNotFoundException;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
 import com.tavemakers.surf.domain.member.presentation.dto.response.TrackResDTO;
@@ -18,6 +19,7 @@ import com.tavemakers.surf.domain.member.application.query.MemberGetService;
 import com.tavemakers.surf.domain.member.application.query.TrackGetService;
 import com.tavemakers.surf.domain.score.domain.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,7 @@ public class TeamService {
     private final MemberGetService memberGetService;
     private final TrackGetService trackGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
@@ -151,6 +154,9 @@ public class TeamService {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(TeamNotFoundException::new);
 
+        // 팀 부속 데이터(활동기록/팀 점수)를 동기 리스너가 같은 트랜잭션에서 먼저 정리한다
+        // (TeamMemberCleanupService.cleanupOnDismiss 와 동일 순서 — 미발행 시 FK 위반/고아 행)
+        eventPublisher.publishEvent(new TeamDeletedEvent(team.getId()));
         teamRepository.delete(team);
     }
 
