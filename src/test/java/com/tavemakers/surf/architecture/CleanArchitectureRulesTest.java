@@ -58,11 +58,12 @@ public class CleanArchitectureRulesTest {
 
     // ── R1: Controller는 application 계층(usecase/query)만 호출 ──────────────
 
+    // R1a는 베이스라인 0건 도달로 freeze 해제 (Phase 4) — 신규 위반은 저장 없이 즉시 실패
     @ArchTest
-    static final ArchRule R1a_controller_는_repository_직접_의존_금지 = FreezingArchRule.freeze(
+    static final ArchRule R1a_controller_는_repository_직접_의존_금지 =
             noClasses().that().resideInAPackage("..controller..")
                     .should().dependOnClassesThat(resideInAPackage("..repository.."))
-                    .as("R1a: Controller는 Repository에 직접 의존할 수 없다"));
+                    .as("R1a: Controller는 Repository에 직접 의존할 수 없다");
 
     @ArchTest
     static final ArchRule R1b_controller_는_usecase_query_만_호출 = FreezingArchRule.freeze(
@@ -110,9 +111,10 @@ public class CleanArchitectureRulesTest {
             }).as("R2: 타 도메인 접근은 query(GetService) 조회 또는 도메인 이벤트만 허용된다"));
 
     // ── R3: 타 도메인 Repository 직접 참조 금지 ─────────────────────────────
+    // 베이스라인 0건 도달로 freeze 해제 (Phase 4-1에서 잔여 6건 청산)
 
     @ArchTest
-    static final ArchRule R3_타_도메인_repository_직접_참조_금지 = FreezingArchRule.freeze(
+    static final ArchRule R3_타_도메인_repository_직접_참조_금지 =
             noClasses().should(new ArchCondition<>("타 도메인의 Repository에 의존한다") {
                 @Override
                 public void check(JavaClass clazz, ConditionEvents events) {
@@ -129,7 +131,7 @@ public class CleanArchitectureRulesTest {
                         }
                     }
                 }
-            }).as("R3: 타 도메인의 Repository를 직접 참조할 수 없다"));
+            }).as("R3: 타 도메인의 Repository를 직접 참조할 수 없다");
 
     // ── R4: @Transactional은 application 계층(usecase/query)에만 ────────────
 
@@ -175,26 +177,28 @@ public class CleanArchitectureRulesTest {
                 }
             };
 
+    // R5는 베이스라인 0건 도달로 freeze 해제 (Phase 4)
     @ArchTest
-    static final ArchRule R5_트랜잭션_안_외부_API_호출_금지 = FreezingArchRule.freeze(
+    static final ArchRule R5_트랜잭션_안_외부_API_호출_금지 =
             noClasses().that(트랜잭션_보유_클래스)
                     .should().dependOnClassesThat(외부_API_클라이언트)
                     .as("R5: 트랜잭션을 여는 클래스는 외부 API 클라이언트에 의존할 수 없다 "
-                            + "(커밋 후 @TransactionalEventListener(AFTER_COMMIT)로 분리)"));
+                            + "(커밋 후 @TransactionalEventListener(AFTER_COMMIT)로 분리)");
 
     // ── R6: 비동기 부수효과 리스너는 @TransactionalEventListener로 통일 ──────
     // 동기 인-트랜잭션 정리 리스너(plain @EventListener, @Async 없음)는 발행자 트랜잭션에
     // 참여해 함께 롤백되므로 허용한다 (D1 결정 — docs/refactoring-plan.md).
     // 금지 대상은 커밋 전에 별도 스레드로 새는 부수효과(@Async + plain @EventListener)다.
 
+    // R6는 베이스라인 0건 도달로 freeze 해제 (Wave 3에서 알림 리스너 5종 전환 완료)
     @ArchTest
-    static final ArchRule R6_비동기_plain_EventListener_금지 = FreezingArchRule.freeze(
+    static final ArchRule R6_비동기_plain_EventListener_금지 =
             noMethods().that().areDeclaredInClassesThat()
                     .resideInAPackage("com.tavemakers.surf.domain..")
                     .and().areAnnotatedWith(Async.class)
                     .should().beAnnotatedWith(EventListener.class)
                     .as("R6: 비동기(@Async) 부수효과 리스너는 @TransactionalEventListener(AFTER_COMMIT)를 "
-                            + "사용한다 (@Async + plain @EventListener 금지)"));
+                            + "사용한다 (@Async + plain @EventListener 금지)");
 
     // ── R7: domain 계층은 같은 도메인의 application/presentation에 의존 금지 ──
     // 계층 방향성(presentation → application → domain)을 강제한다. domain 계층이

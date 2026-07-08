@@ -62,9 +62,28 @@ R5는 정적 근사치다(직접 의존만 탐지). 간접 호출은 PR 리뷰(a
 |-------|------|------|
 | 0 | ArchUnit R1~R6 + 베이스라인, 동시성 테스트 헬퍼(`support/ConcurrencyTestHelper`), 본 문서 | ✅ |
 | 1 | P0 버그 수정 — 확정 4건 수정·커밋, 2건은 검증 결과 오탐 종결 (arch-reviewer APPROVE) | ✅ |
-| 2 | badge 도메인 파일럿 전환 → 4계층 템플릿 + 도메인 점검 체크리스트 확립 | |
-| 3 | 도메인별 전환 + 전 로직 점검 (아래 Wave 순서) | |
-| 4 | global 정리, 베이스라인 0건 달성, FreezingArchRule 해제 | |
+| 2 | badge 도메인 파일럿 전환 → 4계층 템플릿 + 도메인 점검 체크리스트 확립 | ✅ |
+| 3 | 도메인별 전환 + 전 로직 점검 — Wave 1~4 완료, 15개 도메인 전부 4계층 전환 (2026-07-09) | ✅ |
+| 4 | global 정리, 베이스라인 청산, FreezingArchRule 해제 (아래 로드맵) | 진행 중 |
+
+### Phase 4 — 베이스라인 청산 로드맵 (2026-07-09 수립)
+
+Phase 3 완료 시점 동결 베이스라인 **589건** (R1a·R5·R6은 0 — 완전 청산). FreezingArchRule이
+신규 유입을 차단하므로 부채는 더 늘지 않는다. 청산은 위험·규모 순으로 단계화한다:
+
+| 단계 | 대상 | 규모 | 방식 | 상태 |
+|------|------|------|------|------|
+| 4-1 | R3 (타 도메인 repo 직접 참조) | 6건 | 도메인 서비스 창구 신설(ReservationDeleteService, PostPublishService) — 발행 race 수정 동반 | ✅ 0건 |
+| 4-2 | global 정리 | — | jwt import 버그, 예외 메시지 노출, AccessDenied 403, frameOptions, 데드코드 | 진행 중 |
+| 4-3 | R4a/R4b (@Transactional 위치) | ~101건 | domain/service의 트랜잭션을 application(usecase/query)으로 승격 — 호출 경로별 트랜잭션 경계 재검토 필요, 도메인 단위 PR | 로드맵 |
+| 4-4 | R1b (controller→비Get service 직접 호출) | 72건 | usecase 위임 계층 신설 — R4-3과 같은 PR에서 자연 해소되는 경우 많음 | 로드맵 |
+| 4-5 | R2 (타 도메인 비-query 호출) | ~69건 | 이벤트화 또는 커맨드 포트 정식화(PostCommentCountService류) — 정합성 요구별 개별 판단 | 로드맵 |
+| 4-6 | R7 (domain→application/presentation 역의존) | ~339건 | 엔티티 팩토리의 ReqDTO 파라미터를 원시값으로, 서비스의 ResDTO 반환을 매퍼 분리로 — **API·생성자 계약 대수술, 팀 리뷰 필수** | 로드맵 |
+| 4-7 | R1c (controller→infrastructure) | 3건 | FcmTestController(테스트용) — 운영 필요성 자체를 팀 확인 후 삭제 또는 usecase 경유 | 보류 |
+| 4-8 | 0건 도달 규칙부터 FreezingArchRule 해제 | — | R1a/R5/R6/R3는 이미 0 — freeze를 벗겨도 그린(즉시 가능), 나머지는 단계별 | 부분 가능 |
+
+4-3~4-6은 로직 변경(트랜잭션 경계·API 계약)이므로 이 리팩토링 브랜치가 dev에 머지·안정화된 후
+도메인 단위 PR로 진행하는 것을 권장한다.
 
 ### Phase 1 — P0 버그 결과 (2026-07-07 완료)
 
