@@ -19,7 +19,7 @@ import com.tavemakers.surf.domain.post.domain.exception.PostImageListEmptyExcept
 import com.tavemakers.surf.domain.post.domain.repository.PostRepository;
 import com.tavemakers.surf.domain.post.domain.service.file.PostFileCreateService;
 import com.tavemakers.surf.domain.post.domain.service.image.PostImageCreateService;
-import com.tavemakers.surf.domain.post.domain.service.support.PostPublishedEvent;
+import com.tavemakers.surf.domain.post.domain.event.PostPublishedEvent;
 import com.tavemakers.surf.global.logging.LogEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;

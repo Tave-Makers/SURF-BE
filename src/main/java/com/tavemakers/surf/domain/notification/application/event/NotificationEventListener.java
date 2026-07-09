@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.notification.domain.service;
+package com.tavemakers.surf.domain.notification.application.event;
 
 import com.tavemakers.surf.domain.comment.domain.event.CommentCreatedEvent;
 import com.tavemakers.surf.domain.comment.domain.event.CommentLikedEvent;
@@ -6,10 +6,11 @@ import com.tavemakers.surf.domain.comment.domain.event.CommentReplyEvent;
 import com.tavemakers.surf.domain.letter.domain.event.LetterSentEvent;
 import com.tavemakers.surf.domain.notification.domain.entity.NotificationType;
 import com.tavemakers.surf.domain.notification.application.usecase.NotificationUsecase;
+import com.tavemakers.surf.domain.notification.domain.service.NotificationCreateService;
 import com.tavemakers.surf.domain.post.domain.entity.Post;
 import com.tavemakers.surf.domain.post.domain.event.PostLikedEvent;
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
-import com.tavemakers.surf.domain.post.domain.service.support.PostPublishedEvent;
+import com.tavemakers.surf.domain.post.domain.event.PostPublishedEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogEventEmitterImpl;
 import java.util.Map;

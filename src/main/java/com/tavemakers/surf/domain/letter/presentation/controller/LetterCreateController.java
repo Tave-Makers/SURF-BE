@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.letter.presentation.controller;
 
 import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.domain.letter.presentation.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.application.facade.LetterFacade;
+import com.tavemakers.surf.domain.letter.application.usecase.LetterUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +19,7 @@ import static com.tavemakers.surf.domain.letter.presentation.controller.Response
 @Tag(name = "쪽지", description = "회원 간 쪽지 전송 및 조회에 대한 API 입니다.")
 public class LetterCreateController {
 
-    private final LetterFacade letterFacade;
+    private final LetterUsecase letterUsecase;
 
     @PostMapping("/v1/user/letters")
     @Operation(summary = "쪽지 전송", description = "로그인한 사용자가 다른 회원에게 쪽지를 전송합니다.")
@@ -31,7 +31,7 @@ public class LetterCreateController {
         return ApiResponse.response(
                 HttpStatus.OK,
                 LETTER_CREATED.getMessage(),
-                letterFacade.createLetter(senderId, request)
+                letterUsecase.createLetter(senderId, request)
         );
     }
 }

@@ -85,6 +85,27 @@ Phase 3 완료 시점 동결 베이스라인 **589건** (R1a·R5·R6은 0 — �
 4-3~4-6은 로직 변경(트랜잭션 경계·API 계약)이므로 이 리팩토링 브랜치가 dev에 머지·안정화된 후
 도메인 단위 PR로 진행하는 것을 권장한다.
 
+### Phase 4-9 — 스테레오타입 정규화 (2026-07-09 완료)
+
+계층은 4계층으로 정리됐으나 application 하위 스테레오타입 명칭·배치가 불일치했다. `docs/architecture.md`에
+책임 정의를 확정하고, 순수 구조 이동(로직 변경 없음)으로 정규화했다:
+
+| 조치 | 이동 | 근거 |
+|------|------|------|
+| **facade 폐지** | `LetterFacade` → `application/usecase/LetterUsecase` | 유일한 facade가 usecase와 역할 동일. 한 역할 = 한 스테레오타입 |
+| 리스너 배치 규칙화 | `NotificationEventListener` domain/service → **application/event** | usecase 오케스트레이션 → 의존 계층(application)에 배치. **R7 위반 1건 해소** |
+| 리스너 위치 통일 | `BadgeMemberDismissListener` application/event → **domain/event** | 리포지토리만 의존 → 형제 리스너(score 등)와 동일하게 domain/event |
+| 오배치 정리 | `PostPublishedEvent` domain/service/support → **domain/event** | 이벤트가 service 하위에 섞여 있었음 |
+
+**규칙 확정**: Mapper·Listener는 *자신이 만지는 DTO/의존하는 가장 바깥 계층*을 따라 배치한다
+(presentation DTO·usecase 의존 → application, domain만 → domain).
+
+**남은 부채(이연)**: `FlagsMapper`(post/domain/service/support)는 presentation `PostResDTO`를 참조하지만,
+이를 호출하는 `PostListService`·`PostSearchService`(domain/service)도 이미 `PostResDTO`를 직접 반환한다.
+FlagsMapper만 application으로 옮기면 domain→application 역의존이 새로 생길 뿐 위반이 사라지지 않는다.
+근본 해결은 **list/search 서비스의 반환 타입을 도메인 데이터로 바꾸고 DTO 매핑을 application으로 올리는 것**
+(4-6 R7 대수술 범위). 서비스 계약 변경이므로 dev 머지 후 도메인 PR로 이연.
+
 ### Phase 1 — P0 버그 결과 (2026-07-07 완료)
 
 1. ✅ 댓글 좋아요 lost update — `likeCount` 원자적 UPDATE + 중복 등록 race는 `CommentLikeAlreadyExistsException`(409)으로 전환

@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.member.application.usecase;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
-import com.tavemakers.surf.domain.badge.application.event.BadgeMemberDismissListener;
+import com.tavemakers.surf.domain.badge.domain.event.BadgeMemberDismissListener;
 import com.tavemakers.surf.domain.badge.domain.entity.Badge;
 import com.tavemakers.surf.domain.badge.domain.entity.MemberBadge;
 import com.tavemakers.surf.domain.comment.domain.event.CommentMemberDismissListener;

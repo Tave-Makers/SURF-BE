@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.reservation.application.task;
 
 import com.tavemakers.surf.domain.post.application.query.PostGetService;
 import com.tavemakers.surf.domain.post.domain.service.post.PostPublishService;
-import com.tavemakers.surf.domain.post.domain.service.support.PostPublishedEvent;
+import com.tavemakers.surf.domain.post.domain.event.PostPublishedEvent;
 import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
 import com.tavemakers.surf.domain.reservation.application.query.ReservationGetService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.letter.application.facade;
+package com.tavemakers.surf.domain.letter.application.usecase;
 
 import com.tavemakers.surf.domain.auth.common.domain.enums.Provider;
 import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
@@ -47,23 +47,23 @@ import static org.mockito.BDDMockito.willThrow;
  * 메일을 트랜잭션 밖에서 보내므로, 메일 실패 시 예외(500)는 그대로 전파되되 쪽지 레코드는
  * 남는다(orphan — 사용자가 감수하기로 결정한 트레이드오프).
  *
- * <p>또한 LetterSentEvent 발행이 facade(비트랜잭션)에서 LetterCreateService.save 트랜잭션
+ * <p>또한 LetterSentEvent 발행이 usecase(비트랜잭션)에서 LetterCreateService.save 트랜잭션
  * 안으로 이동했는지 검증한다. notification 의 알림 리스너가
  * @TransactionalEventListener(AFTER_COMMIT)라서, 활성 트랜잭션 밖에서 발행된 이벤트는
  * 조용히 드롭되기 때문이다(AfterCommitProbe 로 실제 발화 확인).
  *
- * <p>facade 가 더 이상 트랜잭션을 열지 않으므로 테스트 트랜잭션을 NOT_SUPPORTED 로 끄고
+ * <p>usecase 가 더 이상 트랜잭션을 열지 않으므로 테스트 트랜잭션을 NOT_SUPPORTED 로 끄고
  * 픽스처는 TransactionTemplate 으로 명시적 커밋한다 (MemberDismissRollbackTest 패턴).
  */
 @DataJpaTest
 @Import({
-        LetterFacade.class,
+        LetterUsecase.class,
         LetterCreateService.class,
         LetterGetService.class,
-        LetterFacadeCreateLetterTest.AfterCommitProbe.class,
+        LetterUsecaseCreateLetterTest.AfterCommitProbe.class,
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class LetterFacadeCreateLetterTest {
+class LetterUsecaseCreateLetterTest {
 
     /** AFTER_COMMIT 알림 리스너와 동일한 조건으로 이벤트 발화 여부를 기록하는 프로브 */
     @TestConfiguration
@@ -77,7 +77,7 @@ class LetterFacadeCreateLetterTest {
     }
 
     @Autowired
-    private LetterFacade letterFacade;
+    private LetterUsecase letterUsecase;
 
     @Autowired
     private EntityManager entityManager;
@@ -113,7 +113,7 @@ class LetterFacadeCreateLetterTest {
     @Test
     @DisplayName("정상 경로: 쪽지가 저장되고 LetterSentEvent 가 커밋 후(AFTER_COMMIT) 발화한다")
     void 쪽지_저장_후_이벤트가_커밋_후_발화한다() {
-        LetterResDTO result = letterFacade.createLetter(sender.getId(), req());
+        LetterResDTO result = letterUsecase.createLetter(sender.getId(), req());
 
         assertThat(result.letterId()).isNotNull();
         assertThat(countLetters()).as("쪽지가 저장되어야 한다").isEqualTo(1);
@@ -128,7 +128,7 @@ class LetterFacadeCreateLetterTest {
         willThrow(new MailSendException("smtp down"))
                 .given(emailSender).sendMail(anyString(), anyString(), anyString());
 
-        assertThatThrownBy(() -> letterFacade.createLetter(sender.getId(), req()))
+        assertThatThrownBy(() -> letterUsecase.createLetter(sender.getId(), req()))
                 .isInstanceOf(LetterMailSendFailException.class);
 
         assertThat(countLetters())

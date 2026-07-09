@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.badge.application.event;
+package com.tavemakers.surf.domain.badge.domain.event;
 
 import com.tavemakers.surf.domain.badge.domain.repository.MemberBadgeRepository;
 import com.tavemakers.surf.domain.member.domain.event.MemberDismissedEvent;
