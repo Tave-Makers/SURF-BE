@@ -2,7 +2,7 @@ package com.tavemakers.surf.presentation.notification.controller;
 
 import com.tavemakers.surf.presentation.notification.dto.response.NotificationResDTO;
 import com.tavemakers.surf.domain.notification.entity.NotificationCategory;
-import com.tavemakers.surf.domain.notification.service.NotificationService;
+import com.tavemakers.surf.application.notification.usecase.NotificationUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -23,7 +23,7 @@ import static com.tavemakers.surf.presentation.notification.controller.ResponseM
 @Tag(name = "알람")
 public class NotificationGetController {
 
-    private final NotificationService notificationService;
+    private final NotificationUsecase notificationUsecase;
     private final LogEventEmitter logEventEmitter;
 
     @Operation(summary = "알람 조회", description = "category 파라미터로 카테고리별 필터링 조회합니다. null일 경우 전체 알람 조회")
@@ -36,7 +36,7 @@ public class NotificationGetController {
                 "member_id", memberId,
                 "category", category != null ? category.name().toLowerCase() : "all"
         ));
-        List<NotificationResDTO> response = notificationService.getNotifications(memberId, category);
+        List<NotificationResDTO> response = notificationUsecase.getNotifications(memberId, category);
         return ApiResponse.response(HttpStatus.OK, NOTIFICATION_READ.getMessage(), response);
     }
 }

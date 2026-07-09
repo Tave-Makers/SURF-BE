@@ -1,12 +1,12 @@
 package com.tavemakers.surf.application.auth.kakao.usecase;
 
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
-import com.tavemakers.surf.domain.auth.common.service.LoginTokenIssuer;
+import com.tavemakers.surf.application.auth.common.usecase.LoginTokenIssuer;
 import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoAppLoginReqDTO;
-import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoTokenResDTO;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;

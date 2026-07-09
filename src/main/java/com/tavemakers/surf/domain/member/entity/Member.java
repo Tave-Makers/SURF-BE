@@ -1,13 +1,11 @@
 package com.tavemakers.surf.domain.member.entity;
 
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
-import com.tavemakers.surf.presentation.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.domain.member.exception.InvalidMemberInfoException;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
-import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -210,10 +208,14 @@ public class Member extends BaseEntity {
                 .build();
     }
 
-    public void applySignup(MemberSignupReqDTO req, String normalizedEmail, String normalizedPhone) {
-        this.name = req.getName();
-        this.university = req.getUniversity();
-        this.graduateSchool = req.getGraduateSchool();
+    /**
+     * 회원가입 폼 값을 반영한다. 트랙 추가는 호출자(usecase)가 {@link #addTrack(Integer, Part)}로 해체해 수행한다.
+     */
+    public void applySignup(String name, String university, String graduateSchool,
+                            String normalizedEmail, String normalizedPhone) {
+        this.name = name;
+        this.university = university;
+        this.graduateSchool = graduateSchool;
         this.email = normalizedEmail;
         this.phoneNumber = normalizedPhone;
 
@@ -225,13 +227,6 @@ public class Member extends BaseEntity {
         // 상태 전이: REGISTERING -> WAITING (또는 정책상 APPROVED)
         if (this.status == MemberStatus.REGISTERING) {
             this.status = MemberStatus.WAITING;
-        }
-
-        //트랙 저장
-        if (req.getTracks() != null) {
-            req.getTracks().forEach(t ->
-                    this.addTrack(t.getGeneration(), t.getPart())
-            );
         }
     }
 
@@ -305,16 +300,24 @@ public class Member extends BaseEntity {
     }
 
     //프로필 수정하기
-    public void updateProfile(ProfileUpdateReqDTO dto) {
-        updateIfNotNull(dto.phoneNumber(), phoneNumber -> this.phoneNumber = phoneNumber);
-        updateIfNotNull(dto.email(), email -> this.email = email);
-        updateIfNotNull(dto.university(),university -> this.university = university);
-        updateIfNotNull(dto.graduateSchool(), graduateSchool -> this.graduateSchool = graduateSchool);
-        updateIfNotNull(dto.phoneNumberPublic(), phoneNumberPublic -> this.phoneNumberPublic = phoneNumberPublic);
-        updateIfNotNull(dto.selfIntroduction(), selfIntroduction -> this.selfIntroduction = selfIntroduction);
-        updateIfNotNull(dto.link(), link -> this.link = link);
-        if(dto.isProfileImageChanged() != null && dto.isProfileImageChanged()) {
-            this.profileImageUrl = dto.profileImageUrl();
+    public void updateProfile(String email,
+                              String university,
+                              String graduateSchool,
+                              String selfIntroduction,
+                              String link,
+                              String phoneNumber,
+                              Boolean phoneNumberPublic,
+                              String profileImageUrl,
+                              Boolean isProfileImageChanged) {
+        updateIfNotNull(phoneNumber, value -> this.phoneNumber = value);
+        updateIfNotNull(email, value -> this.email = value);
+        updateIfNotNull(university, value -> this.university = value);
+        updateIfNotNull(graduateSchool, value -> this.graduateSchool = value);
+        updateIfNotNull(phoneNumberPublic, value -> this.phoneNumberPublic = value);
+        updateIfNotNull(selfIntroduction, value -> this.selfIntroduction = value);
+        updateIfNotNull(link, value -> this.link = value);
+        if (isProfileImageChanged != null && isProfileImageChanged) {
+            this.profileImageUrl = profileImageUrl;
         }
     }
 

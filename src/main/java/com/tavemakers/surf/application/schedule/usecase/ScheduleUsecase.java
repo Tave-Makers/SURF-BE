@@ -29,22 +29,25 @@ public class ScheduleUsecase {
     @Transactional
     public void createScheduleAtPost(ScheduleCreateReqDTO dto, Long postId) {
         Post post = postGetService.findPostById(postId);
-        Long scheduleId = scheduleCreateService.createScheduleAtPost(dto, post);
-        post.addScheduleId(scheduleId);
+        Schedule schedule = scheduleCreateService.createScheduleAtPost(
+                dto.category(), dto.title(), dto.startAt(), dto.endAt(), dto.location(), post);
+        post.addScheduleId(schedule.getId());
         post.changeHasSchedule(true);
     }
 
     /** 캘린더에서 개별 일정 생성 */
     @Transactional
     public void createScheduleSingle(ScheduleCreateReqDTO dto){
-        scheduleCreateService.createScheduleSingle(dto);
+        scheduleCreateService.createScheduleSingle(
+                dto.category(), dto.title(), dto.startAt(), dto.endAt(), dto.location());
     }
 
     /** 일정 수정 */
     @Transactional
     public void updateSchedule(ScheduleUpdateReqDTO dto, Long id) {
         Schedule schedule = scheduleGetService.getScheduleById(id);
-        schedulePatchService.updateSchedule(schedule, dto);
+        schedulePatchService.updateSchedule(
+                schedule, dto.category(), dto.title(), dto.startAt(), dto.endAt(), dto.location());
     }
 
     /** 개별 일정 삭제 */

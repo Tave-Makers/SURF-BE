@@ -1,6 +1,6 @@
 package com.tavemakers.surf.presentation.auth.common.controller;
 
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;

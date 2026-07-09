@@ -1,7 +1,6 @@
 package com.tavemakers.surf.presentation.member.controller;
 
 import com.tavemakers.surf.presentation.member.dto.request.ProfileUpdateReqDTO;
-import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.application.member.usecase.MemberUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -21,7 +20,6 @@ import java.util.List;
 public class MemberPatchController {
 
     private final MemberUsecase memberUsecase;
-    private final MemberPatchService memberPatchService;
 
     @Operation(
             summary = "약관 동의",
@@ -29,7 +27,7 @@ public class MemberPatchController {
     @PatchMapping("/v1/user/members/terms/agree")
     public ApiResponse<Void> agreeTerms() {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        memberPatchService.agreeTerms(memberId);
+        memberUsecase.agreeTerms(memberId);
         return ApiResponse.response(
                 HttpStatus.OK,
                 ResponseMessage.TERMS_AGREEMENT_SUCCESS.getMessage(),

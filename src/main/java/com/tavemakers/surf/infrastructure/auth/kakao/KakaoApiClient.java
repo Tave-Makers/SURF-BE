@@ -1,10 +1,10 @@
 package com.tavemakers.surf.infrastructure.auth.kakao;
 
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.service.OAuthApiClient;
 import com.tavemakers.surf.infrastructure.auth.kakao.config.KakaoOAuthProps;
-import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoTokenResDTO;
-import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoUserInfoDTO;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
+import com.tavemakers.surf.infrastructure.auth.kakao.dto.KakaoUserInfoDTO;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthErrorMessage;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthException;
 import lombok.extern.slf4j.Slf4j;

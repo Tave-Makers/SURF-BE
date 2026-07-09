@@ -8,34 +8,28 @@ import com.tavemakers.surf.application.board.query.BoardCategoryGetService;
 import com.tavemakers.surf.application.board.query.BoardGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.application.member.query.MemberGetService;
-import com.tavemakers.surf.presentation.post.dto.request.PostCreateReqDTO;
-import com.tavemakers.surf.presentation.post.dto.request.PostImageCreateReqDTO;
-import com.tavemakers.surf.presentation.post.dto.response.PostDetailResDTO;
-import com.tavemakers.surf.presentation.post.dto.response.PostFileResDTO;
-import com.tavemakers.surf.presentation.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.domain.post.entity.PostFileUrl;
+import com.tavemakers.surf.domain.post.entity.PostImageUrl;
 import com.tavemakers.surf.domain.post.exception.BoardWriteNotAllowedException;
 import com.tavemakers.surf.domain.post.exception.PostImageListEmptyException;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.file.PostFileCreateService;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.event.PostPublishedEvent;
-import com.tavemakers.surf.global.logging.LogEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
 /**
- * 게시글 생성 관련 서비스
+ * 게시글 생성 관련 서비스. DTO를 알지 못하며 원시값·엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(PostCreateUsecase)가 소유한다.
  */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PostCreateService {
 
     private final PostRepository postRepository;
@@ -47,54 +41,59 @@ public class PostCreateService {
     private final PostFileCreateService fileCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
+    /** 게시글 생성 결과 (표현형 매핑은 usecase가 담당) */
+    public record PostCreateResult(Post post, List<PostImageUrl> images, List<PostFileUrl> files) {}
+
     /**
      * 게시글 생성 및 저장 (예약 처리는 Usecase에서 담당)
      */
-    @Transactional
-    public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
-        Board board = boardGetService.getBoard(req.boardId());
+    public PostCreateResult createPost(
+            String title, String content, Boolean pinned, boolean isReserved, Boolean hasSchedule,
+            Long boardId, Long categoryId,
+            List<PostImageCreateService.ImageData> imageDataList,
+            List<PostFileCreateService.FileData> fileDataList,
+            Long memberId) {
+        Board board = boardGetService.getBoard(boardId);
         Member writer = memberGetService.getMember(memberId);
 
         // BoardType.NOTICE인 경우 관리자인지 검증
         validateWritePermission(board, writer);
 
-        BoardCategory category = resolveCategory(board, req.categoryId());
+        BoardCategory category = resolveCategory(board, categoryId);
 
-        Post post = Post.of(req, board, category, writer);
+        Post post = Post.of(title, content, pinned, isReserved, hasSchedule, board, category, writer);
         Post saved = postRepository.save(post);
 
-        if (!req.isReserved()) {
+        if (!isReserved) {
             eventPublisher.publishEvent(new PostPublishedEvent(saved.getId()));
         }
 
-        List<PostImageResDTO> imageUrlResponseList = null;
-        if (req.hasImage()) {
-            List<PostImageCreateReqDTO> imageUrlList = req.imageUrlList();
-            saved.addThumbnailUrl(findFirstImage(imageUrlList));
-            imageUrlResponseList = imageCreateService.saveAll(saved, imageUrlList);
+        List<PostImageUrl> images = List.of();
+        if (imageDataList != null && !imageDataList.isEmpty()) {
+            saved.addThumbnailUrl(findFirstImage(imageDataList));
+            images = imageCreateService.saveAll(saved, imageDataList);
         }
 
-        List<PostFileResDTO> fileResponseList = null;
-        if (req.hasFile()) {
-            fileResponseList = fileCreateService.saveAll(saved, req.fileList());
+        List<PostFileUrl> files = List.of();
+        if (fileDataList != null && !fileDataList.isEmpty()) {
+            files = fileCreateService.saveAll(saved, fileDataList);
         }
 
-        LocalDateTime reservedAt = req.isReserved() ? req.reservedAt() : null;
-        return PostDetailResDTO.of(saved, false, false, true, imageUrlResponseList, fileResponseList, reservedAt, 0);
+        return new PostCreateResult(saved, images, files);
     }
 
     /**
      * 이미지 목록에서 첫 번째 이미지 URL 추출
      */
-    private String findFirstImage(List<PostImageCreateReqDTO> dto) {
-        if (dto == null || dto.isEmpty()) {
+    private String findFirstImage(List<PostImageCreateService.ImageData> dataList) {
+        if (dataList == null || dataList.isEmpty()) {
             throw new PostImageListEmptyException();
         }
 
-        PostImageCreateReqDTO postImageCreateReqDTO = dto.stream()
-                .min(Comparator.comparing(PostImageCreateReqDTO::sequence))
-                .orElse(dto.get(0));
-        return postImageCreateReqDTO.originalUrl();
+        PostImageCreateService.ImageData first = dataList.stream()
+                .min(Comparator.comparing(PostImageCreateService.ImageData::sequence))
+                .orElse(dataList.get(0));
+        return first.originalUrl();
     }
 
     /**

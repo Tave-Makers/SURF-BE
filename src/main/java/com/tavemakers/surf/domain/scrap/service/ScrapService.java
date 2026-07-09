@@ -2,36 +2,30 @@ package com.tavemakers.surf.domain.scrap.service;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.application.member.query.MemberGetService;
-import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.application.post.query.PostLikeGetService;
 import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.scrap.entity.Scrap;
 import com.tavemakers.surf.domain.scrap.exception.ScrapAlreadyExistsException;
 import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
-import com.tavemakers.surf.global.logging.LogEventContext;
 import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
+/**
+ * 스크랩 도메인 로직. 트랜잭션 경계는 호출자(ScrapUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ScrapService {
 
     private final ScrapRepository scrapRepository;
     private final PostGetService postGetService;
     private final MemberGetService memberGetService;
-    private final PostLikeGetService postLikeGetService;
 
     /** 게시글 스크랩 추가 */
     @Transactional
@@ -62,7 +56,6 @@ public class ScrapService {
     }
 
     /** 게시글 스크랩 삭제 */
-    @Transactional
     @LogEvent(value = "scrap.remove", message = "스크랩 삭제 성공")
     public void removeScrap(
             @LogParam("user_id") Long memberId,
@@ -73,28 +66,7 @@ public class ScrapService {
         }
     }
 
-    /** 내 스크랩 목록 조회 */
-    @LogEvent(value = "scrap.list.view", message = "스크랩 목록 조회")
-    public Slice<PostResDTO> getMyScraps(Long memberId, Pageable pageable) {
-        Slice<Post> slice = scrapRepository.findPostsByMemberId(memberId, pageable);
-
-        List<Long> postIds = slice.getContent().stream()
-                .map(Post::getId)
-                .toList();
-
-        Set<Long> likedIds = new HashSet<>(postLikeGetService.findLikedPostIdsByMemberAndPostIds(memberId, postIds));
-
-        Slice<PostResDTO> result = slice.map(post ->
-                PostResDTO.from(post, true, likedIds.contains(post.getId()))
-        );
-
-        LogEventContext.put("count", slice.getNumberOfElements());
-
-        return result;
-    }
-
     /** 특정 회원의 스크랩 전체 제거 */
-    @Transactional
     public void removeAllByMemberId(Long memberId) {
         List<Long> postIds = scrapRepository.findPostIdsByMemberId(memberId);
         for (Long postId : postIds) {

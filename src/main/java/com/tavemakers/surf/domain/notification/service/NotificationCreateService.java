@@ -1,8 +1,6 @@
 package com.tavemakers.surf.domain.notification.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.domain.notification.entity.Notification;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.notification.event.NotificationCreatedEvent;
@@ -13,22 +11,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 알림 영속화 담당 도메인 서비스. DTO를 알지 못하며 원시값/엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(NotificationUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationCreateService {
 
     private final NotificationRepository notificationRepository;
-    private final MemberGetService memberGetService;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 1 알림 저장만 담당
      */
-    @Transactional
     public Notification create(
             Long receiverId,
             NotificationType type,
@@ -46,7 +45,6 @@ public class NotificationCreateService {
     /**
      * 다수 회원에게 알림 일괄 저장 + FCM 전송 (N+1 방지)
      */
-    @Transactional
     public void createAndSendBulk(
             List<Long> receiverIds,
             NotificationType type,
@@ -65,25 +63,4 @@ public class NotificationCreateService {
             throw new RuntimeException("Failed to create bulk notifications", e);
         }
     }
-
-    /**
-     * 2 알림 저장 + FCM 전송
-     */
-    @Transactional
-    public void createAndSend(
-            Long receiverId,
-            NotificationType type,
-            Map<String, Object> payload
-    ) {
-        boolean activeReceiver =
-                memberGetService.existsByIdAndStatusNot(receiverId, MemberStatus.WITHDRAWN);
-        if (!activeReceiver) return;
-
-        Notification notification = create(receiverId, type, payload);
-
-        eventPublisher.publishEvent(
-                new NotificationCreatedEvent(notification.getId(), receiverId)
-        );
-    }
 }
-

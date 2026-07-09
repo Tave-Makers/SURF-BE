@@ -1,11 +1,20 @@
 package com.tavemakers.surf.application.scrap.query;
 
+import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
+import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.application.post.query.PostLikeGetService;
 import com.tavemakers.surf.domain.scrap.repository.ScrapRepository;
+import com.tavemakers.surf.global.logging.LogEvent;
+import com.tavemakers.surf.global.logging.LogEventContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -14,6 +23,7 @@ import java.util.Set;
 public class ScrapGetService {
 
     private final ScrapRepository scrapRepository;
+    private final PostLikeGetService postLikeGetService;
 
     /** 게시글의 모든 스크랩 삭제 */
     @Transactional
@@ -29,5 +39,25 @@ public class ScrapGetService {
     /** 해당 게시글 스크랩 여부 확인 */
     public boolean isScrappedByMe(Long memberId, Long postId) {
         return scrapRepository.existsByMemberIdAndPostId(memberId, postId);
+    }
+
+    /** 내 스크랩 목록 조회 */
+    @LogEvent(value = "scrap.list.view", message = "스크랩 목록 조회")
+    public Slice<PostResDTO> getMyScraps(Long memberId, Pageable pageable) {
+        Slice<Post> slice = scrapRepository.findPostsByMemberId(memberId, pageable);
+
+        List<Long> postIds = slice.getContent().stream()
+                .map(Post::getId)
+                .toList();
+
+        Set<Long> likedIds = new HashSet<>(postLikeGetService.findLikedPostIdsByMemberAndPostIds(memberId, postIds));
+
+        Slice<PostResDTO> result = slice.map(post ->
+                PostResDTO.from(post, true, likedIds.contains(post.getId()))
+        );
+
+        LogEventContext.put("count", slice.getNumberOfElements());
+
+        return result;
     }
 }

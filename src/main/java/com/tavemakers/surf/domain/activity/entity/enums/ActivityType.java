@@ -1,12 +1,7 @@
 package com.tavemakers.surf.domain.activity.entity.enums;
 
-import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityCategoryDetailResDTO;
-import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityTypeDetailResDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory.*;
 import static com.tavemakers.surf.domain.activity.entity.enums.AppliedTarget.INDIVIDUAL;
@@ -93,21 +88,8 @@ public enum ActivityType {
     private AppliedTarget appliedTarget;
     private ActivityCategory category;
 
-    public ActivityTypeDetailResDTO toDto() {
-        return ActivityTypeDetailResDTO.of(this);
-    }
-
     public boolean isReward() {
         return scoreType.equals(REWARD);
-    }
-
-    /** 특정 카테고리에 속한 모든 활동 종류(ActivityType) 조회 */
-    public static ActivityCategoryDetailResDTO getDtoListByCategory(ActivityCategory category) {
-        List<ActivityTypeDetailResDTO> collect = Arrays.stream(ActivityType.values())
-                .filter(activity -> activity.getCategory() == category)
-                .map(ActivityType::toDto)
-                .toList();
-        return ActivityCategoryDetailResDTO.of(category, collect);
     }
 
 }

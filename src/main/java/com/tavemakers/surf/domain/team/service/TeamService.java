@@ -1,10 +1,7 @@
 package com.tavemakers.surf.domain.team.service;
 
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
-import com.tavemakers.surf.presentation.team.dto.request.TeamUpsertReqDTO;
-import com.tavemakers.surf.presentation.team.dto.response.*;
 import com.tavemakers.surf.domain.team.entity.Team;
-import com.tavemakers.surf.domain.team.entity.TeamMember;
 import com.tavemakers.surf.domain.team.entity.TeamType;
 import com.tavemakers.surf.domain.team.exception.TeamLeaderNotFoundException;
 import com.tavemakers.surf.domain.team.exception.TeamLeaderNotInMemberException;
@@ -12,89 +9,40 @@ import com.tavemakers.surf.domain.team.exception.TeamMemberDuplicatedException;
 import com.tavemakers.surf.domain.team.event.TeamDeletedEvent;
 import com.tavemakers.surf.domain.team.exception.TeamNotFoundException;
 import com.tavemakers.surf.domain.team.repository.TeamRepository;
-import com.tavemakers.surf.presentation.member.dto.response.TrackResDTO;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.application.member.query.MemberGetService;
-import com.tavemakers.surf.application.member.query.TrackGetService;
 import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 팀 도메인 로직. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(TeamUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class TeamService {
 
     private final TeamRepository teamRepository;
     private final MemberGetService memberGetService;
-    private final TrackGetService trackGetService;
     private final PersonalScoreCreateService personalScoreCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional(readOnly = true)
-    public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
-        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(type).stream()
-                .map(TeamListResDTO::from)
-                .toList();
+    /** 팀 생성 */
+    public Team createTeam(Integer generation, TeamType type, String name, String description,
+                           Long leaderMemberId, List<Long> memberIds) {
 
-        Map<Integer, List<TeamListResDTO>> grouped = new LinkedHashMap<>();
-
-        for (TeamListResDTO dto : teams) {
-            grouped.computeIfAbsent(dto.generation(), k -> new ArrayList<>()).add(dto);
-        }
-
-        return grouped.entrySet().stream()
-                .map(e -> new TeamGenerationSectionResDTO(e.getKey(), e.getValue()))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public TeamDetailResDTO getTeamDetail(Long teamId) {
-        Team team = teamRepository.findDetailBaseById(teamId)
-                .orElseThrow(TeamNotFoundException::new);
-
-        // 1) tracks 조회에 필요한 memberIds
-        Set<Long> memberIdSet = new HashSet<>();
-        memberIdSet.add(team.getLeader().getId());
-        team.getTeamMembers().forEach(tm -> memberIdSet.add(tm.getMember().getId()));
-        List<Long> memberIds = memberIdSet.stream().toList();
-
-        // 2) Track을 한 번에 조회 (N+1 방지)
-        Map<Long, List<Track>> trackMap = trackGetService.getTracksByMemberIds(memberIds).stream()
-                .collect(Collectors.groupingBy(t -> t.getMember().getId()));
-
-        // 3) 팀장 DTO
-        TeamDetailResDTO.MemberCardDTO leaderDto = toMemberCard(team.getLeader(), trackMap);
-
-        // 4) members: 리더 제외 정렬(최신 기수 순 -> 이름 순)
-        List<Member> members = team.getTeamMembers().stream()
-                .map(TeamMember::getMember)
-                .filter(m -> !m.getId().equals(team.getLeader().getId()))
-                .sorted(memberComparator(trackMap))
-                .toList();
-
-        List<TeamDetailResDTO.MemberCardDTO> memberDtos = members.stream()
-                .map(m -> toMemberCard(m, trackMap))
-                .toList();
-
-        return TeamDetailResDTO.from(team, leaderDto, memberDtos);
-    }
-
-    @Transactional
-    public TeamResDTO createTeam(TeamUpsertReqDTO req) {
-
-        ResolvedMembers resolved = resolveMembers(req);
+        ResolvedMembers resolved = resolveMembers(memberIds, leaderMemberId);
 
         Team team = Team.of(
-                req.generation(),
-                req.type(),
-                req.name(),
-                req.description(),
+                generation,
+                type,
+                name,
+                description,
                 resolved.leader()
         );
 
@@ -108,18 +56,19 @@ public class TeamService {
         Team saved = teamRepository.save(team);
         personalScoreCreateService.saveTeamScore(saved);
 
-        return TeamResDTO.from(saved);
+        return saved;
     }
 
-    @Transactional
-    public TeamResDTO updateTeam(Long teamId, TeamUpsertReqDTO req) {
+    /** 팀 수정 */
+    public Team updateTeam(Long teamId, Integer generation, TeamType type, String name, String description,
+                           Long leaderMemberId, List<Long> memberIds) {
         Team team = teamRepository.findDetailBaseById(teamId)
                 .orElseThrow(TeamNotFoundException::new);
 
-        ResolvedMembers resolved = resolveMembers(req);
+        ResolvedMembers resolved = resolveMembers(memberIds, leaderMemberId);
 
         // 1) 기본 정보(전체) 반영
-        team.changeInfo(req.generation(), req.type(), req.name(), req.description());
+        team.changeInfo(generation, type, name, description);
         team.changeLeader(resolved.leader());
 
         // 2) 팀원을 요청 memberIds와 동일하게 맞추기
@@ -145,11 +94,11 @@ public class TeamService {
             }
         }
 
-        return TeamResDTO.from(team);
+        return team;
     }
 
 
-    @Transactional
+    /** 팀 삭제 */
     public void deleteTeam(Long teamId) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(TeamNotFoundException::new);
@@ -160,11 +109,11 @@ public class TeamService {
         teamRepository.delete(team);
     }
 
-    private ResolvedMembers resolveMembers(TeamUpsertReqDTO req) {
-        List<Long> raw = req.memberIds();
+    private ResolvedMembers resolveMembers(List<Long> memberIds, Long leaderMemberId) {
+        List<Long> raw = memberIds;
 
         // 1) 중복 제거
-        List<Long> distinctMemberIds = req.memberIds().stream()
+        List<Long> distinctMemberIds = memberIds.stream()
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -174,7 +123,7 @@ public class TeamService {
         }
 
         // 2) 팀장은 팀원 목록에 반드시 포함
-        if (!distinctMemberIds.contains(req.leaderMemberId())) {
+        if (!distinctMemberIds.contains(leaderMemberId)) {
             throw new TeamLeaderNotInMemberException();
         }
 
@@ -187,7 +136,7 @@ public class TeamService {
         Map<Long, Member> memberMap = members.stream()
                 .collect(Collectors.toMap(Member::getId, m -> m));
 
-        Member leader = memberMap.get(req.leaderMemberId());
+        Member leader = memberMap.get(leaderMemberId);
         if (leader == null)
             throw new TeamLeaderNotFoundException();
 
@@ -200,32 +149,4 @@ public class TeamService {
             Map<Long, Member> memberMap,
             Set<Long> memberIdsSet
     ) {}
-
-    private TeamDetailResDTO.MemberCardDTO toMemberCard(Member m, Map<Long, List<Track>> trackMap) {
-        List<TrackResDTO> tracks = trackMap.getOrDefault(m.getId(), List.of()).stream()
-                .map(TrackResDTO::from)
-                .toList();
-
-        return new TeamDetailResDTO.MemberCardDTO(
-                m.getId(),
-                m.getName(),
-                m.getProfileImageUrl(),
-                tracks
-        );
-    }
-
-    private Comparator<Member> memberComparator(Map<Long, List<Track>> trackMap) {
-        Comparator<Integer> generationDesc = Comparator.nullsLast(Comparator.reverseOrder());
-
-        return Comparator
-                .comparing((Member m) -> mainGeneration(m.getId(), trackMap), generationDesc)
-                .thenComparing(Member::getName, Comparator.nullsLast(String::compareTo));
-    }
-
-    private Integer mainGeneration(Long memberId, Map<Long, List<Track>> trackMap) {
-        return trackMap.getOrDefault(memberId, List.of()).stream()
-                .map(Track::getGeneration)
-                .min(Integer::compareTo)
-                .orElse(null);
-    }
 }

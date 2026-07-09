@@ -3,6 +3,8 @@ package com.tavemakers.surf.application.member.usecase;
 import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.ProfileUpdateReqDTO;
 import com.tavemakers.surf.presentation.member.dto.response.*;
+import com.tavemakers.surf.domain.member.dto.CareerCreateCommand;
+import com.tavemakers.surf.domain.member.dto.CareerUpdateCommand;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -197,11 +199,29 @@ public class MemberUsecase {
             Member member = memberGetService.getMember(memberId);
 
             // 프로필 정보 수정
-            memberPatchService.updateProfile(member, dto);
+            memberPatchService.updateProfile(
+                    member,
+                    dto.email(),
+                    dto.university(),
+                    dto.graduateSchool(),
+                    dto.selfIntroduction(),
+                    dto.link(),
+                    dto.phoneNumber(),
+                    dto.phoneNumberPublic(),
+                    dto.profileImageUrl(),
+                    dto.isProfileImageChanged());
 
             // 경력 수정
             if (dto.careersToUpdate() != null) {
-                careerPatchService.updateCareer(member, dto.careersToUpdate());
+                careerPatchService.updateCareer(member, dto.careersToUpdate().stream()
+                        .map(c -> new CareerUpdateCommand(
+                                c.careerId(),
+                                c.companyName(),
+                                c.position(),
+                                c.startDate(),
+                                c.endDate(),
+                                c.isWorking()))
+                        .toList());
             }
 
             // 경력 삭제
@@ -211,7 +231,14 @@ public class MemberUsecase {
 
             // 경력 생성
             if (dto.careersToCreate() != null) {
-                careerCreateService.createCareer(member, dto.careersToCreate());
+                careerCreateService.createCareer(member, dto.careersToCreate().stream()
+                        .map(c -> new CareerCreateCommand(
+                                c.companyName(),
+                                c.position(),
+                                c.startDate(),
+                                c.endDate(),
+                                c.isWorking()))
+                        .toList());
             }
 
             Map<String, Object> props = new HashMap<>(dto.buildProps());
@@ -302,7 +329,27 @@ public class MemberUsecase {
     @Transactional
     @LogEvent(value = "signup.create", message = "회원가입 요청 처리")
     public MemberSignupResDTO signupCreate(Member member, MemberSignupReqDTO request) {
-        return memberService.signup(member, request);
+        Member signed = memberService.signup(
+                member,
+                request.getName(),
+                request.getUniversity(),
+                request.getGraduateSchool(),
+                request.getEmail(),
+                request.getPhoneNumber());
+
+        // 트랙 해체 — 원시값(기수+파트)으로 도메인 편의 메서드 호출
+        if (request.getTracks() != null) {
+            request.getTracks().forEach(track ->
+                    signed.addTrack(track.getGeneration(), track.getPart()));
+        }
+
+        return MemberSignupResDTO.from(signed);
+    }
+
+    /** 약관 동의 처리 */
+    @Transactional
+    public void agreeTerms(Long memberId) {
+        memberPatchService.agreeTerms(memberId);
     }
 
     /** 회원 탈퇴 처리 */

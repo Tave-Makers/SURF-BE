@@ -1,7 +1,5 @@
 package com.tavemakers.surf.domain.member.entity;
 
-import com.tavemakers.surf.presentation.member.dto.request.CareerCreateReqDTO;
-import com.tavemakers.surf.presentation.member.dto.request.CareerUpdateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -42,21 +40,22 @@ public class Career extends BaseEntity {
     private boolean isWorking;
 
     //경력 수정
-    public void update(CareerUpdateReqDTO dto) {
-        if (dto.companyName() != null) {
-            this.companyName = dto.companyName();
+    public void update(String companyName, String position, LocalDate startDate,
+                       LocalDate endDate, Boolean isWorking) {
+        if (companyName != null) {
+            this.companyName = companyName;
         }
-        if (dto.position() != null) {
-            this.position = dto.position();
+        if (position != null) {
+            this.position = position;
         }
-        if (dto.startDate() != null) {
-            this.startDate = dto.startDate();
+        if (startDate != null) {
+            this.startDate = startDate;
         }
-        if (dto.endDate() != null) {
-            this.endDate = dto.endDate();
+        if (endDate != null) {
+            this.endDate = endDate;
         }
-        if (dto.isWorking() != null) {
-            this.isWorking = dto.isWorking();
+        if (isWorking != null) {
+            this.isWorking = isWorking;
             if (this.isWorking) {
                 this.endDate = null;
             }
@@ -64,14 +63,15 @@ public class Career extends BaseEntity {
     }
 
     //정적 팩토리 메소드 - 생성
-    public static Career of(CareerCreateReqDTO dto, Member member) {
+    public static Career of(String companyName, String position, LocalDate startDate,
+                            LocalDate endDate, Boolean isWorking, Member member) {
         return Career.builder()
-                .companyName(dto.companyName())
-                .position(dto.position())
-                .startDate(dto.startDate())
-                .endDate(dto.endDate() != null ? dto.endDate() : null)
+                .companyName(companyName)
+                .position(position)
+                .startDate(startDate)
+                .endDate(endDate)
                 .member(member)
-                .isWorking(dto.isWorking())
+                .isWorking(isWorking)
                 .build();
     }
 

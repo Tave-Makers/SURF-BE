@@ -3,7 +3,7 @@ package com.tavemakers.surf.presentation.post.controller.post;
 import com.tavemakers.surf.presentation.post.dto.response.PostDetailResDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
 import com.tavemakers.surf.application.post.query.PostGetService;
-import com.tavemakers.surf.domain.post.service.post.PostListService;
+import com.tavemakers.surf.application.post.query.PostListService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;

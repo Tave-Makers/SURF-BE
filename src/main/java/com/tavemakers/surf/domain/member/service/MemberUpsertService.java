@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
@@ -9,7 +9,6 @@ import com.tavemakers.surf.domain.member.repository.SocialAccountRepository;
 import com.tavemakers.surf.application.member.query.MemberBlacklistGetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -25,8 +24,8 @@ public class MemberUpsertService {
      * 소셜 로그인 upsert — SocialAccount 기준으로 조회하고, 없으면 REGISTERING 회원 + SocialAccount 를 생성한다.
      * <p>로그인 단계에서는 email/phone 기반 자동 통합을 하지 않는다(명시적 연동만 허용, EmailConflictException 폐기).
      * 반환 엔티티는 현재 트랜잭션에서 managed 상태이므로 호출자의 후속 변경(refresh_token 등)이 커밋에 함께 반영된다.
+     * <p>트랜잭션 경계는 호출자(AppleLoginUsecase/KakaoLoginUsecase)가 소유한다.
      */
-    @Transactional
     public Member upsertRegisteringFromOAuth(Provider provider, OAuthUserInfoDTO info) {
         return findExistingMember(provider, info)
                 .orElseGet(() -> createNewSocialMember(provider, info));

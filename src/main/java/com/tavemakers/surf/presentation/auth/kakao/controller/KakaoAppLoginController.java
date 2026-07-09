@@ -1,6 +1,6 @@
 package com.tavemakers.surf.presentation.auth.kakao.controller;
 
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoAppLoginReqDTO;

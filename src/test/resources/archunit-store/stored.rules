@@ -1,8 +1,8 @@
 #
-#Fri Jul 10 00:01:32 KST 2026
-R7\:\ domain\ \uACC4\uCE35\uC740\ \uAC19\uC740\ \uB3C4\uBA54\uC778\uC758\ application(usecase/query)\ \uB610\uB294\ presentation(controller/dto)\uC5D0\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4=adc7db81-6be3-478a-96c3-3b4e58e64083
-R1c\:\ Controller\uB294\ infrastructure\ \uACC4\uCE35(\uC678\uBD80\ \uC5B4\uB311\uD130)\uC5D0\ \uC9C1\uC811\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4\ (Wave\ 3\ \uC2EC\uC0AC\uC5D0\uC11C\ \uBC1C\uACAC\uB41C\ \uADDC\uCE59\ \uAC2D\ \u2014\ FcmService\ infra\ \uC774\uB3D9\uC73C\uB85C\ R1b\ \uBC94\uC704\ \uC774\uD0C8)=0093a51a-0559-4682-aa0f-c03938c50c75
-R4a\:\ @Transactional\ \uD074\uB798\uC2A4\uB294\ application\ \uACC4\uCE35(usecase/query)\uC5D0\uB9CC\ \uB454\uB2E4=8f92cb9f-2587-40cf-91b7-c4861a57dde3
-R2\:\ \uD0C0\ \uB3C4\uBA54\uC778\ \uC811\uADFC\uC740\ query(GetService)\ \uC870\uD68C\ \uB610\uB294\ \uB3C4\uBA54\uC778\ \uC774\uBCA4\uD2B8\uB9CC\ \uD5C8\uC6A9\uB41C\uB2E4=30714d91-2c6e-4210-a1d1-03c04f25f6b6
-R1b\:\ Controller\uB294\ Usecase\ \uB610\uB294\ query(GetService)\uB9CC\ \uD638\uCD9C\uD55C\uB2E4=92486537-aa95-4edd-8642-ae2ed8829428
-R4b\:\ @Transactional\ \uBA54\uC11C\uB4DC\uB294\ application\ \uACC4\uCE35(usecase/query)\uC5D0\uB9CC\ \uB454\uB2E4=1cb8c643-c3a0-4047-9765-42ab05d66cf9
+#Fri Jul 10 01:09:46 KST 2026
+R7\:\ domain\ \uACC4\uCE35\uC740\ \uAC19\uC740\ \uB3C4\uBA54\uC778\uC758\ application(usecase/query)\ \uB610\uB294\ presentation(controller/dto)\uC5D0\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4=ae324701-6167-4633-862f-0dea28ad02bd
+R1c\:\ Controller\uB294\ infrastructure\ \uACC4\uCE35(\uC678\uBD80\ \uC5B4\uB311\uD130)\uC5D0\ \uC9C1\uC811\ \uC758\uC874\uD560\ \uC218\ \uC5C6\uB2E4\ (Wave\ 3\ \uC2EC\uC0AC\uC5D0\uC11C\ \uBC1C\uACAC\uB41C\ \uADDC\uCE59\ \uAC2D\ \u2014\ FcmService\ infra\ \uC774\uB3D9\uC73C\uB85C\ R1b\ \uBC94\uC704\ \uC774\uD0C8)=ae39970b-a0f6-4679-91a6-86547b9af0c4
+R4a\:\ @Transactional\ \uD074\uB798\uC2A4\uB294\ application\ \uACC4\uCE35(usecase/query)\uC5D0\uB9CC\ \uB454\uB2E4=b68a31ca-6775-4c33-be08-778ec07fb2bf
+R2\:\ \uD0C0\ \uB3C4\uBA54\uC778\ \uC811\uADFC\uC740\ query(GetService)\ \uC870\uD68C\ \uB610\uB294\ \uB3C4\uBA54\uC778\ \uC774\uBCA4\uD2B8\uB9CC\ \uD5C8\uC6A9\uB41C\uB2E4=a29eabf0-256b-4db7-91d2-e837d0a37bcb
+R1b\:\ Controller\uB294\ Usecase\ \uB610\uB294\ query(GetService)\uB9CC\ \uD638\uCD9C\uD55C\uB2E4=509e34d4-2ec1-47b8-9468-a7fe5c3a1806
+R4b\:\ @Transactional\ \uBA54\uC11C\uB4DC\uB294\ application\ \uACC4\uCE35(usecase/query)\uC5D0\uB9CC\ \uB454\uB2E4=b8199343-d179-40c0-8768-7eef8ed1d5e5

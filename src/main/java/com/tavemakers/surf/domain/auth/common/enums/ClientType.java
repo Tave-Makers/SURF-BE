@@ -1,4 +1,4 @@
-package com.tavemakers.surf.presentation.auth.common.dto;
+package com.tavemakers.surf.domain.auth.common.enums;
 
 /**
  * 로그인/토큰 응답 분기를 위한 클라이언트 타입.

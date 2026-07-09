@@ -3,6 +3,7 @@ package com.tavemakers.surf.application.notification.usecase;
 import com.tavemakers.surf.domain.notification.entity.DeviceToken;
 import com.tavemakers.surf.domain.notification.entity.Platform;
 import com.tavemakers.surf.domain.notification.repository.DeviceTokenRepository;
+import com.tavemakers.surf.domain.notification.service.DeviceTokenRegisterService;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (동시성 아님 — 단순 영속화 검증)
  */
 @DataJpaTest
-@Import(DeviceTokenUsecase.class)
+@Import({DeviceTokenUsecase.class, DeviceTokenRegisterService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class DeviceTokenDisableTest {
 

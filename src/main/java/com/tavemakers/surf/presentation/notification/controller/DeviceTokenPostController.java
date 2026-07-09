@@ -4,7 +4,7 @@ import static com.tavemakers.surf.presentation.notification.controller.ResponseM
 
 import com.tavemakers.surf.domain.member.entity.CustomUserDetails;
 import com.tavemakers.surf.presentation.notification.dto.request.DeviceTokenReqDTO;
-import com.tavemakers.surf.domain.notification.service.DeviceTokenRegisterService;
+import com.tavemakers.surf.application.notification.usecase.DeviceTokenUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v1/user/notifications")
 public class DeviceTokenPostController {
 
-    private final DeviceTokenRegisterService deviceTokenRegisterService;
+    private final DeviceTokenUsecase deviceTokenUsecase;
 
     @Operation(
             summary = "디바이스 FCM 토큰 등록",
@@ -39,7 +39,7 @@ public class DeviceTokenPostController {
             @AuthenticationPrincipal CustomUserDetails user,
             @Valid @RequestBody DeviceTokenReqDTO dto
     ) {
-        deviceTokenRegisterService.register(user.getMember().getId(), dto);
+        deviceTokenUsecase.register(user.getMember().getId(), dto);
         return ApiResponse.response(
                 HttpStatus.OK,
                 DEVICE_TOKEN_SUCCESS.getMessage()

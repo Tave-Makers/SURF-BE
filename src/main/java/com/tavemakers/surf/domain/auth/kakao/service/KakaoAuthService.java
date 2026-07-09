@@ -1,9 +1,9 @@
 package com.tavemakers.surf.domain.auth.kakao.service;
 
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.infrastructure.auth.kakao.KakaoApiClient;
 import com.tavemakers.surf.infrastructure.auth.kakao.config.KakaoOAuthProps;
-import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoTokenResDTO;
+import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

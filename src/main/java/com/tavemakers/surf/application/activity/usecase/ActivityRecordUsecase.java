@@ -15,6 +15,7 @@ import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.exception.ActivityRecordAlreadyDeletedException;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordDeleteService;
+import com.tavemakers.surf.application.activity.mapper.ActivityRecordMapper;
 import com.tavemakers.surf.application.activity.query.ActivityRecordGetService;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordCreateService;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordPatchService;
@@ -44,6 +45,7 @@ public class ActivityRecordUsecase {
     private final ActivityRecordGetService activityRecordGetService;
     private final ActivityRecordPatchService activityRecordPatchService;
     private final ActivityRecordDeleteService activityRecordDeleteService;
+    private final ActivityRecordMapper activityRecordMapper;
     private final PersonalScoreGetService personalScoreGetService;
     private final ScoreCalculator scoreCalculator;
     private final LogEventEmitter logEventEmitter;
@@ -56,7 +58,7 @@ public class ActivityRecordUsecase {
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
                     BigDecimal prefixSum = personalScore.updateScore(dto.activityName());
-                    return ActivityRecord.of(personalScore.getMember().getId(), dto, prefixSum);
+                    return ActivityRecord.of(personalScore.getMember().getId(), dto.category(), dto.activityName(), dto.activityDate(), prefixSum);
                         }
                 ).toList();
 
@@ -83,7 +85,8 @@ public class ActivityRecordUsecase {
 
                                     return ActivityRecord.ofTeam(
                                             teamScore.getTeam().getId(),
-                                            dto,
+                                            activityType,
+                                            dto.activityDate(),
                                             prefixSum
                                     );
                                 }
@@ -110,7 +113,8 @@ public class ActivityRecordUsecase {
 
                                 return ActivityRecord.ofPersonal(
                                         personalScore.getMember().getId(),
-                                        dto,
+                                        activityType,
+                                        dto.activityDate(),
                                         prefixSum
                                 );
                             }
@@ -212,18 +216,18 @@ public class ActivityRecordUsecase {
 
     /** 모든 활동 종류 조회 */
     public List<ActivityCategoryDetailResDTO> getAllActivityTypeInformation() {
-        return ActivityCategory.getDetailDtoList();
+        return activityRecordMapper.mapAllCategoryDetails();
     }
 
     /** 모든 활동 카테고리 조회 */
     public List<ActivityCategoryResDTO> getAllActivityCategoriesInformation() {
-        return ActivityCategory.getDtoList();
+        return activityRecordMapper.mapAllCategories();
     }
 
     /** 특정 카테고리의 활동 종류 조회 */
     public ActivityCategoryDetailResDTO getActivityTypeInformationByCategory(String category) {
         ActivityCategory activityCategory = ActivityCategory.valueOf(category);
-        return ActivityType.getDtoListByCategory(activityCategory);
+        return activityRecordMapper.mapCategoryDetail(activityCategory);
     }
 
     /** 활동기록의 대상(개인/팀)에 해당하는 점수 엔티티 조회 (점수 갱신용 — 행 잠금) */

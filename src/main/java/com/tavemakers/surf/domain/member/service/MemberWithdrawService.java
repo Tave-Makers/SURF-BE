@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,14 +17,12 @@ public class MemberWithdrawService {
     private final MemberGetService memberGetService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 회원 탈퇴 처리 — SURF 토큰 무효화 및 provider 연결 해제는 커밋 후(AFTER_COMMIT) 수행 */
-    @Transactional
+    /** 회원 탈퇴 처리 — SURF 토큰 무효화 및 provider 연결 해제는 커밋 후(AFTER_COMMIT) 수행. 트랜잭션 경계는 호출자(usecase)가 소유한다. */
     public void withdraw(Long memberId) {
         Member member = memberGetService.getMember(memberId);
         expel(member);
     }
 
-    @Transactional
     public void expel(Member member) {
         disconnectMember(member);
         if (member.getStatus() != MemberStatus.WITHDRAWN) {

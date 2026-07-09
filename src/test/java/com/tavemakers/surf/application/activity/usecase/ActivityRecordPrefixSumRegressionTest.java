@@ -3,6 +3,7 @@ package com.tavemakers.surf.application.activity.usecase;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.request.ActivityRecordPatchReqDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
+import com.tavemakers.surf.application.activity.mapper.ActivityRecordMapper;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordCreateService;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordDeleteService;
 import com.tavemakers.surf.application.activity.query.ActivityRecordGetService;
@@ -56,6 +57,8 @@ class ActivityRecordPrefixSumRegressionTest {
     private ScoreCalculator scoreCalculator;
     @Mock
     private LogEventEmitter logEventEmitter;
+    @Mock
+    private ActivityRecordMapper activityRecordMapper;
 
     private ActivityRecordUsecase usecase;
 
@@ -70,6 +73,7 @@ class ActivityRecordPrefixSumRegressionTest {
                 activityRecordGetService,
                 new ActivityRecordPatchService(),
                 activityRecordDeleteService,
+                activityRecordMapper,
                 personalScoreGetService,
                 scoreCalculator,
                 logEventEmitter

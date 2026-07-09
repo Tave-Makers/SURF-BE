@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.common.service;
 
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.domain.auth.common.exception.TokenErrorMessage;
 import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.jwt.JwtService;

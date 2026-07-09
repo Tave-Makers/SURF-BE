@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.comment.service;
 
-import com.tavemakers.surf.presentation.comment.dto.response.CommentLikeMemberResDTO;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.entity.CommentLike;
 import com.tavemakers.surf.domain.comment.event.CommentLikedEvent;
@@ -37,7 +36,11 @@ public class CommentLikeService {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 좋아요 및 좋아요 취소 */
+    /**
+     * 좋아요 및 좋아요 취소.
+     * <p>동시성 경로(원자적 like count UPDATE + unique 제약 위반 감지)라 트랜잭션 경계를 도메인에 유지한다.
+     * CommentLikeConcurrencyTest 가 이 빈을 직접 호출하며 메서드 레벨 트랜잭션 경계에 의존한다.
+     */
     @Transactional
     public boolean toggleLike(@LogParam("comment_id") Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
@@ -80,7 +83,6 @@ public class CommentLikeService {
     }
 
     /** 댓글의 총 좋아요 수 */
-    @Transactional(readOnly = true)
     public long countLikes(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
@@ -88,7 +90,6 @@ public class CommentLikeService {
     }
 
     /** 내가 해당 댓글에 좋아요 눌렀는지 여부 */
-    @Transactional(readOnly = true)
     public boolean isLikedByMe(Long commentId, Long memberId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
@@ -96,20 +97,12 @@ public class CommentLikeService {
         return commentLikeRepository.existsByCommentAndMember(comment, member);
     }
 
-    /** 특정 댓글에 좋아요를 누른 회원들의 ID, 이름, 프로필 이미지를 조회 */
-    @Transactional(readOnly = true)
-    public List<CommentLikeMemberResDTO> getMembersWhoLiked(Long commentId) {
-        List<Member> members = commentLikeRepository.findMembersWhoLiked(commentId);
-        return members.stream()
-                .map(member -> new CommentLikeMemberResDTO(
-                        member.getId(),
-                        member.getName(),
-                        member.getProfileImageUrl()))
-                .toList();
+    /** 특정 댓글에 좋아요를 누른 회원 엔티티 목록 조회 (DTO 변환은 application/query 담당) */
+    public List<Member> getMembersWhoLiked(Long commentId) {
+        return commentLikeRepository.findMembersWhoLiked(commentId);
     }
 
-    /** 특정 회원이 누른 댓글 좋아요 전체 제거 */
-    @Transactional
+    /** 특정 회원이 누른 댓글 좋아요 전체 제거 (트랜잭션 경계는 호출자 MemberDismissUsecase 소유) */
     public void removeAllByMemberId(Long memberId) {
         for (CommentLike commentLike : commentLikeRepository.findAllByMemberId(memberId)) {
             Comment comment = commentLike.getComment();

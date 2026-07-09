@@ -4,22 +4,51 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.presentation.notification.dto.response.NotificationResDTO;
 import com.tavemakers.surf.domain.notification.entity.Notification;
+import com.tavemakers.surf.domain.notification.entity.NotificationCategory;
+import com.tavemakers.surf.domain.notification.entity.NotificationType;
+import com.tavemakers.surf.domain.notification.repository.NotificationRepository;
 import com.tavemakers.surf.domain.notification.service.NotificationRenderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 알림 read-model 조립. member 도메인 조회 계약을 오케스트레이션하고 표현형(NotificationResDTO)을
+ * 구성하므로 application 계층에 위치한다. 트랜잭션(readOnly) 경계는 호출자(NotificationUsecase)가 소유한다.
+ */
 @RequiredArgsConstructor
 @Service
 public class NotificationGetService {
 
+    private final NotificationRepository notificationRepository;
     private final NotificationRenderService renderer;
     private final MemberGetService memberGetService;
+
+    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능) */
+    public List<NotificationResDTO> getNotifications(Long memberId, NotificationCategory category) {
+
+        List<Notification> notifications;
+
+        if (category == null) {
+            // 전체 알림
+            notifications = notificationRepository.findByMemberIdOrderByIdDesc(memberId);
+        } else {
+            // 해당 카테고리의 타입 목록 추출
+            List<NotificationType> types = Arrays.stream(NotificationType.values())
+                    .filter(t -> t.getCategory() == category)
+                    .toList();
+
+            notifications = notificationRepository.findByMemberIdAndTypeInOrderByIdDesc(memberId, types);
+        }
+
+        return toDtoList(notifications);
+    }
 
     /**
      * 단건 변환 (프로필 이미지 없이)

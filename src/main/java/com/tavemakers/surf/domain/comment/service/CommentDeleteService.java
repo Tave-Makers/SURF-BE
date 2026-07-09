@@ -8,9 +8,11 @@ import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-/** 댓글 삭제 전용 서비스 */
+/**
+ * 댓글 삭제 전용 서비스. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(PostDeleteUsecase / MemberDismissUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class CommentDeleteService {
@@ -21,7 +23,6 @@ public class CommentDeleteService {
     private final PostCommentCountService postCommentCountService;
 
     /** 게시글의 모든 댓글 삭제 (연관 데이터 먼저 삭제) */
-    @Transactional
     public void deleteAllByPostId(Long postId) {
         commentLikeRepository.deleteAllByPostId(postId);
         commentMentionRepository.deleteAllByPostId(postId);
@@ -30,7 +31,6 @@ public class CommentDeleteService {
     }
 
     /** 특정 회원이 남긴 댓글 삭제 (이미 삭제 예정인 게시글은 제외) */
-    @Transactional
     public void deleteAllByMemberId(Long memberId, Set<Long> deletedPostIds) {
         for (Comment comment : commentRepository.findAllByMemberId(memberId)) {
             if (deletedPostIds.contains(comment.getPost().getId())) {
@@ -41,7 +41,6 @@ public class CommentDeleteService {
     }
 
     /** 댓글 단건 강제 삭제 */
-    @Transactional
     public void deleteComment(Comment comment) {
         Long postId = comment.getPost().getId();
         commentRepository.detachChildren(comment.getId());

@@ -1,7 +1,5 @@
 package com.tavemakers.surf.domain.activity.entity;
 
-import com.tavemakers.surf.presentation.activity.dto.activityRecord.request.ActivityRecordReqDTO;
-import com.tavemakers.surf.presentation.activity.dto.activityRecord.request.ActivityRecordReqDTOV2;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
@@ -52,42 +50,42 @@ public class ActivityRecord extends BaseEntity {
     private boolean isDeleted = false;
 
     // TODO 정적 팩토리 메서드
-    public static ActivityRecord of(Long memberId, ActivityRecordReqDTO dto, BigDecimal prefixSum) {
+    public static ActivityRecord of(Long memberId, ActivityCategory category, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .memberId(memberId)
-                .category(dto.category() != null ? dto.category() : null)
-                .activityType(dto.activityName())
-                .activityDate(dto.activityDate())
-                .scoreType(dto.activityName().getScoreType())
-                .appliedScore(BigDecimal.valueOf(dto.activityName().getDelta()))
+                .category(category)
+                .activityType(activityName)
+                .activityDate(activityDate)
+                .scoreType(activityName.getScoreType())
+                .appliedScore(BigDecimal.valueOf(activityName.getDelta()))
                 .prefixSum(prefixSum)
                 .isDeleted(false)
                 .build();
     }
 
     /** 개인 활동 점수 기록 */
-    public static ActivityRecord ofPersonal(Long memberId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
+    public static ActivityRecord ofPersonal(Long memberId, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .memberId(memberId)
-                .category(dto.activityName().getCategory())
-                .activityType(dto.activityName())
-                .activityDate(dto.activityDate())
-                .scoreType(dto.activityName().getScoreType())
-                .appliedScore(BigDecimal.valueOf(dto.activityName().getDelta()))
+                .category(activityName.getCategory())
+                .activityType(activityName)
+                .activityDate(activityDate)
+                .scoreType(activityName.getScoreType())
+                .appliedScore(BigDecimal.valueOf(activityName.getDelta()))
                 .prefixSum(prefixSum)
                 .isDeleted(false)
                 .build();
     }
 
     /** 팀 활동 점수 기록 */
-    public static ActivityRecord ofTeam(Long teamId, ActivityRecordReqDTOV2 dto, BigDecimal prefixSum) {
+    public static ActivityRecord ofTeam(Long teamId, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum) {
         return ActivityRecord.builder()
                 .teamId(teamId)
-                .category(dto.activityName().getCategory())
-                .activityType(dto.activityName())
-                .activityDate(dto.activityDate())
-                .scoreType(dto.activityName().getScoreType())
-                .appliedScore(BigDecimal.valueOf(dto.activityName().getDelta()))
+                .category(activityName.getCategory())
+                .activityType(activityName)
+                .activityDate(activityDate)
+                .scoreType(activityName.getScoreType())
+                .appliedScore(BigDecimal.valueOf(activityName.getDelta()))
                 .prefixSum(prefixSum)
                 .isDeleted(false)
                 .build();

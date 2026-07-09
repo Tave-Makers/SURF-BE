@@ -1,9 +1,9 @@
-package com.tavemakers.surf.domain.post.service.search;
+package com.tavemakers.surf.application.post.query;
 
 import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
-import com.tavemakers.surf.domain.post.service.support.FlagsMapper;
+import com.tavemakers.surf.domain.post.service.search.RecentSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;

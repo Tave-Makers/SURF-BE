@@ -5,7 +5,6 @@ import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
 import com.tavemakers.surf.domain.letter.entity.Letter;
 import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.application.letter.query.LetterGetService;
-import com.tavemakers.surf.domain.letter.service.LetterCreateService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;

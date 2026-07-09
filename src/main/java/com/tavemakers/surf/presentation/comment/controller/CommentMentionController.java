@@ -1,7 +1,7 @@
 package com.tavemakers.surf.presentation.comment.controller;
 
 import com.tavemakers.surf.presentation.comment.dto.response.MentionSearchResDTO;
-import com.tavemakers.surf.domain.comment.service.CommentMentionService;
+import com.tavemakers.surf.application.comment.query.CommentMentionGetService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,14 +19,14 @@ import static com.tavemakers.surf.presentation.comment.controller.ResponseMessag
 @RequiredArgsConstructor
 public class CommentMentionController {
 
-    private final CommentMentionService commentMentionService;
+    private final CommentMentionGetService commentMentionGetService;
 
     @Operation(summary = "멘션할 회원 검색", description = "이름 두 글자 이상 입력 시 회원 검색")
     @GetMapping("/v1/user/comments/mentions/search")
     public ApiResponse<List<MentionSearchResDTO>> searchMentionableMembers(
             @RequestParam("keyword") String keyword
     ) {
-        List<MentionSearchResDTO> result = commentMentionService.searchMentionableMembers(keyword);
+        List<MentionSearchResDTO> result = commentMentionGetService.searchMentionableMembers(keyword);
         return ApiResponse.response(HttpStatus.OK, COMMENT_MENTION_SEARCH_SUCCESS.getMessage(), result);
     }
 }

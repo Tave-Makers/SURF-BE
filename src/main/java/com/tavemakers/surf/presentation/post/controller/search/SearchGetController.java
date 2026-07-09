@@ -1,7 +1,7 @@
 package com.tavemakers.surf.presentation.post.controller.search;
 
 import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
-import com.tavemakers.surf.domain.post.service.search.PostSearchService;
+import com.tavemakers.surf.application.post.query.PostSearchService;
 import com.tavemakers.surf.domain.post.service.search.RecentSearchService;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;

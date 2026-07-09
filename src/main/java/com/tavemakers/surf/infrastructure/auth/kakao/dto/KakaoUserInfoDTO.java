@@ -1,4 +1,4 @@
-package com.tavemakers.surf.presentation.auth.kakao.dto;
+package com.tavemakers.surf.infrastructure.auth.kakao.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;

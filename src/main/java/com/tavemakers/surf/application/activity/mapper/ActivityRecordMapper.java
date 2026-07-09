@@ -1,11 +1,15 @@
 package com.tavemakers.surf.application.activity.mapper;
 
+import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityCategoryDetailResDTO;
+import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityCategoryResDTO;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityRecordSummaryResDTO;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityTypeCountResDTO;
+import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityTypeDetailResDTO;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.ActivityTypeGroupCountResDTO;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.request.ActivityPenaltyGroupReqDTO;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.request.ActivityRewardGroupReqDTO;
 import com.tavemakers.surf.domain.activity.entity.ActivityRecord;
+import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +23,29 @@ import static com.tavemakers.surf.domain.activity.entity.enums.ActivityType.*;
 
 @Component
 public class ActivityRecordMapper {
+
+    /** 전체 카테고리별 활동 종류 상세 목록 */
+    public List<ActivityCategoryDetailResDTO> mapAllCategoryDetails() {
+        return Arrays.stream(ActivityCategory.values())
+                .map(this::mapCategoryDetail)
+                .toList();
+    }
+
+    /** 전체 활동 카테고리 목록 */
+    public List<ActivityCategoryResDTO> mapAllCategories() {
+        return Arrays.stream(ActivityCategory.values())
+                .map(ActivityCategoryResDTO::of)
+                .toList();
+    }
+
+    /** 특정 카테고리에 속한 활동 종류 상세 목록 */
+    public ActivityCategoryDetailResDTO mapCategoryDetail(ActivityCategory category) {
+        List<ActivityTypeDetailResDTO> types = Arrays.stream(ActivityType.values())
+                .filter(type -> type.getCategory() == category)
+                .map(ActivityTypeDetailResDTO::of)
+                .toList();
+        return ActivityCategoryDetailResDTO.of(category, types);
+    }
 
     public ActivityRecordSummaryResDTO mapPinnedActivityRecord(List<ActivityRecord> records) {
         Map<ActivityType, Long> countMap = records.stream()

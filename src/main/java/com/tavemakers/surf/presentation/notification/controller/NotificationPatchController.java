@@ -1,6 +1,6 @@
 package com.tavemakers.surf.presentation.notification.controller;
 
-import com.tavemakers.surf.domain.notification.service.NotificationService;
+import com.tavemakers.surf.application.notification.usecase.NotificationUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +17,7 @@ import static com.tavemakers.surf.presentation.notification.controller.ResponseM
 @Tag(name = "알람")
 public class NotificationPatchController {
 
-    private final NotificationService notificationService;
+    private final NotificationUsecase notificationUsecase;
 
     @Operation(summary = "알람 읽음 처리", description = "특정 알람을 읽음 처리합니다.")
     @PatchMapping("/v1/user/notifications/{notificationId}/read")
@@ -25,7 +25,7 @@ public class NotificationPatchController {
             @PathVariable Long notificationId
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        notificationService.markAsRead(notificationId, memberId);
+        notificationUsecase.markAsRead(notificationId, memberId);
         return ApiResponse.response(HttpStatus.OK, NOTIFICATION_READ_MARK.getMessage());
     }
 }

@@ -85,7 +85,10 @@ class TeamDeleteCleanupTest {
     @DisplayName("관리자 직접 팀 삭제 시 TeamDeletedEvent 리스너가 팀 점수를 같은 트랜잭션에서 정리해 팀·팀점수가 모두 삭제된다")
     void 팀_삭제시_팀점수도_함께_정리된다() {
         // 수정 전에는 team_id FK 를 가진 점수 행이 남아 FK 위반(500) 또는 고아 행이 됐다.
-        assertThatCode(() -> teamService.deleteTeam(teamId))
+        // 트랜잭션 경계는 TeamUsecase.deleteTeam(@Transactional)가 소유하므로(B안),
+        // 프로덕션 경계를 재현하기 위해 TransactionTemplate 으로 감싸 호출한다.
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        assertThatCode(() -> tx.executeWithoutResult(status -> teamService.deleteTeam(teamId)))
                 .doesNotThrowAnyException();
 
         assertThat(countTeams(teamId))

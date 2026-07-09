@@ -1,4 +1,4 @@
-package com.tavemakers.surf.presentation.auth.apple.dto;
+package com.tavemakers.surf.domain.auth.apple.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

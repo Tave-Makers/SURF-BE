@@ -39,17 +39,21 @@ import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 
-/** 게시글 수정 관련 서비스 */
+/**
+ * 게시글 수정 관련 서비스.
+ * 트랜잭션 경계는 호출자(PostPatchUsecase)가 소유한다.
+ * NOTE: @LogEvent(post.update)가 PostUpdateReqDTO(LogPropsProvider)로부터 props를 수집하고,
+ *       usecase에는 예약 변경 경로가 선행하므로 @LogEvent를 usecase로 옮기면 .failed 이벤트 발생 조건이
+ *       바뀐다. 따라서 로깅 계약 보존을 위해 ReqDTO 파라미터와 @LogEvent를 도메인에 유지한다(구조 전환 보류).
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PostPatchService {
 
     private final PostRepository postRepository;
@@ -70,7 +74,6 @@ public class PostPatchService {
     private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 수정 (예약 변경 처리는 Usecase에서 담당) */
-    @Transactional
     @LogEvent(value = "post.update", message = "게시글 수정 성공")
     public PostDetailResDTO updatePost(
             @LogParam("post_id") Long postId,
@@ -84,7 +87,7 @@ public class PostPatchService {
                 ? resolveCategory(post.getBoard(), req.categoryId())
                 : post.getCategory();
 
-        post.update(req, post.getBoard(), newCategory);
+        post.update(req.title(), req.content(), req.pinned(), req.hasSchedule(), post.getBoard(), newCategory);
 
         boolean scrappedByMe = scrapGetService.isScrappedByMe(viewerId, postId);
         boolean likedByMe = postLikeService.isLikedByMe(viewerId, postId);
@@ -103,13 +106,16 @@ public class PostPatchService {
         List<PostImageResDTO> imageDtoList;
         if (Boolean.TRUE.equals(req.isImageChanged())) {
             deleteExistingImages(post);
-            List<PostImageCreateReqDTO> changeImages = req.imageUrlList();
-            if (changeImages == null || changeImages.isEmpty()) {
+            List<PostImageCreateService.ImageData> changeImages = toImageData(req.imageUrlList());
+            if (changeImages.isEmpty()) {
                 post.addThumbnailUrl(null);
                 imageDtoList = null;
             } else {
                 post.addThumbnailUrl(findFirstImage(changeImages));
-                imageDtoList = imageCreateService.saveAll(post, changeImages);
+                imageDtoList = imageCreateService.saveAll(post, changeImages).stream()
+                        .map(PostImageResDTO::from)
+                        .sorted(Comparator.comparing(PostImageResDTO::sequence))
+                        .toList();
             }
         } else {
             imageDtoList = postGetService.getImageUrlList(post);
@@ -119,11 +125,13 @@ public class PostPatchService {
         List<PostFileResDTO> fileDtoList;
         if (Boolean.TRUE.equals(req.isFileChanged())) {
             deleteExistingFiles(post);
-            List<PostFileCreateReqDTO> changeFiles = req.fileList();
-            if (changeFiles == null || changeFiles.isEmpty()) {
+            List<PostFileCreateService.FileData> changeFiles = toFileData(req.fileList());
+            if (changeFiles.isEmpty()) {
                 fileDtoList = null;
             } else {
-                fileDtoList = fileCreateService.saveAll(post, changeFiles);
+                fileDtoList = fileCreateService.saveAll(post, changeFiles).stream()
+                        .map(PostFileResDTO::from)
+                        .toList();
             }
         } else {
             fileDtoList = postGetService.getPostFileList(post);
@@ -171,15 +179,29 @@ public class PostPatchService {
     }
 
     /** 이미지 목록에서 첫 번째 이미지 URL 추출 */
-    private String findFirstImage(List<PostImageCreateReqDTO> dto) {
-        if (dto == null || dto.isEmpty()) {
+    private String findFirstImage(List<PostImageCreateService.ImageData> dataList) {
+        if (dataList == null || dataList.isEmpty()) {
             throw new PostImageListEmptyException();
         }
 
-        PostImageCreateReqDTO postImageCreateReqDTO = dto.stream()
-                .min(Comparator.comparing(PostImageCreateReqDTO::sequence))
-                .orElse(dto.get(0));
-        return postImageCreateReqDTO.originalUrl();
+        PostImageCreateService.ImageData first = dataList.stream()
+                .min(Comparator.comparing(PostImageCreateService.ImageData::sequence))
+                .orElse(dataList.get(0));
+        return first.originalUrl();
+    }
+
+    private List<PostImageCreateService.ImageData> toImageData(List<PostImageCreateReqDTO> list) {
+        if (list == null) return List.of();
+        return list.stream()
+                .map(d -> new PostImageCreateService.ImageData(d.originalUrl(), d.sequence()))
+                .toList();
+    }
+
+    private List<PostFileCreateService.FileData> toFileData(List<PostFileCreateReqDTO> list) {
+        if (list == null) return List.of();
+        return list.stream()
+                .map(d -> new PostFileCreateService.FileData(d.fileUrl(), d.originalFileName(), d.sequence()))
+                .toList();
     }
 
     /** 게시글 소유자 또는 관리자 권한 검증 */

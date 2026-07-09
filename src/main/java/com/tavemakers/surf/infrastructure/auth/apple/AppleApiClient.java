@@ -2,7 +2,7 @@ package com.tavemakers.surf.infrastructure.auth.apple;
 
 import com.tavemakers.surf.domain.auth.apple.service.AppleClientSecretGenerator;
 import com.tavemakers.surf.infrastructure.auth.apple.config.AppleOAuthProps;
-import com.tavemakers.surf.presentation.auth.apple.dto.AppleTokenResDTO;
+import com.tavemakers.surf.domain.auth.apple.dto.AppleTokenResDTO;
 import com.tavemakers.surf.domain.auth.apple.exception.AppleAuthErrorMessage;
 import com.tavemakers.surf.domain.auth.apple.exception.AppleAuthException;
 import lombok.extern.slf4j.Slf4j;

@@ -6,7 +6,6 @@ import com.tavemakers.surf.domain.comment.event.CommentReplyEvent;
 import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.application.notification.usecase.NotificationUsecase;
-import com.tavemakers.surf.domain.notification.service.NotificationCreateService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.event.PostLikedEvent;
 import com.tavemakers.surf.application.post.query.PostGetService;
@@ -31,7 +30,6 @@ public class NotificationEventListener {
 
     private final PostGetService postGetService;
     private final NotificationUsecase notificationUsecase;
-    private final NotificationCreateService notificationCreateService;
     private final LogEventEmitterImpl logEventEmitter;
 
     @Async
@@ -55,7 +53,7 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentCreated(CommentCreatedEvent event) {
-        notificationCreateService.createAndSend(
+        notificationUsecase.createAndSend(
                 event.getReceiverId(),
                 NotificationType.POST_COMMENT,
                 Map.of(
@@ -74,7 +72,7 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentReply(CommentReplyEvent event) {
-        notificationCreateService.createAndSend(
+        notificationUsecase.createAndSend(
                 event.getReceiverId(),
                 NotificationType.COMMENT_REPLY,
                 Map.of(
@@ -93,7 +91,7 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentLiked(CommentLikedEvent event) {
-        notificationCreateService.createAndSend(
+        notificationUsecase.createAndSend(
                 event.getReceiverId(),
                 NotificationType.COMMENT_LIKE,
                 Map.of(
@@ -112,7 +110,7 @@ public class NotificationEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostLiked(PostLikedEvent event) {
-        notificationCreateService.createAndSend(
+        notificationUsecase.createAndSend(
                 event.getReceiverId(),
                 NotificationType.POST_LIKE,
                 Map.of(
@@ -137,7 +135,7 @@ public class NotificationEventListener {
                 "sender_name", event.getSenderName()
         ));
         try {
-            notificationCreateService.createAndSend(
+            notificationUsecase.createAndSend(
                     event.getReceiverId(),
                     NotificationType.MESSAGE,
                     Map.of(

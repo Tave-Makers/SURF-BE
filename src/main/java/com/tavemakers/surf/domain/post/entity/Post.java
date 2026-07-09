@@ -3,8 +3,6 @@ package com.tavemakers.surf.domain.post.entity;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.presentation.post.dto.request.PostCreateReqDTO;
-import com.tavemakers.surf.presentation.post.dto.request.PostUpdateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -78,11 +76,12 @@ public class Post extends BaseEntity {
     private Long scheduleId;
 
 
-    public static Post of(PostCreateReqDTO req, Board board, BoardCategory category, Member member) {
+    public static Post of(String title, String content, Boolean pinned, boolean isReserved,
+                          Boolean hasSchedule, Board board, BoardCategory category, Member member) {
         return Post.builder()
-                .title(req.title())
-                .content(req.content())
-                .pinned(req.pinned() != null ? req.pinned() : false)
+                .title(title)
+                .content(content)
+                .pinned(pinned != null ? pinned : false)
                 .postedAt(LocalDateTime.now())
                 .board(board)
                 .boardName(board.getName())
@@ -92,20 +91,21 @@ public class Post extends BaseEntity {
                 .scrapCount(0L)
                 .likeCount(0L)
                 .commentCount(0L)
-                .isReserved(req.isReserved())
-                .hasSchedule(req.hasSchedule() != null ? req.hasSchedule() : false)
+                .isReserved(isReserved)
+                .hasSchedule(hasSchedule != null ? hasSchedule : false)
                 .viewCount(0)
                 .build();
     }
 
-    public void update(PostUpdateReqDTO req, Board board, BoardCategory category) {
-        if (req.title() != null && !req.title().isBlank()) {
-            this.title = req.title();
+    public void update(String title, String content, Boolean pinned,
+                       Boolean hasSchedule, Board board, BoardCategory category) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
         }
-        if (req.content() != null && !req.content().isBlank()) {
-            this.content = req.content();
+        if (content != null && !content.isBlank()) {
+            this.content = content;
         }
-        this.pinned = req.pinned() != null ? req.pinned() : this.pinned;
+        this.pinned = pinned != null ? pinned : this.pinned;
 
         this.board = board;
         this.boardName = board.getName();
@@ -113,9 +113,9 @@ public class Post extends BaseEntity {
         this.category = category;
         this.categoryName = category.getName();
 
-        this.hasSchedule = req.hasSchedule() != null ? req.hasSchedule() : this.hasSchedule;
+        this.hasSchedule = hasSchedule != null ? hasSchedule : this.hasSchedule;
 
-        if (Boolean.FALSE.equals(req.hasSchedule())) {
+        if (Boolean.FALSE.equals(hasSchedule)) {
             this.scheduleId = null;
         }
     }

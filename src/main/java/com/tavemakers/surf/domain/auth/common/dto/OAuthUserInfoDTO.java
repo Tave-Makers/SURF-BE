@@ -1,4 +1,4 @@
-package com.tavemakers.surf.presentation.auth.common.dto;
+package com.tavemakers.surf.domain.auth.common.dto;
 
 /**
  * OAuth provider 공통 사용자 정보 DTO

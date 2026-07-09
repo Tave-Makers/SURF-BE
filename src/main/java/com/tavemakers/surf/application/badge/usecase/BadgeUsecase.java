@@ -25,7 +25,8 @@ public class BadgeUsecase {
     /** 배지 생성 */
     @Transactional
     public Long createBadge(BadgeCreateReqDTO dto) {
-        return badgeCreateService.createBadge(dto);
+        return badgeCreateService.createBadge(
+                dto.getName(), dto.getImageUrl(), dto.getDescription(), dto.getRequirement());
     }
 
     /** 배지 리스트 조회 */
@@ -55,7 +56,8 @@ public class BadgeUsecase {
     /** 배지 수정 */
     @Transactional
     public void updateBadge(Long badgeId, BadgeUpdateReqDTO dto) {
-        badgeUpdateService.updateBadge(badgeId, dto);
+        badgeUpdateService.updateBadge(
+                badgeId, dto.getName(), dto.getImageUrl(), dto.getDescription(), dto.getRequirement());
     }
 
     /** 배지 삭제 */

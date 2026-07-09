@@ -1,9 +1,5 @@
 package com.tavemakers.surf.domain.comment.service;
 
-import com.tavemakers.surf.presentation.comment.dto.request.CommentCreateReqDTO;
-import com.tavemakers.surf.presentation.comment.dto.response.CommentListResDTO;
-import com.tavemakers.surf.presentation.comment.dto.response.CommentResDTO;
-import com.tavemakers.surf.presentation.comment.dto.response.MentionResDTO;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.event.CommentCreatedEvent;
 import com.tavemakers.surf.domain.comment.event.CommentReplyEvent;
@@ -18,18 +14,16 @@ import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.post.service.support.PostCommentCountService;
-import com.tavemakers.surf.global.logging.LogEvent;
-import com.tavemakers.surf.global.logging.LogParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * 댓글 도메인 로직. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(CommentUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -38,29 +32,30 @@ public class CommentService {
     private final PostGetService postGetService;
     private final MemberGetService memberGetService;
     private final CommentMentionService commentMentionService;
-    private final CommentLikeService commentLikeService;
     private final CommentLikeRepository commentLikeRepository;
     private final PostCommentCountService postCommentCountService;
 
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 댓글 작성 */
-    @Transactional
-    public CommentResDTO createComment(
+    /** 댓글 작성 (루트/대댓글 분기). 저장된 댓글 엔티티를 반환한다. */
+    public Comment createComment(
             Long postId,
-            Long memberId, CommentCreateReqDTO req) {
+            Long memberId,
+            Long parentId,
+            String content,
+            List<Long> mentionMemberIds) {
         Post post = postGetService.getPost(postId);
         Member member = memberGetService.getMember(memberId);
-        if (req.content() == null || req.content().isEmpty()) throw new InvalidBlankCommentException();
+        if (content == null || content.isEmpty()) throw new InvalidBlankCommentException();
 
         // 댓글 생성 (루트/대댓글 분기)
         Comment saved;
 
         // 1) 루트 댓글 (parentId == null)
-        if (req.parentId() == null) {
+        if (parentId == null) {
 
             // 루트 댓글 생성
-            Comment comment = Comment.root(post, member, req.content());
+            Comment comment = Comment.root(post, member, content);
             saved = commentRepository.save(comment);
             saved.markAsRoot();
 
@@ -78,7 +73,7 @@ public class CommentService {
         } else {
 
             // 2) 대댓글 생성 (parentId != null)
-            Comment parent = commentRepository.findById(req.parentId())
+            Comment parent = commentRepository.findById(parentId)
                     .orElseThrow(CommentNotFoundException::new);
 
             // 다른 게시글의 루트 댓글이면 안됨
@@ -90,13 +85,13 @@ public class CommentService {
 
             // 본인 댓글에 대댓글을 다는 경우는 자기 멘션 검증 스킵
             if (!parentWriterId.equals(memberId)) {
-                if (req.mentionMemberIds() == null ||
-                        !req.mentionMemberIds().contains(parentWriterId)) {
+                if (mentionMemberIds == null ||
+                        !mentionMemberIds.contains(parentWriterId)) {
                     throw new InvalidReplyException(); // 대댓글은 부모 멘션 필수
                 }
             }
 
-            Comment child = Comment.child(post, member, req.content(), parent);
+            Comment child = Comment.child(post, member, content, parent);
             saved = commentRepository.save(child);
 
             if (!parentWriterId.equals(memberId)) {
@@ -111,19 +106,15 @@ public class CommentService {
             }
         }
         // 멘션 등록
-        commentMentionService.createMentions(saved, req.mentionMemberIds());
+        commentMentionService.createMentions(saved, mentionMemberIds);
 
         // 댓글 수 증가 — 동시 요청 lost update 방지 위해 원자적 UPDATE
         postCommentCountService.increase(postId);
 
-        // 응답 DTO (멘션, 좋아요 포함)
-        List<MentionResDTO> mentions = commentMentionService.getMentions(saved.getId());
-        boolean liked = false; // 새 댓글은 기본적으로 좋아요 없음
-        return CommentResDTO.from(saved, postId, mentions, liked);
+        return saved;
     }
 
     /** 댓글 삭제 */
-    @Transactional
     public void deleteComment(
             Long postId,
             Long commentId,
@@ -148,37 +139,5 @@ public class CommentService {
 
         // 게시글 댓글 수 감소 — 동시 요청 lost update 방지 위해 원자적 UPDATE
         postCommentCountService.decrease(postId);
-    }
-
-    /** 댓글 목록 조회 */
-    @Transactional(readOnly = true)
-    public CommentListResDTO getComments(Long postId, Pageable pageable, Long memberId) {
-
-        // 1) 댓글 Slice 조회
-        Slice<Comment> commentSlice =
-                commentRepository.findByPostIdOrderByCreatedAtAsc(postId, pageable);
-
-        // 2) 댓글 총 개수 조회
-        long totalCount = commentRepository.countByPostId(postId);
-
-        // 3) 각 댓글 → DTO 변환 (멘션 일괄 조회로 N+1 방지)
-        List<Comment> comments = commentSlice.getContent();
-        List<Long> commentIds = comments.stream().map(Comment::getId).toList();
-        Map<Long, List<MentionResDTO>> mentionMap = commentMentionService.getMentionsByCommentIds(commentIds);
-
-        List<CommentResDTO> commentDtoList = comments.stream()
-                .map(comment -> {
-                    List<MentionResDTO> mentions = mentionMap.getOrDefault(comment.getId(), List.of());
-                    boolean liked = memberId != null && commentLikeService.isLikedByMe(comment.getId(), memberId);
-                    return CommentResDTO.from(comment, postId, mentions, liked);
-                })
-                .toList();
-
-        // 4) CommentListResDTO로 감싸서 반환
-        return new CommentListResDTO(
-                commentDtoList,
-                totalCount,
-                commentSlice.hasNext()
-        );
     }
 }

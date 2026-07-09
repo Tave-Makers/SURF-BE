@@ -1,9 +1,10 @@
-package com.tavemakers.surf.domain.auth.common.service;
+package com.tavemakers.surf.application.auth.common.usecase;
 
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginResDTO;
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.global.jwt.JwtService;
 import jakarta.servlet.http.Cookie;

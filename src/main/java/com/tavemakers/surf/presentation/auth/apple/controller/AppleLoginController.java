@@ -6,7 +6,7 @@ import com.tavemakers.surf.domain.auth.apple.exception.AppleAuthException;
 import com.tavemakers.surf.domain.auth.apple.service.AppleAuthService;
 import com.tavemakers.surf.domain.auth.apple.service.AppleOAuthStateService;
 import com.tavemakers.surf.application.auth.apple.usecase.AppleLoginUsecase;
-import com.tavemakers.surf.presentation.auth.common.dto.ClientType;
+import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.global.common.response.ApiResponse;

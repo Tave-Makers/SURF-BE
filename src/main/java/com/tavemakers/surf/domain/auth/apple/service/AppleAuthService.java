@@ -2,7 +2,7 @@ package com.tavemakers.surf.domain.auth.apple.service;
 
 import com.tavemakers.surf.infrastructure.auth.apple.AppleApiClient;
 import com.tavemakers.surf.infrastructure.auth.apple.config.AppleOAuthProps;
-import com.tavemakers.surf.presentation.auth.apple.dto.AppleTokenResDTO;
+import com.tavemakers.surf.domain.auth.apple.dto.AppleTokenResDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

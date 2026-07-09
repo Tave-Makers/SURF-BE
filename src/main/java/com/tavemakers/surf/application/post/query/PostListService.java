@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.post.service.post;
+package com.tavemakers.surf.application.post.query;
 
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
@@ -12,7 +12,6 @@ import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
-import com.tavemakers.surf.domain.post.service.support.FlagsMapper;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventContext;
 import com.tavemakers.surf.global.logging.LogParam;

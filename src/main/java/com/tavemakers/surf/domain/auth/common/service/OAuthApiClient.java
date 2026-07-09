@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.auth.common.service;
 
-import com.tavemakers.surf.presentation.auth.common.dto.OAuthUserInfoDTO;
+import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 
 /**
  * OAuth provider별 사용자 정보 조회 인터페이스

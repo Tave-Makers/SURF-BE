@@ -20,14 +20,15 @@ import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** 게시글 삭제 관련 서비스 - Post 도메인 내부 삭제 로직만 담당 */
+/**
+ * 게시글 삭제 관련 서비스 - Post 도메인 내부 삭제 로직만 담당.
+ * 트랜잭션 경계는 호출자(PostDeleteUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class PostDeleteService {
 
     private final PostRepository postRepository;
@@ -42,7 +43,6 @@ public class PostDeleteService {
     private final ApplicationEventPublisher eventPublisher;
 
     /** 게시글 삭제 - Post 도메인 내부 데이터만 삭제 (좋아요, 이미지, 게시글) */
-    @Transactional
     @LogEvent(value = "post.delete", message = "게시글 삭제 성공")
     public void deletePost(
             @LogParam("post_id") Long postId) {
@@ -69,7 +69,6 @@ public class PostDeleteService {
     }
 
     /** 권한 검증 없이 게시글 강제 삭제 — dismiss 전용 */
-    @Transactional
     public void forceDeletePost(Post post) {
         postLikeRepository.deleteByPostId(post.getId());
 
