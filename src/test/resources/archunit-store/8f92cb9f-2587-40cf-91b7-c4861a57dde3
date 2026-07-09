@@ -1,5 +1,3 @@
-Class <com.tavemakers.surf.domain.board.service.BoardCategoryService> is annotated with @Transactional in (BoardCategoryService.java:0)
-Class <com.tavemakers.surf.domain.board.service.BoardService> is annotated with @Transactional in (BoardService.java:0)
 Class <com.tavemakers.surf.domain.feedback.service.FeedbackService> is annotated with @Transactional in (FeedbackService.java:0)
 Class <com.tavemakers.surf.domain.post.service.post.PostCreateService> is annotated with @Transactional in (PostCreateService.java:0)
 Class <com.tavemakers.surf.domain.post.service.post.PostDeleteService> is annotated with @Transactional in (PostDeleteService.java:0)

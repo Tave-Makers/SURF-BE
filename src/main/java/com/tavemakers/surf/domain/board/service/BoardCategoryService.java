@@ -1,7 +1,5 @@
 package com.tavemakers.surf.domain.board.service;
 
-import com.tavemakers.surf.presentation.board.dto.request.BoardCategoryCreateReqDTO;
-import com.tavemakers.surf.presentation.board.dto.response.BoardCategoryResDTO;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.exception.BoardCategoryAlreadyExistsException;
@@ -10,34 +8,33 @@ import com.tavemakers.surf.global.logging.LogEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 게시판 카테고리 도메인 로직. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(BoardCategoryUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class BoardCategoryService {
     private final BoardCategoryRepository boardCategoryRepository;
 
     /** 새 게시판 카테고리 생성 */
-    @Transactional
     @LogEvent(value = "board.category.create", message = "게시판 카테고리 생성 성공")
-    public BoardCategoryResDTO createBoardCategory(Board board, BoardCategoryCreateReqDTO req) {
-        if (boardCategoryRepository.existsByBoardAndSlug(board, req.slug())) {
+    public BoardCategory createBoardCategory(Board board, String name, String slug) {
+        if (boardCategoryRepository.existsByBoardAndSlug(board, slug)) {
             throw new BoardCategoryAlreadyExistsException();
         }
 
-        BoardCategory boardCategory = BoardCategory.of(board, req);
+        BoardCategory boardCategory = BoardCategory.of(board, name, slug);
 
         try {
-            BoardCategory saved = boardCategoryRepository.saveAndFlush(boardCategory);
-            return BoardCategoryResDTO.from(saved);
+            return boardCategoryRepository.saveAndFlush(boardCategory);
         } catch (DataIntegrityViolationException e) {
             throw new BoardCategoryAlreadyExistsException();
         }
     }
 
     /** 게시판 카테고리 삭제 */
-    @Transactional
     @LogEvent(value = "board.category.delete", message = "게시판 카테고리 삭제 성공")
     public void deleteBoardCategory(BoardCategory category) {
         boardCategoryRepository.delete(category);

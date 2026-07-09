@@ -29,7 +29,8 @@ public class BoardCategoryUsecase {
     @Transactional
     public BoardCategoryResDTO createCategory(Long boardId, BoardCategoryCreateReqDTO req) {
         Board board = boardGetService.getBoard(boardId);
-        return boardCategoryService.createBoardCategory(board, req);
+        return BoardCategoryResDTO.from(
+                boardCategoryService.createBoardCategory(board, req.name(), req.slug()));
     }
 
     /** 전체 카테고리를 게시판(Board)별로 묶어서 조회합니다. */
