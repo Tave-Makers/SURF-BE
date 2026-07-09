@@ -7,40 +7,46 @@ import com.tavemakers.surf.domain.home.presentation.dto.request.HomeContentUpser
 import com.tavemakers.surf.domain.home.presentation.dto.response.HomeBannerResDTO;
 import com.tavemakers.surf.domain.home.presentation.dto.response.HomeContentResDTO;
 import com.tavemakers.surf.domain.home.presentation.dto.response.HomeResDTO;
+import com.tavemakers.surf.domain.home.application.query.HomeGetService;
 import com.tavemakers.surf.domain.home.domain.service.HomeBannerService;
 import com.tavemakers.surf.domain.home.domain.service.HomeContentService;
-import com.tavemakers.surf.domain.home.domain.service.HomeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** 홈 Usecase */
+/**
+ * 홈 Usecase — 트랜잭션 경계를 소유하고 도메인 서비스 결과(엔티티)를 표현형(DTO)으로 매핑한다.
+ * 도메인 계층은 DTO를 알지 못한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class HomeUsecase {
 
-    private final HomeService homeService;
+    private final HomeGetService homeGetService;
     private final HomeBannerService homeBannerService;
     private final HomeContentService homeContentService;
 
     /** 홈 화면 조회 */
     @Transactional(readOnly = true)
     public HomeResDTO getHome() {
-        return homeService.getHome();
+        return homeGetService.getHome();
     }
 
     /** 배너 생성 */
     @Transactional
     public HomeBannerResDTO createBanner(HomeBannerCreateReqDTO req) {
-        return homeBannerService.createBanner(req);
+        return HomeBannerResDTO.from(
+                homeBannerService.createBanner(req.name(), req.imageUrl(), req.linkUrl()));
     }
 
     /** 배너 목록 조회 */
     @Transactional(readOnly = true)
     public List<HomeBannerResDTO> getBanners() {
-        return homeBannerService.getBanners();
+        return homeBannerService.getBanners().stream()
+                .map(HomeBannerResDTO::from)
+                .toList();
     }
 
     /** 배너 삭제 */
@@ -52,36 +58,42 @@ public class HomeUsecase {
     /** 배너 순서 변경 */
     @Transactional
     public List<HomeBannerResDTO> reorderBanners(HomeBannerReorderReqDTO req) {
-        return homeBannerService.reorderBanners(req);
+        return homeBannerService.reorderBanners(req.orderedIds()).stream()
+                .map(HomeBannerResDTO::from)
+                .toList();
     }
 
     /** 배너 수정 */
     @Transactional
     public HomeBannerResDTO updateBanner(Long bannerId, HomeBannerUpdateReqDTO req) {
-        return homeBannerService.updateBanner(bannerId, req);
+        return HomeBannerResDTO.from(
+                homeBannerService.updateBanner(bannerId, req.name(), req.imageUrl(), req.linkUrl()));
     }
 
     /** 배너 활성화 */
     @Transactional
     public HomeBannerResDTO activateBanner(Long bannerId) {
-        return homeBannerService.activateBanner(bannerId);
+        return HomeBannerResDTO.from(homeBannerService.activateBanner(bannerId));
     }
 
     /** 배너 비활성화 */
     @Transactional
     public HomeBannerResDTO deactivateBanner(Long bannerId) {
-        return homeBannerService.deactivateBanner(bannerId);
+        return HomeBannerResDTO.from(homeBannerService.deactivateBanner(bannerId));
     }
 
     /** 홈 콘텐츠 Upsert */
     @Transactional
     public HomeContentResDTO upsertContent(HomeContentUpsertReqDTO req) {
-        return homeContentService.upsertContent(req);
+        return HomeContentResDTO.from(
+                homeContentService.upsertContent(req.message(), req.sender()));
     }
 
-    /** 홈 콘텐츠 조회 */
+    /** 홈 콘텐츠 조회 (없으면 빈 기본값) */
     @Transactional(readOnly = true)
     public HomeContentResDTO getContent() {
-        return homeContentService.getContent();
+        return homeContentService.getContent()
+                .map(HomeContentResDTO::from)
+                .orElse(new HomeContentResDTO(HomeContentService.HOME_CONTENT_ID, "", ""));
     }
 }

@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.home.domain.service;
+package com.tavemakers.surf.domain.home.application.query;
 
 import com.tavemakers.surf.domain.home.presentation.dto.response.HomeBannerResDTO;
 import com.tavemakers.surf.domain.home.presentation.dto.response.HomeResDTO;
@@ -15,7 +15,6 @@ import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,9 +24,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 홈 화면 read-model 조립. 여러 도메인(member/schedule)의 조회 계약을 오케스트레이션하고
+ * 표현형(HomeResDTO)을 구성하므로 application 계층에 위치한다.
+ * 트랜잭션(readOnly) 경계는 호출자(HomeUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
-public class HomeService {
+public class HomeGetService {
 
     private static final Long HOME_CONTENT_ID = 1L;
 
@@ -39,7 +43,6 @@ public class HomeService {
     private final LogEventEmitter logEventEmitter;
 
     /** 홈 화면 정보 조회 (메시지, 배너, 회원정보, 일정) */
-    @Transactional(readOnly = true)
     public HomeResDTO getHome() {
         // 1) main message
         String message = "";
