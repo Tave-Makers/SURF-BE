@@ -1,6 +1,6 @@
 package com.tavemakers.surf.global.config;
 
-import com.tavemakers.surf.domain.member.domain.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.global.jwt.JwtAuthenticationFilter;
 import com.tavemakers.surf.global.jwt.JwtService;
 import lombok.RequiredArgsConstructor;

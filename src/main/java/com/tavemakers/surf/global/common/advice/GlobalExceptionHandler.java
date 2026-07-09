@@ -1,7 +1,7 @@
 package com.tavemakers.surf.global.common.advice;
 
-import com.tavemakers.surf.domain.auth.common.domain.exception.EmailConflictException;
-import com.tavemakers.surf.domain.letter.presentation.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.domain.auth.common.exception.EmailConflictException;
+import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.global.common.exception.BaseException;
 import com.tavemakers.surf.global.common.exception.ErrorCode;
 import com.tavemakers.surf.global.common.exception.ErrorDetail;

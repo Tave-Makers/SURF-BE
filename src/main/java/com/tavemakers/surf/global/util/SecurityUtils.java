@@ -1,7 +1,7 @@
 package com.tavemakers.surf.global.util;
 
-import com.tavemakers.surf.domain.member.domain.entity.CustomUserDetails;
-import com.tavemakers.surf.domain.member.domain.entity.Member;
+import com.tavemakers.surf.domain.member.entity.CustomUserDetails;
+import com.tavemakers.surf.domain.member.entity.Member;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.Authentication;

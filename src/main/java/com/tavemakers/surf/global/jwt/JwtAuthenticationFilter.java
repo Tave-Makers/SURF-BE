@@ -1,9 +1,9 @@
 package com.tavemakers.surf.global.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tavemakers.surf.domain.member.domain.entity.CustomUserDetails;
-import com.tavemakers.surf.domain.member.domain.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.domain.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.entity.CustomUserDetails;
+import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

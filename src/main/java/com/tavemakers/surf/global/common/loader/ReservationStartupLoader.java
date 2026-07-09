@@ -1,8 +1,8 @@
 package com.tavemakers.surf.global.common.loader;
 
-import com.tavemakers.surf.domain.reservation.domain.entity.Reservation;
-import com.tavemakers.surf.domain.reservation.application.query.ReservationGetService;
-import com.tavemakers.surf.domain.reservation.infrastructure.ReservationScheduleService;
+import com.tavemakers.surf.domain.reservation.entity.Reservation;
+import com.tavemakers.surf.application.reservation.query.ReservationGetService;
+import com.tavemakers.surf.infrastructure.reservation.ReservationScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;

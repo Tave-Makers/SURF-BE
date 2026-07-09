@@ -34,25 +34,30 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 @AnalyzeClasses(packages = "com.tavemakers.surf", importOptions = ImportOption.DoNotIncludeTests.class)
 public class CleanArchitectureRulesTest {
 
-    private static final String DOMAIN_ROOT = "com.tavemakers.surf.domain.";
+    private static final String BASE = "com.tavemakers.surf.";
+    private static final Set<String> LAYERS =
+            Set.of("presentation", "application", "domain", "infrastructure");
 
-    /** 패키지명에서 도메인 세그먼트 추출 (domain 하위가 아니면 null) */
+    /**
+     * 패키지명에서 도메인 세그먼트 추출 (layer-first: base.{layer}.{domain}...).
+     * 계층 패키지가 아니면(global/architecture 등) null.
+     */
     private static String domainOf(String packageName) {
-        if (!packageName.startsWith(DOMAIN_ROOT)) {
+        if (!packageName.startsWith(BASE)) {
             return null;
         }
-        String rest = packageName.substring(DOMAIN_ROOT.length());
-        int dot = rest.indexOf('.');
-        return dot == -1 ? rest : rest.substring(0, dot);
+        String[] segs = packageName.substring(BASE.length()).split("\\.");
+        if (segs.length < 2 || !LAYERS.contains(segs[0])) {
+            return null;
+        }
+        return segs[1];
     }
 
     /**
-     * 패키지가 특정 도메인의 특정 계층(presentation/application/domain/infrastructure)에 속하는지.
-     * "domain"이 도메인 루트(com.tavemakers.surf.domain)와 계층 이름으로 중복되므로
-     * 도메인 세그먼트 뒤의 계층 세그먼트를 정확히 대조한다.
+     * 패키지가 특정 도메인의 특정 계층에 속하는지 (layer-first: base.{layer}.{domain}).
      */
     private static boolean isLayer(String packageName, String domain, String layer) {
-        String base = DOMAIN_ROOT + domain + "." + layer;
+        String base = BASE + layer + "." + domain;
         return packageName.equals(base) || packageName.startsWith(base + ".");
     }
 
