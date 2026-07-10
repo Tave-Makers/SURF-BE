@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.member.repository;
+package com.tavemakers.surf.infrastructure.member.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;

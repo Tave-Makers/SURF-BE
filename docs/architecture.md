@@ -2,28 +2,36 @@
 
 ## 레이어 구조
 
-실용적 클린 아키텍처 — 4계층 패키지. 의존 방향은 **presentation → application → domain ← infrastructure**.
+실용적 클린 아키텍처 — **layer-first 패키지**(계층이 최상위, 그 아래 도메인).
+의존 방향은 **presentation → application → domain ← infrastructure**.
 
 ```
-domain/{도메인}/
-├── presentation/     ← 바깥세상(HTTP)과의 접점
-│   ├── controller/       HTTP 요청/응답만. 비즈니스 로직 없음
+com.tavemakers.surf/
+├── presentation/{도메인}/     ← 바깥세상(HTTP)과의 접점
+│   ├── controller/               HTTP 요청/응답만. 비즈니스 로직 없음
 │   └── dto/{request,response}/
-├── application/      ← 유스케이스 오케스트레이션
-│   ├── usecase/          Command(쓰기) 흐름 조합 + @Transactional 경계 소유
-│   ├── query/            읽기 진입점 + 타 도메인이 호출하는 조회 계약 (GetService)
-│   ├── mapper/           presentation DTO ↔ Entity 변환
-│   ├── scheduler/        주기(cron) 트리거
-│   └── task/             단발 비동기 작업 러너
-├── domain/           ← 도메인 규칙·상태 (계층 이름과 도메인 루트가 겹치므로 주의)
-│   ├── entity/           JPA 엔티티 = 도메인 모델 (의도된 트레이드오프)
-│   ├── service/          단일 책임 도메인 로직 (CRUD별 분리)
-│   ├── repository/       JPA + QueryDSL. 타 도메인에서 직접 주입 금지
-│   ├── event/            도메인 이벤트 정의 + 리스너
-│   ├── mapper/           domain DTO ↔ Entity 변환 (presentation DTO 참조 금지)
-│   ├── dto/, exception/, constants/, validator/, util/
-└── infrastructure/   ← 외부 연동 어댑터 (S3, FCM, 외부 API 클라이언트)
+├── application/{도메인}/       ← 유스케이스 오케스트레이션
+│   ├── usecase/                  Command(쓰기) 흐름 조합 + @Transactional 경계 소유 + 엔티티→DTO 매핑
+│   ├── query/                    읽기 진입점 + 타 도메인이 호출하는 조회 계약 (GetService)
+│   ├── mapper/                   presentation DTO ↔ Entity 변환
+│   ├── event/                    application(usecase)에 의존하는 리스너
+│   ├── scheduler/ task/          주기(cron) 트리거 / 단발 비동기 러너
+├── domain/{도메인}/            ← 도메인 규칙·상태
+│   ├── entity/                   JPA 엔티티 = 도메인 모델 (의도된 트레이드오프)
+│   ├── service/                  단일 책임 도메인 로직. **엔티티를 반환**하고 presentation을 모른다(B안)
+│   ├── repository/               Spring Data 인터페이스(사실상 포트 — 구현은 Spring 프록시). 타 도메인 직접 주입 금지
+│   ├── event/                    도메인 이벤트 + 도메인에만 의존하는 리스너
+│   ├── mapper/                   domain DTO ↔ Entity 변환 (presentation DTO 참조 금지)
+│   ├── dto/ exception/ constants/ validator/ util/
+├── infrastructure/{도메인}/    ← 외부 연동 어댑터 (S3, FCM, OAuth 클라이언트)
+│   └── repository/               손으로 쓴 영속성 구체 클래스만 (QueryDSL·JdbcTemplate 등)
+└── global/                     ← 도메인이 아닌 공통 (config·jwt·common·logging·util)
 ```
+
+> **B안 (도메인 서비스는 DTO를 모른다)**: 도메인 서비스는 원시값/엔티티를 입력받아 **엔티티를 반환**하고,
+> `@Transactional`과 Entity↔DTO 매핑은 **usecase**가 소유한다. 이로써 도메인 계층은 presentation 없이
+> Spring 컨텍스트 없이 순수 단위테스트(Mockito)가 가능하다. (참조 구조: loopers-labs/loop-pack-be-l2-vol4)
+> 단, 엔티티=JPA 엔티티(persistence 결합)는 의도된 트레이드오프로 유지 — 진짜 헥사고날(도메인이 JPA도 모름)까지는 가지 않는다.
 
 ### 스테레오타입 책임 정의
 
@@ -33,7 +41,7 @@ domain/{도메인}/
 | **Usecase** | `application/usecase` | Command 오케스트레이션 — 도메인 서비스 + 타 도메인 query 조합, 부수효과 순서 제어 | **경계 소유** | `{Domain}Usecase`, `{Domain}{Action}Usecase` |
 | **Query** | `application/query` | 읽기 진입점 + **타 도메인이 호출하는 유일한 조회 계약** | `readOnly` | `{Domain}GetService` |
 | **Service** | `domain/service` | **단일 책임** 도메인 로직 (CRUD별 분리). 타 도메인은 `GetService`만 호출 | 세부 관리 | `{Domain}{Action}Service` |
-| **Repository** | `domain/repository` | 영속성. 타 도메인 직접 주입 금지 | — | `{Domain}Repository` |
+| **Repository** | *선언/구현으로 나뉨* | Spring Data **인터페이스** → `domain/{d}/repository`(사실상 포트). 손으로 쓴 **구체 클래스**(QueryDSL·JdbcTemplate) → `infrastructure/{d}/repository`. 별도 포트 추상화는 두지 않는다(JPA 교체 계획 없음 — 구현 1개짜리 인터페이스 금지) | — | `{Domain}Repository` |
 | **Event/Listener** | *의존 계층을 따라감* | 도메인 이벤트 + `@Async @TransactionalEventListener` 리스너 | — | `{X}Event`, `{X}Listener` |
 | **Mapper** | *DTO 계층을 따라감* | Entity ↔ DTO 변환 | — | `{Domain}Mapper` |
 | **Scheduler / Task** | `application/scheduler`·`task` | 주기 트리거 / 단발 비동기 러너 | — | `{X}Scheduler`, `{X}Task` |

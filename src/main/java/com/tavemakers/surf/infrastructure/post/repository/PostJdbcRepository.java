@@ -1,5 +1,4 @@
-package com.tavemakers.surf.infrastructure.post.persistence;
-import com.tavemakers.surf.domain.post.repository.PostJdbcRepository;
+package com.tavemakers.surf.infrastructure.post.repository;
 
 import com.tavemakers.surf.domain.post.dto.PostViewUpdateDto;
 import lombok.RequiredArgsConstructor;
@@ -9,13 +8,13 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.util.List;
 
+/** viewCount 델타 벌크 반영용 JDBC 구체 레포지토리 (포트 추상화 없음 — JPA 교체 계획 없음) */
 @Repository
 @RequiredArgsConstructor
-public class PostJdbcRepositoryImpl implements PostJdbcRepository {
+public class PostJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    @Override
     public void viewCountBulkUpdate(List<PostViewUpdateDto> updateDtoList) {
         String bulkUpdateSql =
                 "UPDATE post " +

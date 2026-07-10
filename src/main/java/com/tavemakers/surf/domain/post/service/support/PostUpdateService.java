@@ -1,7 +1,7 @@
 package com.tavemakers.surf.domain.post.service.support;
 
 import com.tavemakers.surf.domain.post.dto.PostViewUpdateDto;
-import com.tavemakers.surf.infrastructure.post.persistence.PostJdbcRepositoryImpl;
+import com.tavemakers.surf.infrastructure.post.repository.PostJdbcRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostUpdateService {
 
-    private final PostJdbcRepositoryImpl postJdbcRepository;
+    private final PostJdbcRepository postJdbcRepository;
 
     /** 게시글 조회수 일괄 업데이트 */
     public void updateViewCount(List<PostViewUpdateDto> updateDtoList) {

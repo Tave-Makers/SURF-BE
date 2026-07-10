@@ -1,4 +1,4 @@
-package com.tavemakers.surf.infrastructure.post.persistence;
+package com.tavemakers.surf.infrastructure.post.repository;
 
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
@@ -31,11 +31,11 @@ import static org.assertj.core.api.Assertions.assertThat;
  * (델타 합산)이므로 DB의 기존 값 위에 Redis 델타가 더해져야 한다.
  */
 @DataJpaTest
-@Import(PostJdbcRepositoryImpl.class)
-class PostJdbcRepositoryImplTest {
+@Import(PostJdbcRepository.class)
+class PostJdbcRepositoryTest {
 
     @Autowired
-    private PostJdbcRepositoryImpl postJdbcRepository;
+    private PostJdbcRepository postJdbcRepository;
 
     @Autowired
     private EntityManager entityManager;

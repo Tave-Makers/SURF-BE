@@ -6,7 +6,7 @@ import com.tavemakers.surf.domain.member.entity.enums.Part;
 import com.tavemakers.surf.domain.member.exception.InvalidSignupListException;
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
-import com.tavemakers.surf.domain.member.repository.MemberSearchRepository;
+import com.tavemakers.surf.infrastructure.member.repository.MemberSearchRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
