@@ -45,6 +45,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation ("org.junit.jupiter:junit-jupiter-api:5.10.1")
     testRuntimeOnly("com.h2database:h2")
+    testImplementation("org.testcontainers:testcontainers:1.20.4")
+    testImplementation("org.testcontainers:junit-jupiter:1.20.4")
 
     implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
 
