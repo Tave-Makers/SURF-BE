@@ -85,6 +85,32 @@ Phase 3 완료 시점 동결 베이스라인 **589건** (R1a·R5·R6은 0 — �
 4-3~4-6은 로직 변경(트랜잭션 경계·API 계약)이므로 이 리팩토링 브랜치가 dev에 머지·안정화된 후
 도메인 단위 PR로 진행하는 것을 권장한다.
 
+### Phase 5 — layer-first 재편 + B안 전 도메인 롤아웃 (2026-07-10 완료, arch-reviewer APPROVE)
+
+계층을 최상위로 올린 layer-first 구조(`surf.{presentation|application|domain|infrastructure}.{도메인}`,
+참조: loopers-labs/loop-pack-be-l2-vol4)로 재편하고, 전 도메인을 B안(도메인 서비스=원시값 입력·엔티티
+반환·DTO 무지, usecase=트랜잭션 소유+DTO 매핑)으로 전환했다. 커밋 체인: 5738d8c7(home 파일럿) →
+8d572e12(스테레오타입) → 5894836e(재편 596파일) → cd260c42(board) → 03de1609(12도메인 병렬) →
+e6f81ac9(단위테스트 174개) → f742cb38(E2E 7건) → 8ddff256(레포지토리 절충안).
+
+- **효과**: 동결 R7 327→53, R4b 82→18, R1b 66→38, R4a 9→0 (~375건 청산). 254 테스트 그린
+  (known-red PostContentLongText 3 제외). E2E로 전체 컨텍스트 부팅·직렬화·트랜잭션 실증.
+- **레포지토리 배치 규칙**(사용자 확정): Spring Data 인터페이스는 domain(사실상 포트, 의존 방향 보존),
+  손으로 쓴 구체 클래스(QueryDSL·JdbcTemplate)만 infrastructure. 구현 1개짜리 포트 금지.
+- **잔여 동결(이연)**: R7 53 = post(PostPatchService @LogEvent props 보존 보류)·member의 same-domain
+  query 역전. R1b 38 = controller→도메인 서비스 직주입(post like·comment like 등). R2 72.
+
+**Phase 5 심사 non-blocking 후속 (2026-07-10 기록):**
+- query 서비스 안의 쓰기 메서드: `PostGetService.increase/decreaseScrapCount`, `ScrapGetService.deleteByPostId`
+  — 이름·계약 불일치. 커맨드 서비스로 이동 권고.
+- KakaoLoginUsecase `@Transactional` 안 외부 HTTP(토큰 교환·유저정보) — Phase 5 이전부터 있던 R5 계열
+  위반(동결 규칙엔 없음). 외부 지연 시 커넥션 풀 고갈 위험 — 백로그.
+- `PostGetService.getPost()` 쓰기 모드 @Transactional(readOnly 아님, readPost는 이미 readOnly) — 정리 여지.
+- 제명/팀삭제 동기 @EventListener는 R6 문언과 의도적 편차(원자성 우선) — architecture.md 예외 문서화 재확인.
+- test application.yml 잠복 결함(E2E가 발견): jwt 키 불일치(`jwt.access.expiration` vs
+  `access-token-expiration`), `cloud.aws.bucket-name` 키 상이, feedback/kakao/apple/mail 프로퍼티 부재.
+  현재 E2ESupport가 properties로 우회 주입 — test yml 정합화 권고.
+
 ### Phase 4-9 — 스테레오타입 정규화 (2026-07-09 완료)
 
 계층은 4계층으로 정리됐으나 application 하위 스테레오타입 명칭·배치가 불일치했다. `docs/architecture.md`에
