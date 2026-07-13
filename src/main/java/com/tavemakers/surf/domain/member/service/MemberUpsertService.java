@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
+import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.SocialAccountRepository;
 import com.tavemakers.surf.application.member.query.MemberBlacklistGetService;
@@ -31,12 +32,25 @@ public class MemberUpsertService {
                 .orElseGet(() -> createNewSocialMember(provider, info));
     }
 
-    /** SocialAccount 로 기존 회원을 조회하고, 있으면 provider 가 준 이메일로 providerEmail 을 갱신한다. */
+    /**
+     * SocialAccount 로 기존 회원을 조회하고, 있으면 provider 가 준 이메일로 providerEmail 을 갱신한다.
+     * <p>탈퇴(WITHDRAWN) 회원에 매칭되면 잔존 SocialAccount 를 정리하고 빈 결과를 반환해
+     * 신규 가입 경로로 보낸다 — withdraw 가 소셜 계정을 지우기 전에 탈퇴한 기존 데이터의 자가 치유.
+     * (탈퇴자가 재로그인하면 새 계정으로 가입 시작. 퇴출/제명자는 블랙리스트가 신규 가입을 차단한다.)
+     */
     private Optional<Member> findExistingMember(Provider provider, OAuthUserInfoDTO info) {
         return socialAccountRepository.findByProviderAndProviderId(provider, info.oauthId())
-                .map(socialAccount -> {
+                .flatMap(socialAccount -> {
+                    Member member = socialAccount.getMember();
+                    if (member.getStatus() == MemberStatus.WITHDRAWN) {
+                        // 부모 컬렉션에서 제거(orphanRemoval 삭제). 이어지는 신규 가입 INSERT가
+                        // 같은 (provider, provider_id) UNIQUE 를 쓰므로 DELETE 를 먼저 flush 한다.
+                        member.removeSocialAccount(socialAccount);
+                        socialAccountRepository.flush();
+                        return Optional.empty();
+                    }
                     refreshProviderEmail(socialAccount, info.email());
-                    return socialAccount.getMember();
+                    return Optional.of(member);
                 });
     }
 
