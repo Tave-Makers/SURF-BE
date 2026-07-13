@@ -275,6 +275,15 @@ public class Member extends BaseEntity {
         socialAccount.setMember(this); // setMember 에서만 양방향 add 수행
     }
 
+    /**
+     * 소셜 계정 연결 해제 — orphanRemoval 로 DB에서도 삭제된다.
+     * cascade=ALL 관계에서는 리포지토리 직접 delete 시 부모 컬렉션의 잔존 참조가
+     * 재영속화를 일으킬 수 있으므로 반드시 이 메서드로 컬렉션에서 제거해야 한다.
+     */
+    public void removeSocialAccount(SocialAccount socialAccount) {
+        this.socialAccounts.remove(socialAccount);
+    }
+
     /** 해당 provider 로그인 수단을 이미 보유하고 있는지 여부. */
     public boolean hasProvider(Provider provider) {
         return socialAccounts.stream()
@@ -370,6 +379,10 @@ public class Member extends BaseEntity {
         this.status = MemberStatus.WITHDRAWN;
 
         anonymizeOnWithdraw();
+
+        // 소셜 계정 연결 제거(orphanRemoval로 DB에서도 삭제) — 남겨두면 재로그인 시
+        // 탈퇴 회원에 매칭되어 신규 가입이 영구히 막힌다 (재가입은 새 계정으로 시작)
+        this.socialAccounts.clear();
     }
 
     private void anonymizeOnWithdraw() {
