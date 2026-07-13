@@ -1,6 +1,6 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.member.dto.request.CareerUpdateReqDTO;
+import com.tavemakers.surf.domain.member.dto.CareerUpdateCommand;
 import com.tavemakers.surf.domain.member.entity.Career;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.repository.CareerRepository;
@@ -8,7 +8,6 @@ import com.tavemakers.surf.domain.member.validator.CareerValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -23,11 +22,10 @@ public class CareerPatchService {
     private final CareerValidator careerValidator;
 
     /** 회원 경력 정보 수정 */
-    @Transactional
-    public void updateCareer(Member member, List<CareerUpdateReqDTO> dtos) {
+    public void updateCareer(Member member, List<CareerUpdateCommand> commands) {
         // 요청으로 들어온 ID 목록
-        Set<Long> requestedIds = dtos.stream()
-                .map(CareerUpdateReqDTO::careerId)
+        Set<Long> requestedIds = commands.stream()
+                .map(CareerUpdateCommand::careerId)
                 .collect(Collectors.toSet());
 
         // 실제 해당 멤버의 Career 중 업데이트 대상 조회
@@ -39,10 +37,15 @@ public class CareerPatchService {
                 .collect(Collectors.toMap(Career::getId, career -> career));
 
         // 업데이트 적용
-        dtos.forEach(dto -> {
-            Career careerToUpdate = validCareerMap.get(dto.careerId());
+        commands.forEach(command -> {
+            Career careerToUpdate = validCareerMap.get(command.careerId());
             if (careerToUpdate != null) {
-                careerToUpdate.update(dto);
+                careerToUpdate.update(
+                        command.companyName(),
+                        command.position(),
+                        command.startDate(),
+                        command.endDate(),
+                        command.isWorking());
             }
         });
     }

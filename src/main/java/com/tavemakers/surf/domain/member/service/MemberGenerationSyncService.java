@@ -7,7 +7,6 @@ import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,7 +18,6 @@ public class MemberGenerationSyncService {
     private final MemberRepository memberRepository;
 
     /** 현재 활동 기수 기준으로 승인 회원들의 활동 상태를 일괄 동기화합니다. */
-    @Transactional
     public void syncApprovedMembersByGeneration(Integer activeGeneration) {
         List<Member> approvedMembers = memberRepository.findAllApprovedWithTracks();
 
@@ -58,7 +56,6 @@ public class MemberGenerationSyncService {
     }
 
     /** 단일 승인 회원을 현재 활동 기수 기준으로 동기화합니다. */
-    @Transactional
     public void syncApprovedMember(Member member, Integer activeGeneration) {
         if (!member.isApproved() || member.isDeleted()) {
             return;

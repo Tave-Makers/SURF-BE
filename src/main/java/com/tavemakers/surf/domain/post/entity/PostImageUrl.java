@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.post.entity;
 
-import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
@@ -34,11 +33,11 @@ public class PostImageUrl extends BaseEntity {
     @Column(nullable = false)
     private Integer sequence;
 
-    public static PostImageUrl of(Post post, PostImageCreateReqDTO dto) {
+    public static PostImageUrl of(Post post, String originalUrl, Integer sequence) {
         return PostImageUrl.builder()
                 .post(post)
-                .originalUrl(dto.originalUrl())
-                .sequence(dto.sequence())
+                .originalUrl(originalUrl)
+                .sequence(sequence)
                 .build();
     }
 

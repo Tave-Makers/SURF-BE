@@ -1,7 +1,5 @@
 package com.tavemakers.surf.domain.schedule.entity;
 
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleUpdateReqDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.schedule.exception.ScheduleTimeException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
@@ -48,47 +46,46 @@ public class Schedule extends BaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    public static Schedule from(ScheduleCreateReqDTO dto) {
-        validateScheduleTime(dto.startAt(), dto.endAt());
-        return of(dto, null);
+    public static Schedule from(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location) {
+        return of(category, title, startAt, endAt, location, null);
     }
 
-    public static Schedule of(ScheduleCreateReqDTO dto, Post post) {
-        validateScheduleTime(dto.startAt(), dto.endAt());
+    public static Schedule of(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location, Post post) {
+        validateScheduleTime(startAt, endAt);
         return Schedule.builder()
-                .category(dto.category())
-                .title(dto.title())
-                .startAt(dto.startAt())
-                .endAt(dto.endAt())
-                .location(dto.location())
+                .category(category)
+                .title(title)
+                .startAt(startAt)
+                .endAt(endAt)
+                .location(location)
                 .post(post)
                 .build();
     }
 
-    public void updateSchedule(ScheduleUpdateReqDTO dto){
-        if(dto.startAt()!=null && dto.endAt()!=null){
-            validateScheduleTime(dto.startAt(), dto.endAt());
-            this.startAt = dto.startAt();
-            this.endAt = dto.endAt();
+    public void updateSchedule(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location){
+        if(startAt != null && endAt != null){
+            validateScheduleTime(startAt, endAt);
+            this.startAt = startAt;
+            this.endAt = endAt;
         }
-        else if(dto.startAt() != null) {
-            validateScheduleTime(dto.startAt(), this.endAt);
-            this.startAt = dto.startAt();
-        } else if (dto.endAt() != null) {
-            validateScheduleTime(this.startAt, dto.endAt());
-            this.endAt = dto.endAt();
-        }
-
-        if(dto.category() != null) {
-            this.category = dto.category();
+        else if(startAt != null) {
+            validateScheduleTime(startAt, this.endAt);
+            this.startAt = startAt;
+        } else if (endAt != null) {
+            validateScheduleTime(this.startAt, endAt);
+            this.endAt = endAt;
         }
 
-        if(dto.title() != null) {
-            this.title = dto.title();
+        if(category != null) {
+            this.category = category;
         }
 
-        if(dto.location() != null) {
-            this.location = dto.location();
+        if(title != null) {
+            this.title = title;
+        }
+
+        if(location != null) {
+            this.location = location;
         }
     }
 

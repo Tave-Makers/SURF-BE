@@ -1,24 +1,13 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.auth.apple.service.AppleApiClient;
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.event.MemberDisconnectedEvent;
+import com.tavemakers.surf.application.member.query.MemberGetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
@@ -26,26 +15,14 @@ import org.springframework.web.client.RestTemplate;
 public class MemberWithdrawService {
 
     private final MemberGetService memberGetService;
-    private final RefreshTokenService refreshTokenService;
-    private final AppleApiClient appleApiClient;
+    private final ApplicationEventPublisher eventPublisher;
 
-    @Qualifier("kakaoRestTemplate")
-    private final RestTemplate restTemplate;
-
-    @Value("${kakao.admin-key}")
-    private String adminKey;
-
-    @Value("${kakao.unlink-uri}")
-    private String unlinkUri;
-
-    /** 회원 탈퇴 처리 — SURF 토큰 무효화 후 provider 별 외부 연결 해제 (KAKAO unlink / APPLE revoke) */
-    @Transactional
+    /** 회원 탈퇴 처리 — SURF 토큰 무효화 및 provider 연결 해제는 커밋 후(AFTER_COMMIT) 수행. 트랜잭션 경계는 호출자(usecase)가 소유한다. */
     public void withdraw(Long memberId) {
         Member member = memberGetService.getMember(memberId);
         expel(member);
     }
 
-    @Transactional
     public void expel(Member member) {
         disconnectMember(member);
         if (member.getStatus() != MemberStatus.WITHDRAWN) {
@@ -53,50 +30,16 @@ public class MemberWithdrawService {
         }
     }
 
+    /**
+     * 연결 해제 이벤트 발행 — 외부 API(Kakao/Apple)와 refresh 무효화는 커밋 후 리스너가 처리.
+     * member.withdraw()가 appleRefreshToken/kakaoId를 지우기 전에 값을 이벤트에 캡처한다.
+     */
     public void disconnectMember(Member member) {
-        refreshTokenService.invalidateAll(member.getId());
-        if (member.getProvider() == Provider.KAKAO) {
-            unlinkKakao(member.getKakaoId());
-        } else if (member.getProvider() == Provider.APPLE) {
-            revokeApple(member.getAppleRefreshToken());
-        }
-    }
-
-    private void revokeApple(String appleRefreshToken) {
-        if (appleRefreshToken == null) {
-            log.warn("[APPLE][REVOKE] appleRefreshToken 없음 — revoke 생략");
-            return;
-        }
-        // App(Bundle ID) 기준으로 먼저 시도, 이후 Web(Service ID) 기준으로 시도
-        // Apple /auth/revoke는 잘못된 client_id로 호출해도 HTTP 200을 반환하므로 에러 로그 오염 없음
-        appleApiClient.revokeAppToken(appleRefreshToken);
-        appleApiClient.revokeToken(appleRefreshToken);
-    }
-
-    private void unlinkKakao(Long kakaoId) {
-        if (kakaoId == null) {
-            return;
-        }
-
-        String url = unlinkUri;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "KakaoAK " + adminKey);
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("target_id_type", "user_id");
-        body.add("target_id", String.valueOf(kakaoId));
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-
-        try {
-            restTemplate.postForEntity(url, entity, String.class);
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("[KAKAO][UNLINK] 실패: status={}, body={}",
-                    e.getStatusCode(), e.getResponseBodyAsString(), e);
-        } catch (Exception e) {
-            log.error("[KAKAO][UNLINK] 예기치 못한 오류", e);
-        }
+        eventPublisher.publishEvent(new MemberDisconnectedEvent(
+                member.getId(),
+                member.getProvider(),
+                member.getKakaoId(),
+                member.getAppleRefreshToken()
+        ));
     }
 }

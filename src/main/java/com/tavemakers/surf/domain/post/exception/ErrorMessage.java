@@ -21,7 +21,9 @@ public enum ErrorMessage {
     POST_IMAGE_DELETE_DENIED(HttpStatus.FORBIDDEN, "[이미지]를 삭제할 권한이 없습니다."),
     POST_IMAGE_MISMATCH(HttpStatus.NOT_FOUND, "해당 [게시글]에 속하지 않는 [이미지]입니다."),
 
-    BOARD_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "[공지사항] 게시판은 관리자만 게시글을 작성할 수 있습니다.");
+    BOARD_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "[공지사항] 게시판은 관리자만 게시글을 작성할 수 있습니다."),
+
+    POST_LIKE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 좋아요를 누른 [게시글]입니다.");
 
     private final HttpStatus status;
     private final String message;

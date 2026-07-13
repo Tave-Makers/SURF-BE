@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.post.entity;
 
-import com.tavemakers.surf.domain.post.dto.request.PostFileCreateReqDTO;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
@@ -32,12 +31,12 @@ public class PostFileUrl extends BaseEntity {
     @Column(nullable = false)
     private Integer sequence;
 
-    public static PostFileUrl of(Post post, PostFileCreateReqDTO dto) {
+    public static PostFileUrl of(Post post, String fileUrl, String originalFileName, Integer sequence) {
         return PostFileUrl.builder()
                 .post(post)
-                .fileUrl(dto.fileUrl())
-                .originalFileName(dto.originalFileName())
-                .sequence(dto.sequence())
+                .fileUrl(fileUrl)
+                .originalFileName(originalFileName)
+                .sequence(sequence)
                 .build();
     }
 }

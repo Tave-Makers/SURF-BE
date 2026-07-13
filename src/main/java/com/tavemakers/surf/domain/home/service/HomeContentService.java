@@ -1,40 +1,36 @@
 package com.tavemakers.surf.domain.home.service;
 
-import com.tavemakers.surf.domain.home.dto.request.HomeContentUpsertReqDTO;
-import com.tavemakers.surf.domain.home.dto.response.HomeContentResDTO;
 import com.tavemakers.surf.domain.home.entity.HomeContent;
 import com.tavemakers.surf.domain.home.repository.HomeContentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
+/**
+ * 홈 콘텐츠 도메인 로직. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(HomeUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class HomeContentService {
 
-    private static final Long HOME_CONTENT_ID = 1L;
+    public static final Long HOME_CONTENT_ID = 1L;
 
     private final HomeContentRepository homeContentRepository;
 
     /** 홈 콘텐츠 생성 또는 수정 */
-    @Transactional
-    public HomeContentResDTO upsertContent(HomeContentUpsertReqDTO req) {
-
-        HomeContent content = homeContentRepository.findById(HOME_CONTENT_ID)
+    public HomeContent upsertContent(String message, String sender) {
+        return homeContentRepository.findById(HOME_CONTENT_ID)
                 .map(existing -> {
-                    existing.changeHomeContent(req.message(), req.sender());
+                    existing.changeHomeContent(message, sender);
                     return existing;
                 })
-                .orElseGet(() -> homeContentRepository.save(HomeContent.of(req.message(), req.sender())));
-
-        return HomeContentResDTO.from(content);
+                .orElseGet(() -> homeContentRepository.save(HomeContent.of(message, sender)));
     }
 
-    /** 홈 콘텐츠 조회 */
-    @Transactional(readOnly = true)
-    public HomeContentResDTO getContent() {
-        return homeContentRepository.findById(HOME_CONTENT_ID)
-                .map(HomeContentResDTO::from)
-                .orElse(new HomeContentResDTO(HOME_CONTENT_ID, "", ""));
+    /** 홈 콘텐츠 조회 (없으면 empty) */
+    public Optional<HomeContent> getContent() {
+        return homeContentRepository.findById(HOME_CONTENT_ID);
     }
 }

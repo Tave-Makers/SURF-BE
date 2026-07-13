@@ -48,6 +48,9 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.20.4")
     testImplementation("org.testcontainers:junit-jupiter:1.20.4")
 
+    // 아키텍처 규칙 검증 (R1~R6, 기존 위반은 freeze 베이스라인)
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
+
     implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
 
     // jwt

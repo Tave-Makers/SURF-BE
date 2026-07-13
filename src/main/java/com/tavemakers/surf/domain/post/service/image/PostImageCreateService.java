@@ -1,15 +1,11 @@
 package com.tavemakers.surf.domain.post.service.image;
 
-import com.tavemakers.surf.domain.post.dto.request.PostImageCreateReqDTO;
-import com.tavemakers.surf.domain.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.entity.PostImageUrl;
 import com.tavemakers.surf.domain.post.repository.PostImageUrlRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -18,21 +14,19 @@ public class PostImageCreateService {
 
     private final PostImageUrlRepository postImageUrlRepository;
 
-    /** 게시글 이미지 일괄 저장 */
-    @Transactional
-    public List<PostImageResDTO> saveAll(Post post, List<PostImageCreateReqDTO> dto) {
-        if (dto == null || dto.isEmpty()) {
+    /** 게시글 이미지 생성 입력 (표현형 DTO를 도메인에 노출하지 않기 위한 도메인 입력 타입) */
+    public record ImageData(String originalUrl, Integer sequence) {}
+
+    /** 게시글 이미지 일괄 저장 (트랜잭션 경계는 호출자 usecase가 소유) */
+    public List<PostImageUrl> saveAll(Post post, List<ImageData> imageDataList) {
+        if (imageDataList == null || imageDataList.isEmpty()) {
             return List.of();
         }
 
-        List<PostImageUrl> imageUrlList = dto.stream()
-                .map(url -> PostImageUrl.of(post, url))
+        List<PostImageUrl> imageUrlList = imageDataList.stream()
+                .map(data -> PostImageUrl.of(post, data.originalUrl(), data.sequence()))
                 .toList();
-        return postImageUrlRepository.saveAll(imageUrlList)
-                .stream()
-                .map(PostImageResDTO::from)
-                .sorted(Comparator.comparing(PostImageResDTO::sequence))
-                .toList();
+        return postImageUrlRepository.saveAll(imageUrlList);
     }
 
 }

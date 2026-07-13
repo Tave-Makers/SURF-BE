@@ -1,29 +1,30 @@
 package com.tavemakers.surf.domain.schedule.service;
 
-import com.tavemakers.surf.domain.schedule.dto.request.ScheduleCreateReqDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
 import com.tavemakers.surf.domain.schedule.repository.ScheduleRepository;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 일정 생성 도메인 로직. DTO를 알지 못하며 원시값·엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(ScheduleUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class ScheduleCreateService {
     private final ScheduleRepository scheduleRepository;
 
     /** 게시글 연동 일정 생성 */
-    @Transactional
-    public Long createScheduleAtPost(ScheduleCreateReqDTO dto, Post post) {
-        Schedule schedule = Schedule.of(dto, post);
-        return scheduleRepository.save(schedule).getId();
+    public Schedule createScheduleAtPost(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location, Post post) {
+        Schedule schedule = Schedule.of(category, title, startAt, endAt, location, post);
+        return scheduleRepository.save(schedule);
     }
 
     /** 개별 일정 생성 */
-    @Transactional
-    public void createScheduleSingle(ScheduleCreateReqDTO dto) {
-        Schedule schedule = Schedule.from(dto);
+    public void createScheduleSingle(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location) {
+        Schedule schedule = Schedule.from(category, title, startAt, endAt, location);
         scheduleRepository.save(schedule);
     }
 }

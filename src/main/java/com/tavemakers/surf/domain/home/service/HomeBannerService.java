@@ -1,9 +1,5 @@
 package com.tavemakers.surf.domain.home.service;
 
-import com.tavemakers.surf.domain.home.dto.request.HomeBannerCreateReqDTO;
-import com.tavemakers.surf.domain.home.dto.request.HomeBannerReorderReqDTO;
-import com.tavemakers.surf.domain.home.dto.request.HomeBannerUpdateReqDTO;
-import com.tavemakers.surf.domain.home.dto.response.HomeBannerResDTO;
 import com.tavemakers.surf.domain.home.entity.HomeBanner;
 import com.tavemakers.surf.domain.home.exception.AllHomeBannersRequiredException;
 import com.tavemakers.surf.domain.home.exception.EmptyHomeBannersException;
@@ -12,39 +8,33 @@ import com.tavemakers.surf.domain.home.exception.InvalidHomeBannerRequestExcepti
 import com.tavemakers.surf.domain.home.repository.HomeBannerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * 홈 배너 도메인 로직. DTO를 알지 못하며 엔티티만 다룬다.
+ * 트랜잭션 경계는 호출자(HomeUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class HomeBannerService {
 
     private final HomeBannerRepository homeBannerRepository;
 
-    /** 홈 배너 생성 */
-    @Transactional
-    public HomeBannerResDTO createBanner(HomeBannerCreateReqDTO req) {
+    /** 홈 배너 생성 (맨 뒤 순서로) */
+    public HomeBanner createBanner(String name, String imageUrl, String linkUrl) {
         int nextOrder = homeBannerRepository.findMaxDisplayOrder().orElse(0) + 1;
-
-        HomeBanner banner = HomeBanner.of(req.name(), req.imageUrl(), req.linkUrl(), nextOrder);
-
-        return HomeBannerResDTO.from(homeBannerRepository.save(banner));
+        return homeBannerRepository.save(HomeBanner.of(name, imageUrl, linkUrl, nextOrder));
     }
 
-    /** 홈 배너 목록 조회 */
-    @Transactional(readOnly = true)
-    public List<HomeBannerResDTO> getBanners() {
-        return homeBannerRepository.findAllByOrderByDisplayOrderAsc()
-                .stream()
-                .map(HomeBannerResDTO::from)
-                .toList();
+    /** 홈 배너 목록 조회 (순서 오름차순) */
+    public List<HomeBanner> getBanners() {
+        return homeBannerRepository.findAllByOrderByDisplayOrderAsc();
     }
 
-    /** 홈 배너 삭제 */
-    @Transactional
+    /** 홈 배너 삭제 후 남은 배너를 1부터 재정렬 */
     public void deleteBanner(Long bannerId) {
         HomeBanner target = homeBannerRepository.findById(bannerId)
                 .orElseThrow(HomeBannerNotFoundException::new);
@@ -63,11 +53,8 @@ public class HomeBannerService {
         }
     }
 
-    /** 홈 배너 순서 변경 */
-    @Transactional
-    public List<HomeBannerResDTO> reorderBanners(HomeBannerReorderReqDTO req) {
-        List<Long> orderedIds = req.orderedIds();
-
+    /** 홈 배너 순서 변경 — orderedIds 순서대로 displayOrder 재부여 */
+    public List<HomeBanner> reorderBanners(List<Long> orderedIds) {
         List<HomeBanner> banners = validateAndLoadAllBanners(orderedIds);
         if (banners.isEmpty()) return List.of();
 
@@ -79,21 +66,28 @@ public class HomeBannerService {
             map.get(id).changeDisplayOrder(displayOrder++);
         }
 
-        return homeBannerRepository.findAllByOrderByDisplayOrderAsc()
-                .stream()
-                .map(HomeBannerResDTO::from)
-                .toList();
+        return homeBannerRepository.findAllByOrderByDisplayOrderAsc();
     }
 
     /** 홈 배너 수정 */
-    @Transactional
-    public HomeBannerResDTO updateBanner(Long bannerId, HomeBannerUpdateReqDTO req) {
-        HomeBanner banner = homeBannerRepository.findById(bannerId)
-                .orElseThrow(HomeBannerNotFoundException::new);
+    public HomeBanner updateBanner(Long bannerId, String name, String imageUrl, String linkUrl) {
+        HomeBanner banner = findBanner(bannerId);
+        banner.updateBanner(name, imageUrl, linkUrl);
+        return banner;
+    }
 
-        banner.updateBanner(req.name(), req.imageUrl(), req.linkUrl());
+    /** 홈 배너 활성화 */
+    public HomeBanner activateBanner(Long bannerId) {
+        HomeBanner banner = findBanner(bannerId);
+        banner.activate();
+        return banner;
+    }
 
-        return HomeBannerResDTO.from(banner);
+    /** 홈 배너 비활성화 */
+    public HomeBanner deactivateBanner(Long bannerId) {
+        HomeBanner banner = findBanner(bannerId);
+        banner.deactivate();
+        return banner;
     }
 
     private List<HomeBanner> validateAndLoadAllBanners(List<Long> orderedIds) {
@@ -130,20 +124,6 @@ public class HomeBannerService {
         }
 
         return banners;
-    }
-
-    @Transactional
-    public HomeBannerResDTO activateBanner(Long bannerId) {
-        HomeBanner banner = findBanner(bannerId);
-        banner.activate();
-        return HomeBannerResDTO.from(banner);
-    }
-
-    @Transactional
-    public HomeBannerResDTO deactivateBanner(Long bannerId) {
-        HomeBanner banner = findBanner(bannerId);
-        banner.deactivate();
-        return HomeBannerResDTO.from(banner);
     }
 
     private HomeBanner findBanner(Long id) {

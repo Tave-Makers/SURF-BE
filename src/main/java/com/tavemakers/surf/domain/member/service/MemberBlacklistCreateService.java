@@ -6,7 +6,6 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberBlacklistActionType;
 import com.tavemakers.surf.domain.member.repository.MemberBlacklistRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Locale;
@@ -17,7 +16,6 @@ public class MemberBlacklistCreateService {
 
     private final MemberBlacklistRepository memberBlacklistRepository;
 
-    @Transactional
     public void createIfAbsent(Member member, MemberBlacklistActionType actionType, Long processedBy) {
         Long kakaoId = member.getKakaoId();
         String normalizedEmail = normalizeEmail(member.getEmail());

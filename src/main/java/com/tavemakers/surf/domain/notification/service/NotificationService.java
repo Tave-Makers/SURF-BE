@@ -1,63 +1,32 @@
 package com.tavemakers.surf.domain.notification.service;
 
-import com.tavemakers.surf.domain.notification.dto.response.NotificationResDTO;
 import com.tavemakers.surf.domain.notification.entity.Notification;
-import com.tavemakers.surf.domain.notification.entity.NotificationCategory;
-import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.notification.exception.NotificationNotFoundException;
 import com.tavemakers.surf.domain.notification.repository.NotificationRepository;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
+/**
+ * 알림 도메인 로직. DTO를 알지 못하며 엔티티/원시값만 다룬다.
+ * 트랜잭션 경계는 호출자(NotificationUsecase)가 소유한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final NotificationGetService notificationGetService;
     private final LogEventEmitter logEventEmitter;
 
-    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능) */
-    @Transactional(readOnly = true)
-    public List<NotificationResDTO> getNotifications(Long memberId, NotificationCategory category) {
-
-        List<Notification> notifications;
-
-        if (category == null) {
-            // 전체 알림
-            notifications = notificationRepository.findByMemberIdOrderByIdDesc(memberId);
-        } else {
-            // 해당 카테고리의 타입 목록 추출
-            List<NotificationType> types = Arrays.stream(NotificationType.values())
-                    .filter(t -> t.getCategory() == category)
-                    .toList();
-
-            notifications = notificationRepository.findByMemberIdAndTypeInOrderByIdDesc(memberId, types);
-        }
-
-        return notificationGetService.toDtoList(notifications);
-    }
-
-    /** 알림 읽음 처리 */
-    @Transactional
+    /** 알림 읽음 처리 — 본인 소유 알림만 조회·갱신한다 */
     public void markAsRead(Long notificationId, Long memberId) {
-        Notification notification = notificationRepository.findById(notificationId).orElse(null);
-        boolean previousIsRead = notification != null && notification.isRead();
+        Notification notification = notificationRepository.findByIdAndMemberId(notificationId, memberId)
+                .orElseThrow(NotificationNotFoundException::new);
+        boolean previousIsRead = notification.isRead();
 
-        int updated = notificationRepository.markAsRead(notificationId, memberId);
-
-        if (updated == 0) {
-            boolean exists = notificationRepository.existsByIdAndMemberId(notificationId, memberId);
-            if (!exists) {
-                throw new NotificationNotFoundException();
-            }
-        }
+        notificationRepository.markAsRead(notificationId, memberId);
 
         logEventEmitter.emit("notification.read", Map.of(
                 "notification_id", notificationId,

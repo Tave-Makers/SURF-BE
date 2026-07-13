@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.comment.repository;
 
 import com.tavemakers.surf.domain.comment.entity.Comment;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -18,6 +19,25 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     /** 댓글 총 개수 */
     long countByPostId(Long postId);
+
+    /**
+     * 직전 중복 댓글 감지 — 같은 작성자가 같은 게시글·같은 부모에 같은 내용을
+     * 짧은 시간 안에 다시 보낸 경우(더블 클릭·네트워크 재시도) true.
+     */
+    @Query("""
+        select count(c) > 0
+        from Comment c
+        where c.post.id = :postId
+          and c.member.id = :memberId
+          and c.content = :content
+          and ((:parentId is null and c.parent is null) or c.parent.id = :parentId)
+          and c.createdAt > :after
+    """)
+    boolean existsRecentDuplicate(@Param("postId") Long postId,
+                                  @Param("memberId") Long memberId,
+                                  @Param("parentId") Long parentId,
+                                  @Param("content") String content,
+                                  @Param("after") LocalDateTime after);
 
     /** 게시글 삭제 시 대댓글(자식) 먼저 삭제 */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -45,4 +65,14 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
         where c.parent.id = :parentId
     """)
     void detachChildren(@Param("parentId") Long parentId);
+
+    /** 좋아요 수 원자적 증가 (동시 요청 lost update 방지) */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Comment c set c.likeCount = c.likeCount + 1 where c.id = :commentId")
+    void increaseLikeCount(@Param("commentId") Long commentId);
+
+    /** 좋아요 수 원자적 감소 (0 미만 방지) */
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update Comment c set c.likeCount = c.likeCount - 1 where c.id = :commentId and c.likeCount > 0")
+    void decreaseLikeCount(@Param("commentId") Long commentId);
 }

@@ -1,7 +1,7 @@
 package com.tavemakers.surf.global.common.advice;
 
 import com.tavemakers.surf.domain.auth.common.exception.EmailConflictException;
-import com.tavemakers.surf.domain.letter.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.global.common.exception.BaseException;
 import com.tavemakers.surf.global.common.exception.ErrorCode;
 import com.tavemakers.surf.global.common.exception.ErrorDetail;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -61,8 +62,17 @@ public class GlobalExceptionHandler {
     // JSON 형식이 어긋난 경우 (유실, 형식X etc...)
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
-        logWarning(e, HttpStatus.BAD_REQUEST.value());
-        return responseException(HttpStatus.BAD_REQUEST, e.getMessage(), null);
+        ErrorCode errorCode = MESSAGE_NOT_READABLE;
+        logWarning(e, errorCode.getStatus().value());
+        return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
+    }
+
+    // @PreAuthorize 등 인가 거부 (AuthorizationDeniedException 포함)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
+        ErrorCode errorCode = ACCESS_DENIED;
+        logWarning(e, errorCode.getStatus().value());
+        return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
     }
 
     // @Valid 유효성 검증 예외
@@ -98,7 +108,9 @@ public class GlobalExceptionHandler {
                 failedProps.put("content_length", req.content() != null ? req.content().length() : 0);
                 failedProps.put("fail_reason", failReason);
                 logEventEmitter.emitError("letter_send_validation_failed", failedProps, "쪽지 전송 유효성 검증 실패");
-            } catch (Exception ignored) {}
+            } catch (Exception ex) {
+                log.warn("쪽지 전송 유효성 검증 실패 로그 적재 실패: {}", ex.toString());
+            }
         }
 
         logWarning(e, errorCode.getStatus().value());
@@ -121,7 +133,7 @@ public class GlobalExceptionHandler {
         errorProps.put("error_msg", e.getMessage() != null ? e.getMessage() : "internal server error");
         logEventEmitter.emitError("any.error", errorProps, "서버 내부 오류");
         logError(e, errorCode.getStatus().value());
-        return responseException(errorCode.getStatus(), e.getMessage(), null);
+        return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
     }
 
     private <T> ResponseEntity<ApiResponse<T>> responseException(HttpStatus status, String message, T data ) {
