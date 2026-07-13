@@ -61,6 +61,17 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Slice<Post> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
             String title, String content, Pageable pageable);
 
+    /** 특정 게시판 내 제목/내용 검색 (boardId 지정 검색용) */
+    @Query("""
+        select p from Post p
+        where p.board.id = :boardId
+          and (lower(p.title) like lower(concat('%', :param, '%'))
+            or lower(p.content) like lower(concat('%', :param, '%')))
+    """)
+    Slice<Post> searchInBoard(@Param("boardId") Long boardId,
+                              @Param("param") String param,
+                              Pageable pageable);
+
     @Query("""
         select p.member.id
         from Post p

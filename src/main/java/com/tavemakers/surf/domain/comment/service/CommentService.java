@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.event.CommentCreatedEvent;
 import com.tavemakers.surf.domain.comment.event.CommentReplyEvent;
 import com.tavemakers.surf.domain.comment.exception.CommentNotFoundException;
+import com.tavemakers.surf.domain.comment.exception.DuplicateCommentException;
 import com.tavemakers.surf.domain.comment.exception.InvalidBlankCommentException;
 import com.tavemakers.surf.domain.comment.exception.InvalidReplyException;
 import com.tavemakers.surf.domain.comment.exception.NotMyCommentException;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -27,6 +29,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CommentService {
+
+    /** 이 시간 안에 동일(게시글·부모·내용) 댓글 재요청이 오면 중복으로 간주한다 (더블 클릭·재시도 방지) */
+    private static final int DUPLICATE_WINDOW_SECONDS = 5;
 
     private final CommentRepository commentRepository;
     private final PostGetService postGetService;
@@ -47,6 +52,13 @@ public class CommentService {
         Post post = postGetService.getPost(postId);
         Member member = memberGetService.getMember(memberId);
         if (content == null || content.isEmpty()) throw new InvalidBlankCommentException();
+
+        // 직전 동일 댓글 중복 방지 (더블 클릭·네트워크 재시도 시 댓글이 2개 달리는 버그)
+        if (commentRepository.existsRecentDuplicate(
+                postId, memberId, parentId, content,
+                LocalDateTime.now().minusSeconds(DUPLICATE_WINDOW_SECONDS))) {
+            throw new DuplicateCommentException();
+        }
 
         // 댓글 생성 (루트/대댓글 분기)
         Comment saved;

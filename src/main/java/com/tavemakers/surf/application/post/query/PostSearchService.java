@@ -19,11 +19,12 @@ public class PostSearchService {
     private final RecentSearchService recentSearchService;
     private final FlagsMapper flagsMapper;
 
-    /** 게시글 제목 및 내용 검색 */
-    public Slice<PostResDTO> search(Long viewerId, String param, Pageable pageable) {
-        // 1) 게시글 검색
-        Slice<Post> slice = postRepository
-                .findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(param, param, pageable);
+    /** 게시글 제목 및 내용 검색 — boardId 지정 시 해당 게시판 내에서만 검색 */
+    public Slice<PostResDTO> search(Long viewerId, String param, Long boardId, Pageable pageable) {
+        // 1) 게시글 검색 (boardId 있으면 게시판 내 검색, 없으면 통합 검색)
+        Slice<Post> slice = (boardId != null)
+                ? postRepository.searchInBoard(boardId, param, pageable)
+                : postRepository.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(param, param, pageable);
 
         // 2) 최근 검색어 저장
         recentSearchService.saveQuery(viewerId, param);

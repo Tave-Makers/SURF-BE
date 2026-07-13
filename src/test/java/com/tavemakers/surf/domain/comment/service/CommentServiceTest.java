@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.event.CommentCreatedEvent;
 import com.tavemakers.surf.domain.comment.event.CommentReplyEvent;
 import com.tavemakers.surf.domain.comment.exception.CommentNotFoundException;
+import com.tavemakers.surf.domain.comment.exception.DuplicateCommentException;
 import com.tavemakers.surf.domain.comment.exception.InvalidBlankCommentException;
 import com.tavemakers.surf.domain.comment.exception.InvalidReplyException;
 import com.tavemakers.surf.domain.comment.exception.NotMyCommentException;
@@ -128,6 +129,42 @@ class CommentServiceTest {
             ReflectionTestUtils.setField(comment, "id", id);
             return comment;
         });
+    }
+
+    // ---------- createComment: 직전 중복 요청 방지 ----------
+
+    @Test
+    @DisplayName("같은 작성자가 같은 게시글·부모에 같은 내용을 시간창 안에 다시 보내면 DuplicateCommentException — 저장·카운트 증가 없음")
+    void createComment_duplicateWithinWindow_throwsAndSkipsSave() {
+        Member author = member(2L, "작성자");
+        Post post = post(10L, member(1L, "글쓴이"), board(), category(board()));
+        given(postGetService.getPost(10L)).willReturn(post);
+        given(memberGetService.getMember(2L)).willReturn(author);
+        given(commentRepository.existsRecentDuplicate(
+                any(), any(), any(), any(), any())).willReturn(true);
+
+        assertThatThrownBy(() -> commentService.createComment(10L, 2L, null, "중복 내용", List.of()))
+                .isInstanceOf(DuplicateCommentException.class);
+
+        then(commentRepository).should(never()).save(any());
+        then(postCommentCountService).should(never()).increase(any());
+    }
+
+    @Test
+    @DisplayName("중복이 아니면(시간창 밖/다른 내용) 정상 저장된다")
+    void createComment_noDuplicate_savesNormally() {
+        Member author = member(2L, "작성자");
+        Post post = post(10L, member(1L, "글쓴이"), board(), category(board()));
+        given(postGetService.getPost(10L)).willReturn(post);
+        given(memberGetService.getMember(2L)).willReturn(author);
+        given(commentRepository.existsRecentDuplicate(
+                any(), any(), any(), any(), any())).willReturn(false);
+        stubSaveAssignsId(100L);
+
+        Comment saved = commentService.createComment(10L, 2L, null, "새 내용", List.of());
+
+        assertThat(saved.getId()).isEqualTo(100L);
+        then(postCommentCountService).should().increase(10L);
     }
 
     // ---------- createComment: 루트 댓글 ----------
