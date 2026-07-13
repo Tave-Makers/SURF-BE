@@ -1,4 +1,6 @@
-package com.tavemakers.surf.domain.auth.apple.service;
+package com.tavemakers.surf.application.auth.apple.service;
+
+import com.tavemakers.surf.domain.auth.apple.service.AppleJwksProvider;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;

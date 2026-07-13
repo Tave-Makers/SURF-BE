@@ -2,8 +2,8 @@ package com.tavemakers.surf.application.auth.apple.usecase;
 
 import com.tavemakers.surf.presentation.auth.apple.dto.AppleAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.apple.dto.AppleTokenResDTO;
-import com.tavemakers.surf.domain.auth.apple.service.AppleAuthService;
-import com.tavemakers.surf.domain.auth.apple.service.AppleIdentityTokenVerifier;
+import com.tavemakers.surf.application.auth.apple.service.AppleAuthService;
+import com.tavemakers.surf.application.auth.apple.service.AppleIdentityTokenVerifier;
 import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;

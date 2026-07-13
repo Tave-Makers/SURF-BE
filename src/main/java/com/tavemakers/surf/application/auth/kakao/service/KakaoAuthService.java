@@ -1,4 +1,6 @@
-package com.tavemakers.surf.domain.auth.kakao.service;
+package com.tavemakers.surf.application.auth.kakao.service;
+
+import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthLogService;
 
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.infrastructure.auth.kakao.KakaoApiClient;

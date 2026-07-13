@@ -86,6 +86,17 @@ public class CleanArchitectureRulesTest {
                     .as("R1c: Controller는 infrastructure 계층(외부 어댑터)에 직접 의존할 수 없다 "
                             + "(Wave 3 심사에서 발견된 규칙 갭 — FcmService infra 이동으로 R1b 범위 이탈)"));
 
+    // ── R8: domain 계층은 infrastructure를 모른다 ──────────────────────────
+    // 배치 규칙(architecture.md): Spring Data 인터페이스는 domain(사실상 포트),
+    // 손으로 쓴 구체 클래스(QueryDSL·JdbcTemplate·외부 API 클라이언트)는 infrastructure.
+    // 이 규칙이 없으면 절충안의 의존 방향 논리가 무너진다. 위반 0 도달로 freeze 없이 즉시 실패.
+    @ArchTest
+    static final ArchRule R8_domain_계층은_infrastructure_의존_금지 =
+            noClasses().that().resideInAPackage("com.tavemakers.surf.domain..")
+                    .should().dependOnClassesThat(resideInAPackage("com.tavemakers.surf.infrastructure.."))
+                    .as("R8: domain 계층은 infrastructure(외부 어댑터·기술 구현체)에 의존할 수 없다 "
+                            + "— 인프라를 오케스트레이션하는 로직은 application 소관");
+
     // ── R2: 타 도메인 접근은 query(GetService) 또는 이벤트만 ────────────────
 
     @ArchTest

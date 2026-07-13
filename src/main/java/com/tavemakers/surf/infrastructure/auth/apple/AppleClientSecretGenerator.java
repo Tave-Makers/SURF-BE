@@ -1,4 +1,4 @@
-package com.tavemakers.surf.domain.auth.apple.service;
+package com.tavemakers.surf.infrastructure.auth.apple;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;

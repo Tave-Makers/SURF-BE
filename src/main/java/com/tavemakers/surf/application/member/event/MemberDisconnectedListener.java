@@ -1,4 +1,6 @@
-package com.tavemakers.surf.domain.member.event;
+package com.tavemakers.surf.application.member.event;
+
+import com.tavemakers.surf.domain.member.event.MemberDisconnectedEvent;
 
 import com.tavemakers.surf.infrastructure.auth.apple.AppleApiClient;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;

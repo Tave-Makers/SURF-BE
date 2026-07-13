@@ -1,4 +1,6 @@
-package com.tavemakers.surf.domain.auth.apple.service;
+package com.tavemakers.surf.application.auth.apple.service;
+
+import com.tavemakers.surf.domain.auth.apple.service.AppleAuthLogService;
 
 import com.tavemakers.surf.infrastructure.auth.apple.AppleApiClient;
 import com.tavemakers.surf.infrastructure.auth.apple.config.AppleOAuthProps;

@@ -2,7 +2,7 @@ package com.tavemakers.surf.application.post.scheduler;
 
 import com.tavemakers.surf.domain.post.dto.PostViewUpdateDto;
 import com.tavemakers.surf.domain.post.mapper.PostMapper;
-import com.tavemakers.surf.domain.post.service.support.PostUpdateService;
+import com.tavemakers.surf.infrastructure.post.repository.PostJdbcRepository;
 import com.tavemakers.surf.global.common.aop.annotations.ExecutionTimeLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class ViewCountScheduler {
 
     private final StringRedisTemplate redisTemplate;
     private final PostMapper postMapper;
-    private final PostUpdateService postUpdateService;
+    private final PostJdbcRepository postJdbcRepository;
 
     private static final String VIEW_COUNT_PATTERN = "post:*:view:count";
     private static final int SCAN_SIZE = 100;
@@ -87,7 +87,7 @@ public class ViewCountScheduler {
 
     private void executeViewCountUpdate(List<PostViewUpdateDto> updateDtoList) {
         if (!updateDtoList.isEmpty()) {
-            postUpdateService.updateViewCount(updateDtoList);
+            postJdbcRepository.viewCountBulkUpdate(updateDtoList);
         }
     }
 

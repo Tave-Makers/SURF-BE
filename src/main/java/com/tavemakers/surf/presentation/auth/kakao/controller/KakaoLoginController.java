@@ -4,7 +4,7 @@ import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginResDTO;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthErrorMessage;
 import com.tavemakers.surf.domain.auth.kakao.exception.KakaoAuthException;
-import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
+import com.tavemakers.surf.application.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.application.auth.kakao.usecase.KakaoLoginUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

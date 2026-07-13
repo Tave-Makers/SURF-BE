@@ -1,4 +1,6 @@
-package com.tavemakers.surf.domain.notification.event;
+package com.tavemakers.surf.application.notification.event;
+
+import com.tavemakers.surf.domain.notification.event.NotificationCreatedEvent;
 
 import com.tavemakers.surf.domain.notification.entity.Notification;
 import com.tavemakers.surf.domain.notification.repository.NotificationRepository;

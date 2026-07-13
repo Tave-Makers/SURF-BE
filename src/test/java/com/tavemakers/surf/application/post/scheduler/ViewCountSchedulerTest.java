@@ -2,7 +2,7 @@ package com.tavemakers.surf.application.post.scheduler;
 
 import com.tavemakers.surf.domain.post.dto.PostViewUpdateDto;
 import com.tavemakers.surf.domain.post.mapper.PostMapper;
-import com.tavemakers.surf.domain.post.service.support.PostUpdateService;
+import com.tavemakers.surf.infrastructure.post.repository.PostJdbcRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,12 +38,12 @@ class ViewCountSchedulerTest {
     private StringRedisTemplate redisTemplate;
 
     @Mock
-    private PostUpdateService postUpdateService;
+    private PostJdbcRepository postJdbcRepository;
 
     @Test
     @DisplayName("GET+DEL로 회수한 델타 중 0·null·파싱 불가는 제외하고 DB에 반영한다")
     void 유효한_델타만_DB에_반영한다() {
-        ViewCountScheduler scheduler = new ViewCountScheduler(redisTemplate, new PostMapper(), postUpdateService);
+        ViewCountScheduler scheduler = new ViewCountScheduler(redisTemplate, new PostMapper(), postJdbcRepository);
         stubScan(List.of("post:1:view:count", "post:2:view:count", "post:3:view:count", "post:4:view:count"));
         stubGetAndDel("post:1:view:count", "3");   // 유효 델타
         stubGetAndDel("post:2:view:count", "0");   // 델타 0 → skip
@@ -53,20 +53,20 @@ class ViewCountSchedulerTest {
         scheduler.synchronizeViewCount();
 
         ArgumentCaptor<List<PostViewUpdateDto>> captor = ArgumentCaptor.captor();
-        verify(postUpdateService).updateViewCount(captor.capture());
+        verify(postJdbcRepository).viewCountBulkUpdate(captor.capture());
         assertThat(captor.getValue()).containsExactly(new PostViewUpdateDto(1L, 3));
     }
 
     @Test
     @DisplayName("회수한 유효 델타가 없으면 DB 업데이트를 호출하지 않는다")
     void 유효_델타가_없으면_DB_업데이트를_생략한다() {
-        ViewCountScheduler scheduler = new ViewCountScheduler(redisTemplate, new PostMapper(), postUpdateService);
+        ViewCountScheduler scheduler = new ViewCountScheduler(redisTemplate, new PostMapper(), postJdbcRepository);
         stubScan(List.of("post:1:view:count"));
         stubGetAndDel("post:1:view:count", "0");
 
         scheduler.synchronizeViewCount();
 
-        verify(postUpdateService, never()).updateViewCount(any());
+        verify(postJdbcRepository, never()).viewCountBulkUpdate(any());
     }
 
     @SuppressWarnings("unchecked")

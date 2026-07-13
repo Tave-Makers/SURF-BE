@@ -7,7 +7,7 @@ import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.application.auth.common.usecase.LoginTokenIssuer;
 import com.tavemakers.surf.presentation.auth.kakao.dto.KakaoAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.kakao.dto.KakaoTokenResDTO;
-import com.tavemakers.surf.domain.auth.kakao.service.KakaoAuthService;
+import com.tavemakers.surf.application.auth.kakao.service.KakaoAuthService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.service.MemberUpsertService;
 import jakarta.servlet.http.HttpServletRequest;
