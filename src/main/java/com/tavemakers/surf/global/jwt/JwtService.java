@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +28,6 @@ public class JwtService {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String REFRESH_COOKIE_NAME = "refreshToken";
     private static final String ROLE_PREFIX = "ROLE_";
-    private final Environment environment;
 
     @Value("${jwt.secret}")
     private String jwtSecret;
@@ -40,6 +37,17 @@ public class JwtService {
 
     @Value("${jwt.refresh.expiration}")
     private long refreshTokenExpireMs;
+
+    // 쿠키 속성은 프로필명이 아닌 배포 토폴로지(프론트↔API 도메인 관계) 기준으로 결정한다.
+    // 크로스 사이트 배포면 SameSite=None + Secure 필수, 같은 등록 도메인 공유 시에만 domain 지정.
+    @Value("${jwt.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    @Value("${jwt.cookie.same-site:None}")
+    private String cookieSameSite;
+
+    @Value("${jwt.cookie.domain:}")
+    private String cookieDomain;
 
     private Key secretKey;
 
@@ -123,31 +131,26 @@ public class JwtService {
         }
     }
 
-    private boolean isDev() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("dev");
-    }
+    /** 인증용 쿠키 공통 빌더 — refresh·deviceId 쿠키가 동일한 토폴로지 속성을 공유한다 */
+    public ResponseCookie buildAuthCookie(String name, String value, Duration maxAge) {
+        ResponseCookie.ResponseCookieBuilder builder =
+                ResponseCookie.from(name, value)
+                        .httpOnly(true)
+                        .path("/")
+                        .maxAge(maxAge)
+                        .secure(cookieSecure)
+                        .sameSite(cookieSameSite);
 
-    private boolean isTest() {
-        return Arrays.asList(environment.getActiveProfiles()).contains("test");
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            builder.domain(cookieDomain);
+        }
+
+        return builder.build();
     }
 
     /** Refresh Token 쿠키 생성 */
     public ResponseCookie buildRefreshTokenCookie(String refreshToken) {
-        ResponseCookie.ResponseCookieBuilder builder =
-                ResponseCookie.from(REFRESH_COOKIE_NAME, refreshToken)
-                        .httpOnly(true)
-                        .path("/")
-                        .maxAge(Duration.ofMillis(refreshTokenExpireMs));
-
-        if (isDev()) {
-            builder.secure(true).sameSite("None").domain(".tavesurf.site");
-        } else if (isTest()) {
-            builder.secure(false).sameSite("Lax");
-        } else {
-            builder.secure(true).sameSite("Lax");
-        }
-
-        return builder.build();
+        return buildAuthCookie(REFRESH_COOKIE_NAME, refreshToken, Duration.ofMillis(refreshTokenExpireMs));
     }
 
     /** Refresh Token 쿠키 전송 */
@@ -190,21 +193,7 @@ public class JwtService {
 
     /** Refresh Token 쿠키 삭제 */
     public void clearRefreshTokenCookie(HttpServletResponse res) {
-        ResponseCookie.ResponseCookieBuilder builder =
-                ResponseCookie.from(REFRESH_COOKIE_NAME, "")
-                        .httpOnly(true)
-                        .path("/")
-                        .maxAge(Duration.ZERO);
-
-        if (isDev()) {
-            builder.secure(true).domain(".tavesurf.site").sameSite("None");
-        } else if (isTest()) {
-            builder.secure(false).sameSite("Lax");
-        } else {
-            builder.secure(true).sameSite("Lax");
-        }
-
-        ResponseCookie refreshCookie = builder.build();
+        ResponseCookie refreshCookie = buildAuthCookie(REFRESH_COOKIE_NAME, "", Duration.ZERO);
         res.addHeader("Set-Cookie", refreshCookie.toString());
     }
 }

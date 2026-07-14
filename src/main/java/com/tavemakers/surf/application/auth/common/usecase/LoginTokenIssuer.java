@@ -76,13 +76,9 @@ public class LoginTokenIssuer {
             }
         }
         // WEB 첫 로그인 — UUID 생성 후 브라우저에 저장할 쿠키도 함께 반환
+        // refresh 쿠키와 동일한 토폴로지 속성 공유 — 크로스 사이트에서 deviceId가 매 로그인 재발급되는 것을 방지
         String newId = UUID.randomUUID().toString();
-        ResponseCookie newCookie = ResponseCookie.from(DEVICE_ID_COOKIE, newId)
-                .httpOnly(true)
-                .path("/")
-                .maxAge(Duration.ofDays(365))
-                .sameSite("Lax")
-                .build();
+        ResponseCookie newCookie = jwtService.buildAuthCookie(DEVICE_ID_COOKIE, newId, Duration.ofDays(365));
         return new DeviceResolution(newId, newCookie);
     }
 

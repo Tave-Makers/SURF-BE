@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisCallback;
@@ -29,8 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @Testcontainers
 @DisplayName("RefreshTokenService")
@@ -62,14 +59,14 @@ class RefreshTokenServiceTest {
         redisTemplate.setValueSerializer(serializer);
         redisTemplate.afterPropertiesSet();
 
-        Environment env = mock(Environment.class);
-        when(env.getActiveProfiles()).thenReturn(new String[]{"test"});
-
-        jwtService = new JwtService(env);
+        jwtService = new JwtService();
         ReflectionTestUtils.setField(jwtService, "jwtSecret",
                 "testsecrettestsecrettestsecrettestsecrettestsecret");
         ReflectionTestUtils.setField(jwtService, "accessTokenExpireMs", 3600000L);
         ReflectionTestUtils.setField(jwtService, "refreshTokenExpireMs", 604800000L);
+        ReflectionTestUtils.setField(jwtService, "cookieSecure", false);
+        ReflectionTestUtils.setField(jwtService, "cookieSameSite", "Lax");
+        ReflectionTestUtils.setField(jwtService, "cookieDomain", "");
         jwtService.init();
 
         refreshTokenService = new RefreshTokenService(jwtService, redisTemplate);

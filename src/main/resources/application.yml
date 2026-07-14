@@ -63,6 +63,13 @@ jwt:
   refresh:
     expiration: ${JWT_REFRESH_EXPIRATION}
     header: RefreshToken
+  # 인증 쿠키 속성 — 프로필명이 아닌 배포 토폴로지 기준으로 환경변수로 결정 (기본값 = 운영 현행)
+  # 크로스 사이트(프론트↔API 도메인 상이) 배포: same-site=None + secure=true 필수
+  # domain 은 프론트·API가 같은 등록 도메인을 공유할 때만 지정, 빈 값이면 host-only
+  cookie:
+    secure: ${JWT_COOKIE_SECURE:true}
+    same-site: ${JWT_COOKIE_SAME_SITE:None}
+    domain: ${JWT_COOKIE_DOMAIN:.tavesurf.site}
 
 feedback:
   hash:

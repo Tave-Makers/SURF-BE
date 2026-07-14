@@ -6,8 +6,10 @@ import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.env.MockEnvironment;
+import org.springframework.http.ResponseCookie;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.Duration;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -24,10 +26,13 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService(new MockEnvironment());
+        jwtService = new JwtService();
         ReflectionTestUtils.setField(jwtService, "jwtSecret", SECRET);
         ReflectionTestUtils.setField(jwtService, "accessTokenExpireMs", 3_600_000L);
         ReflectionTestUtils.setField(jwtService, "refreshTokenExpireMs", 3_600_000L);
+        ReflectionTestUtils.setField(jwtService, "cookieSecure", true);
+        ReflectionTestUtils.setField(jwtService, "cookieSameSite", "None");
+        ReflectionTestUtils.setField(jwtService, "cookieDomain", ".tavesurf.site");
         jwtService.init();
     }
 
@@ -53,6 +58,28 @@ class JwtServiceTest {
         String validToken = jwtService.createAccessToken(42L, "MEMBER");
 
         assertThat(jwtService.extractMemberId(validToken)).contains(42L);
+    }
+
+    @Test
+    @DisplayName("refresh 쿠키는 설정된 토폴로지 속성(Secure/SameSite/Domain)으로 발급된다")
+    void buildRefreshTokenCookie_appliesConfiguredAttributes() {
+        ResponseCookie cookie = jwtService.buildRefreshTokenCookie("refresh-token-value");
+
+        assertThat(cookie.isSecure()).isTrue();
+        assertThat(cookie.getSameSite()).isEqualTo("None");
+        assertThat(cookie.getDomain()).isEqualTo(".tavesurf.site");
+        assertThat(cookie.isHttpOnly()).isTrue();
+        assertThat(cookie.getPath()).isEqualTo("/");
+    }
+
+    @Test
+    @DisplayName("domain 설정이 비어 있으면 host-only 쿠키로 발급된다 (Domain 속성 없음)")
+    void buildAuthCookie_blankDomain_hostOnly() {
+        ReflectionTestUtils.setField(jwtService, "cookieDomain", "");
+
+        ResponseCookie cookie = jwtService.buildAuthCookie("anyCookie", "v", Duration.ofDays(1));
+
+        assertThat(cookie.getDomain()).isNull();
     }
 
     private String buildToken(String secret, Date expiration) {
