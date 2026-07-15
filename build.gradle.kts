@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")      // MVC (Controller)
+    implementation("org.springframework.boot:spring-boot-starter-actuator") // 엔드포인트별 메트릭 (http.server.requests)
     // implementation("org.springframework.boot:spring-boot-starter-webflux")  // WebClient
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-security")
