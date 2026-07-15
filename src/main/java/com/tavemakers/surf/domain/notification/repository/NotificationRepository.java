@@ -2,6 +2,8 @@ package com.tavemakers.surf.domain.notification.repository;
 
 import com.tavemakers.surf.domain.notification.entity.Notification;
 import com.tavemakers.surf.domain.notification.entity.NotificationType;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,9 +17,9 @@ import java.util.Optional;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    List<Notification> findByMemberIdOrderByIdDesc(Long memberId);
+    Slice<Notification> findByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
 
-    List<Notification> findByMemberIdAndTypeInOrderByIdDesc(Long memberId, Collection<NotificationType> types);
+    Slice<Notification> findByMemberIdAndTypeInOrderByIdDesc(Long memberId, Collection<NotificationType> types, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

@@ -10,12 +10,13 @@ import com.tavemakers.surf.domain.notification.event.NotificationCreatedEvent;
 import com.tavemakers.surf.domain.notification.service.NotificationCreateService;
 import com.tavemakers.surf.domain.notification.service.NotificationService;
 import com.tavemakers.surf.domain.post.entity.Post;
-import com.tavemakers.surf.presentation.notification.dto.response.NotificationResDTO;
+import com.tavemakers.surf.presentation.notification.dto.response.NotificationSliceResDTO;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +35,11 @@ public class NotificationUsecase {
     private final NotificationCreateService notificationCreateService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능) */
+    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능, 무한스크롤) */
     @Transactional(readOnly = true)
-    public List<NotificationResDTO> getNotifications(Long memberId, NotificationCategory category) {
-        return notificationGetService.getNotifications(memberId, category);
+    public NotificationSliceResDTO getNotifications(Long memberId, NotificationCategory category, Pageable pageable) {
+        return NotificationSliceResDTO.from(
+                notificationGetService.getNotifications(memberId, category, pageable));
     }
 
     /** 알림 읽음 처리 */
