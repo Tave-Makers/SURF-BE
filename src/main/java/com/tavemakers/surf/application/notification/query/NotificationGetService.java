@@ -9,6 +9,9 @@ import com.tavemakers.surf.domain.notification.entity.NotificationType;
 import com.tavemakers.surf.domain.notification.repository.NotificationRepository;
 import com.tavemakers.surf.domain.notification.service.NotificationRenderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -30,24 +33,25 @@ public class NotificationGetService {
     private final NotificationRenderService renderer;
     private final MemberGetService memberGetService;
 
-    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능) */
-    public List<NotificationResDTO> getNotifications(Long memberId, NotificationCategory category) {
+    /** 회원의 알림 목록 조회 (카테고리별 필터링 가능, 무한스크롤) */
+    public Slice<NotificationResDTO> getNotifications(Long memberId, NotificationCategory category, Pageable pageable) {
 
-        List<Notification> notifications;
+        Slice<Notification> notifications;
 
         if (category == null) {
             // 전체 알림
-            notifications = notificationRepository.findByMemberIdOrderByIdDesc(memberId);
+            notifications = notificationRepository.findByMemberIdOrderByIdDesc(memberId, pageable);
         } else {
             // 해당 카테고리의 타입 목록 추출
             List<NotificationType> types = Arrays.stream(NotificationType.values())
                     .filter(t -> t.getCategory() == category)
                     .toList();
 
-            notifications = notificationRepository.findByMemberIdAndTypeInOrderByIdDesc(memberId, types);
+            notifications = notificationRepository.findByMemberIdAndTypeInOrderByIdDesc(memberId, types, pageable);
         }
 
-        return toDtoList(notifications);
+        List<NotificationResDTO> content = toDtoList(notifications.getContent());
+        return new SliceImpl<>(content, pageable, notifications.hasNext());
     }
 
     /**

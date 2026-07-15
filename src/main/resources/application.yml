@@ -84,6 +84,13 @@ springdoc:
 server:
   forward-headers-strategy: framework
 
+# 엔드포인트별 응답시간 메트릭 노출 (접근은 SecurityConfig에서 관리자 역할로 제한)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+
 logging:
   forwarding:
     enabled: ${LOG_FORWARD_ENABLED:false}
