@@ -26,6 +26,7 @@ public class NotificationGetController {
     private final NotificationUsecase notificationUsecase;
     private final LogEventEmitter logEventEmitter;
 
+    /** 회원의 알림 목록 조회 (카테고리 필터 + 무한스크롤) */
     @Operation(summary = "알람 조회", description = "category 파라미터로 카테고리별 필터링 조회합니다. null일 경우 전체 알람 조회. page/size로 무한스크롤 조회합니다.")
     @GetMapping("/v1/user/notifications")
     public ApiResponse<NotificationSliceResDTO> getNotifications(

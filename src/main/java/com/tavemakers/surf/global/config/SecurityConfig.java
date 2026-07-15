@@ -50,6 +50,8 @@ public class SecurityConfig {
                         .requestMatchers(permitUrlConfig.getPublicUrl()).permitAll()
                         .requestMatchers(permitUrlConfig.getMemberUrl()).hasAnyRole("MEMBER", "ADMIN", "PRESIDENT", "MANAGER")
                         .requestMatchers(permitUrlConfig.getAdminUrl()).hasAnyRole("ADMIN", "PRESIDENT", "MANAGER")
+                        // 헬스체크는 LB/오케스트레이터가 무토큰으로 호출 (기본 설정이라 UP/DOWN만 노출됨)
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/**").hasAnyRole("ADMIN", "PRESIDENT", "MANAGER")
                         .anyRequest().authenticated()
                 )

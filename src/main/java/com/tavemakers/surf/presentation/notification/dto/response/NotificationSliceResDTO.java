@@ -11,6 +11,7 @@ public record NotificationSliceResDTO(
         boolean hasNext
 ) {
 
+    /** Slice 조회 결과를 무한스크롤 응답 형태로 변환 */
     public static NotificationSliceResDTO from(Slice<NotificationResDTO> slice) {
         return new NotificationSliceResDTO(
                 slice.getContent(),

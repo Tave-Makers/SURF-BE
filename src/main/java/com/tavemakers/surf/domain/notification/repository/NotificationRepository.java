@@ -17,8 +17,10 @@ import java.util.Optional;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
+    /** 회원의 전체 알림을 최신순으로 페이지 조회 */
     Slice<Notification> findByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
 
+    /** 회원의 알림을 타입 목록(카테고리)으로 필터링해 최신순으로 페이지 조회 */
     Slice<Notification> findByMemberIdAndTypeInOrderByIdDesc(Long memberId, Collection<NotificationType> types, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
