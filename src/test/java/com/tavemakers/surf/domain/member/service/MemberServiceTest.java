@@ -6,6 +6,8 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
+import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.domain.member.validator.OnboardingAccountValidator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,12 @@ class MemberServiceTest {
 
     @Mock
     private MemberBlacklistGetService memberBlacklistGetService;
+
+    @Mock
+    private OnboardingAccountValidator onboardingAccountValidator;
+
+    @Mock
+    private MemberRepository memberRepository;
 
     @InjectMocks
     private MemberService memberService;
