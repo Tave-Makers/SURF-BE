@@ -2,9 +2,12 @@ package com.tavemakers.surf.presentation.member.controller;
 
 import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberSignupResDTO;
+import com.tavemakers.surf.domain.member.exception.AccountIntegrationAvailableException;
+import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
 import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
 import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
 import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
+import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.presentation.member.dto.response.OnboardingCheckResDTO;
 import com.tavemakers.surf.application.member.usecase.MemberUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -52,6 +55,9 @@ public class MemberSignupController {
             );
 
             return response;
+        } catch (AccountIntegrationAvailableException | EmailAlreadyUsedException | PhoneAlreadyUsedException e) {
+            // 온보딩 검증 예외(case B/C) 및 동시 경합으로 변환된 email/phone 충돌은 GlobalExceptionHandler 전용 핸들러에 위임하여 실제 HTTP 409 로 응답한다. (§3.5/§3.6.2)
+            throw e;
         } catch (Exception e) {
 
             int statusCode;
