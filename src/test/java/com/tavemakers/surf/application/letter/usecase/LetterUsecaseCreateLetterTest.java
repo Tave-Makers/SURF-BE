@@ -3,8 +3,9 @@ package com.tavemakers.surf.application.letter.usecase;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
+import com.tavemakers.surf.application.letter.event.LetterEmailListener;
+import com.tavemakers.surf.domain.letter.event.LetterEmailRequestedEvent;
 import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.application.letter.query.LetterGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -31,27 +32,25 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.verifyNoInteractions;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.willThrow;
 
 /**
- * 쪽지 생성 R5 수정(저장 커밋 후 트랜잭션 밖 메일 발송) 검증.
+ * 쪽지 생성 검증 — 이메일 발송이 요청 흐름에서 분리(AFTER_COMMIT 비동기 이벤트)됐는지 확인한다.
  *
- * <p>수정 전에는 @Transactional 안에서 메일을 먼저 보내고 저장했기 때문에 저장 실패 시
- * "유령 메일"(메일만 가고 쪽지 없음)이 발생했다. 수정 후에는 쪽지를 먼저 저장(커밋)하고
- * 메일을 트랜잭션 밖에서 보내므로, 메일 실패 시 예외(500)는 그대로 전파되되 쪽지 레코드는
- * 남는다(orphan — 사용자가 감수하기로 결정한 트레이드오프).
+ * <p>성능 측정에서 동기 SMTP 발송이 응답을 ~3초 지연시키는 것이 확인되어,
+ * 발송을 LetterEmailRequestedEvent + LetterEmailListener 로 옮겼다.
+ * 요청 스레드는 저장 커밋까지만 책임지고, 이메일은 커밋 후 비동기로 발송된다.
+ * 발송 실패는 응답에 영향을 주지 않는다(쪽지는 이미 커밋됨, 실패는 서버 로그).
  *
- * <p>또한 LetterSentEvent 발행이 usecase(비트랜잭션)에서 LetterCreateService.save 트랜잭션
- * 안으로 이동했는지 검증한다. notification 의 알림 리스너가
- * @TransactionalEventListener(AFTER_COMMIT)라서, 활성 트랜잭션 밖에서 발행된 이벤트는
- * 조용히 드롭되기 때문이다(AfterCommitProbe 로 실제 발화 확인).
- *
- * <p>usecase 가 더 이상 트랜잭션을 열지 않으므로 테스트 트랜잭션을 NOT_SUPPORTED 로 끄고
+ * <p>usecase 가 트랜잭션을 열지 않으므로 테스트 트랜잭션을 NOT_SUPPORTED 로 끄고
  * 픽스처는 TransactionTemplate 으로 명시적 커밋한다 (MemberDismissRollbackTest 패턴).
  */
 @DataJpaTest
@@ -64,14 +63,20 @@ import static org.mockito.BDDMockito.willThrow;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class LetterUsecaseCreateLetterTest {
 
-    /** AFTER_COMMIT 알림 리스너와 동일한 조건으로 이벤트 발화 여부를 기록하는 프로브 */
+    /** AFTER_COMMIT 리스너와 동일한 조건으로 두 이벤트의 발화 여부를 기록하는 프로브 */
     @TestConfiguration
     static class AfterCommitProbe {
-        final AtomicInteger fired = new AtomicInteger();
+        final AtomicInteger sentFired = new AtomicInteger();
+        final AtomicReference<LetterEmailRequestedEvent> emailEvent = new AtomicReference<>();
 
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
         public void onLetterSent(LetterSentEvent event) {
-            fired.incrementAndGet();
+            sentFired.incrementAndGet();
+        }
+
+        @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+        public void onEmailRequested(LetterEmailRequestedEvent event) {
+            emailEvent.set(event);
         }
     }
 
@@ -99,7 +104,8 @@ class LetterUsecaseCreateLetterTest {
 
     @BeforeEach
     void setUp() {
-        afterCommitProbe.fired.set(0);
+        afterCommitProbe.sentFired.set(0);
+        afterCommitProbe.emailEvent.set(null);
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         tx.executeWithoutResult(status -> {
             this.sender = persistMember("sender");
@@ -110,29 +116,41 @@ class LetterUsecaseCreateLetterTest {
     }
 
     @Test
-    @DisplayName("정상 경로: 쪽지가 저장되고 LetterSentEvent 가 커밋 후(AFTER_COMMIT) 발화한다")
-    void 쪽지_저장_후_이벤트가_커밋_후_발화한다() {
+    @DisplayName("쪽지가 저장되고 알림·이메일 이벤트가 커밋 후(AFTER_COMMIT) 발화한다")
+    void 쪽지_저장_후_두_이벤트가_커밋_후_발화한다() {
         LetterResDTO result = letterUsecase.createLetter(sender.getId(), req());
 
         assertThat(result.letterId()).isNotNull();
         assertThat(countLetters()).as("쪽지가 저장되어야 한다").isEqualTo(1);
-        assertThat(afterCommitProbe.fired.get())
-                .as("LetterSentEvent 가 save 트랜잭션 안에서 발행되어 AFTER_COMMIT 리스너가 발화해야 한다")
+        assertThat(afterCommitProbe.sentFired.get())
+                .as("LetterSentEvent(알림) 가 AFTER_COMMIT 으로 발화해야 한다")
                 .isEqualTo(1);
+        LetterEmailRequestedEvent email = afterCommitProbe.emailEvent.get();
+        assertThat(email).as("LetterEmailRequestedEvent(이메일) 가 AFTER_COMMIT 으로 발화해야 한다").isNotNull();
+        assertThat(email.receiverEmail()).isEqualTo(receiver.getEmail());
+        assertThat(email.senderName()).isEqualTo(sender.getName());
     }
 
     @Test
-    @DisplayName("메일 발송 실패 시 LetterMailSendFailException 이 전파되지만 쪽지는 이미 커밋되어 남는다(orphan)")
-    void 메일_실패해도_쪽지는_이미_저장되어_있다() {
+    @DisplayName("요청 흐름은 SMTP 를 호출하지 않는다 — 발송은 리스너 책임 (응답 지연 제거)")
+    void 요청_흐름에서_메일을_보내지_않는다() {
+        letterUsecase.createLetter(sender.getId(), req());
+
+        verifyNoInteractions(emailSender);
+    }
+
+    @Test
+    @DisplayName("리스너의 메일 발송이 실패해도 예외를 전파하지 않는다 (쪽지는 이미 커밋됨)")
+    void 리스너_메일_실패는_예외를_전파하지_않는다() {
+        EmailSender failing = mock(EmailSender.class);
         willThrow(new MailSendException("smtp down"))
-                .given(emailSender).sendMail(anyString(), anyString(), anyString());
+                .given(failing).sendMail(anyString(), anyString(), anyString());
+        LetterEmailListener listener = new LetterEmailListener(failing);
 
-        assertThatThrownBy(() -> letterUsecase.createLetter(sender.getId(), req()))
-                .isInstanceOf(LetterMailSendFailException.class);
-
-        assertThat(countLetters())
-                .as("저장이 메일 발송보다 먼저 커밋되어 쪽지 레코드가 남아야 한다")
-                .isEqualTo(1);
+        assertThatCode(() -> listener.handle(new LetterEmailRequestedEvent(
+                1L, sender.getId(), receiver.getId(), "보낸이",
+                receiver.getEmail(), "제목", "내용", "reply@test.com", null)))
+                .doesNotThrowAnyException();
     }
 
     private LetterCreateReqDTO req() {

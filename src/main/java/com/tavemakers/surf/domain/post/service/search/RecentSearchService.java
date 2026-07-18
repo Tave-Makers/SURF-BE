@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.post.service.search;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,23 +17,29 @@ public class RecentSearchService {
     private static final int MAX_SIZE = 10;
     private static final Duration TTL = Duration.ofDays(30); // 필요시 0으로 두면 무기한
 
-    /** 최근 검색어 저장 */
+    // 중복 제거 + 앞 삽입 + 트림 + TTL을 한 번의 왕복으로 처리 (기존 4회 왕복 → 1회)
+    // KEYS[1]=recent 키, ARGV[1]=검색어, ARGV[2]=보관 개수-1, ARGV[3]=TTL(초)
+    private static final DefaultRedisScript<Long> SAVE_QUERY_SCRIPT = new DefaultRedisScript<>(
+            "redis.call('LREM', KEYS[1], 0, ARGV[1]); " +
+                    "redis.call('LPUSH', KEYS[1], ARGV[1]); " +
+                    "redis.call('LTRIM', KEYS[1], 0, ARGV[2]); " +
+                    "redis.call('EXPIRE', KEYS[1], ARGV[3]); " +
+                    "return 1",
+            Long.class
+    );
+
+    /** 최근 검색어 저장 — 중복 제거·삽입·트림·TTL을 Redis 왕복 1회로 처리 */
     @Transactional
     public void saveQuery(Long memberId, String raw) {
         if (raw == null) return;
         String q = normalize(raw);
         if (q.isEmpty()) return;
 
-        String key = key(memberId);
-
-        // 1) 중복 제거
-        redis.opsForList().remove(key, 0, q);
-        // 2) 맨 앞에 삽입
-        redis.opsForList().leftPush(key, q);
-        // 3) 10개로 트림
-        redis.opsForList().trim(key, 0, MAX_SIZE - 1);
-        // 4) TTL 갱신
-        redis.expire(key, TTL);
+        redis.execute(
+                SAVE_QUERY_SCRIPT,
+                List.of(key(memberId)),
+                q, String.valueOf(MAX_SIZE - 1), String.valueOf(TTL.toSeconds())
+        );
     }
 
     /** 최근 검색어 10개 조회 */
