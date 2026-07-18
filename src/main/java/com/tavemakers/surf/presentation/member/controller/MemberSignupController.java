@@ -56,7 +56,7 @@ public class MemberSignupController {
 
             return response;
         } catch (AccountIntegrationAvailableException | EmailAlreadyUsedException | PhoneAlreadyUsedException e) {
-            // 온보딩 검증 예외(case B/C) 및 동시 경합으로 변환된 email/phone 충돌은 GlobalExceptionHandler 전용 핸들러에 위임하여 실제 HTTP 409 로 응답한다. (§3.5/§3.6.2)
+            // 온보딩 검증 예외(case B/C)는 전용 핸들러에 위임해 실제 409로 응답 (§3.5)
             throw e;
         } catch (Exception e) {
 

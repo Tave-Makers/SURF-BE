@@ -5,7 +5,9 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
+import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
 import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
+import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.validator.OnboardingAccountValidator;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -92,5 +95,48 @@ class MemberServiceTest {
         assertThat(member.getName()).isNull();
         assertThat(member.getEmail()).isNull();
         assertThat(member.getStatus()).isEqualTo(MemberStatus.REGISTERING);
+    }
+
+    @Test
+    @DisplayName("전화번호가 공백이라 정규화 결과가 빈 문자열이어도, 무관한 제약 위반을 PhoneAlreadyUsed로 오분류하지 않고 원 예외를 그대로 전파한다")
+    void signup_blankPhone_doesNotMismapUnrelatedConstraintViolation() {
+        Member member = registeringMember();
+        // 정규화: phone "   " → "" (String.contains("")는 항상 true → 오분류 함정)
+        DataIntegrityViolationException unrelated = new DataIntegrityViolationException(
+                "constraint",
+                new RuntimeException("Duplicate entry 'S2024' for key 'uk_member_student_no'"));
+        given(memberRepository.saveAndFlush(member)).willThrow(unrelated);
+
+        assertThatThrownBy(() -> memberService.signup(
+                member, "홍길동", "서울대", "서울대학원", "user@test.com", "   "))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("위반 메시지에 실제 전화번호 값이 있으면 PhoneAlreadyUsedException으로 변환한다")
+    void signup_realPhoneConflict_mapsToPhoneAlreadyUsed() {
+        Member member = registeringMember();
+        DataIntegrityViolationException conflict = new DataIntegrityViolationException(
+                "constraint",
+                new RuntimeException("Duplicate entry '01012345678' for key 'uk_member_phone'"));
+        given(memberRepository.saveAndFlush(member)).willThrow(conflict);
+
+        assertThatThrownBy(() -> memberService.signup(
+                member, "홍길동", "서울대", "서울대학원", "user@test.com", "010-1234-5678"))
+                .isInstanceOf(PhoneAlreadyUsedException.class);
+    }
+
+    @Test
+    @DisplayName("위반 메시지에 실제 이메일 값이 있으면 EmailAlreadyUsedException으로 변환한다")
+    void signup_realEmailConflict_mapsToEmailAlreadyUsed() {
+        Member member = registeringMember();
+        DataIntegrityViolationException conflict = new DataIntegrityViolationException(
+                "constraint",
+                new RuntimeException("Duplicate entry 'user@test.com' for key 'uk_member_email'"));
+        given(memberRepository.saveAndFlush(member)).willThrow(conflict);
+
+        assertThatThrownBy(() -> memberService.signup(
+                member, "홍길동", "서울대", "서울대학원", "user@test.com", "010-1234-5678"))
+                .isInstanceOf(EmailAlreadyUsedException.class);
     }
 }

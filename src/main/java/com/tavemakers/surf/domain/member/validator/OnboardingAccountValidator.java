@@ -14,14 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 온보딩 시 통합 이메일·전화번호를 기존 회원과 대조하여 통합/충돌을 판별한다. (§3.5)
- *
- * <ul>
- *   <li>case A: 이메일·전화번호 둘 다 신규 → 통과 (정상 온보딩)</li>
- *   <li>case B: 이메일·전화번호가 <b>모두 동일</b>한 온보딩 완료(WAITING/APPROVED) 회원 존재(소셜만 다름) → 통합 필요 감지</li>
- *   <li>case C: 부분 일치(한쪽만 일치) 또는 서로 다른 회원 → 온보딩 차단</li>
- * </ul>
- *
+ * 온보딩 시 통합 이메일·전화번호를 기존 회원과 대조해 case A(정상)/B(통합 필요 감지)/C(부분 일치 차단)를 판별한다. (§3.5)
  * 부분 일치는 어떤 경우에도 통과시키지 않는다. (5.A-7)
  */
 @Component
@@ -68,14 +61,7 @@ public class OnboardingAccountValidator {
         return status == MemberStatus.WAITING || status == MemberStatus.APPROVED;
     }
 
-    /**
-     * 신규(self)가 가져오는 소셜 계정이 통합 대상 기존 회원에 연동 가능한지 판별한다.
-     * <ul>
-     *   <li>임시(REGISTERING) 회원은 로그인으로 생성된 소셜 계정이 <b>정확히 1개</b>여야 한다.
-     *       마이그레이션 누락/비정상 데이터로 0개거나 2개 이상이면 통합 대상에서 제외한다(→ case C 차단).</li>
-     *   <li>기존 회원이 이미 그 provider 를 보유하면 통합 시 1 provider = 1 account(5.A-3)를 위반하므로 통합 불가로 본다.</li>
-     * </ul>
-     */
+    /** self 소셜 계정이 정확히 1개이고 기존 회원이 그 provider 를 미보유해야 연동 가능하다 (1 provider=1 account, 5.A-3). */
     private boolean isProviderLinkable(Member self, Member existing) {
         List<SocialAccount> accounts = self.getSocialAccounts();
         if (accounts.size() != 1) {
