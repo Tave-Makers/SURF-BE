@@ -69,11 +69,13 @@ class LetterUsecaseCreateLetterTest {
         final AtomicInteger sentFired = new AtomicInteger();
         final AtomicReference<LetterEmailRequestedEvent> emailEvent = new AtomicReference<>();
 
+        /** 알림 이벤트의 커밋 후 발화를 기록한다 */
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
         public void onLetterSent(LetterSentEvent event) {
             sentFired.incrementAndGet();
         }
 
+        /** 이메일 요청 이벤트의 커밋 후 발화와 페이로드를 기록한다 */
         @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
         public void onEmailRequested(LetterEmailRequestedEvent event) {
             emailEvent.set(event);

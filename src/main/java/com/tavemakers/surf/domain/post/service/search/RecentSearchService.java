@@ -1,14 +1,15 @@
 package com.tavemakers.surf.domain.post.service.search;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecentSearchService {
@@ -28,22 +29,25 @@ public class RecentSearchService {
             Long.class
     );
 
-    /** 최근 검색어 저장 — 중복 제거·삽입·트림·TTL을 Redis 왕복 1회로 처리 */
-    @Transactional
+    /** 최근 검색어 저장 — 중복 제거·삽입·트림·TTL을 Redis 왕복 1회로 처리 (실패해도 검색은 계속) */
     public void saveQuery(Long memberId, String raw) {
         if (raw == null) return;
         String q = normalize(raw);
         if (q.isEmpty()) return;
 
-        redis.execute(
-                SAVE_QUERY_SCRIPT,
-                List.of(key(memberId)),
-                q, String.valueOf(MAX_SIZE - 1), String.valueOf(TTL.toSeconds())
-        );
+        try {
+            redis.execute(
+                    SAVE_QUERY_SCRIPT,
+                    List.of(key(memberId)),
+                    q, String.valueOf(MAX_SIZE - 1), String.valueOf(TTL.toSeconds())
+            );
+        } catch (Exception e) {
+            // 부가 기능이므로 Redis 장애가 검색 응답을 실패시키지 않도록 격리한다
+            log.warn("최근 검색어 저장 실패 (검색은 계속 진행): {}", e.getMessage());
+        }
     }
 
     /** 최근 검색어 10개 조회 */
-    @Transactional(readOnly = true)
     public List<String> getRecent10(Long memberId) {
         String key = key(memberId);
         List<String> items = redis.opsForList().range(key, 0, MAX_SIZE - 1);
@@ -51,13 +55,11 @@ public class RecentSearchService {
     }
 
     /** 최근 검색어 전체 삭제 */
-    @Transactional
     public void clearAll(Long memberId) {
         redis.delete(key(memberId));
     }
 
     /** 특정 검색어 삭제 */
-    @Transactional
     public void deleteOne(Long memberId, String rawKeyword) {
         if (rawKeyword == null) return;
 

@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
@@ -38,8 +37,11 @@ public class ViewCountService {
 
     private final StringRedisTemplate redisTemplate;
 
-    /** 게시글 조회수 증가 및 반환 — Redis 왕복 1회 (장애 시 DB 직접 증가 폴백) */
-    @Transactional
+    /**
+     * 게시글 조회수 증가 및 반환 — Redis 왕복 1회.
+     * 장애 시 DB 직접 증가로 폴백하며, 이 경우 더티체킹 반영을 위해
+     * 호출자(usecase/query)의 트랜잭션 안에서 호출되어야 한다.
+     */
     public int increaseViewCount(Post post, Long viewerId) {
         String viewCountKey = generateViewCountKey(post.getId());
         String viewersKey = generateViewersKey(post.getId(), viewerId);
