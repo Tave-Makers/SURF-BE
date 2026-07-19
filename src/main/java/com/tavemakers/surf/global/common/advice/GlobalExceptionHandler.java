@@ -48,19 +48,20 @@ public class GlobalExceptionHandler {
         return responseException(e.getStatus(), e.getMessage(), data);
     }
 
-    /** 온보딩 통합 필요 감지 (case B, §3.5). message 로 프론트가 분기하며, integrationToken 등 data 페이로드는 Phase 4 에서 추가한다. */
+    /** 온보딩 통합 필요 감지 (case B, §3.5 / §3.6.2). message 는 한글 안내, 프론트는 data.reason 으로 분기한다. integrationToken 등 data 페이로드는 Phase 4 에서 추가한다. */
     @ExceptionHandler(AccountIntegrationAvailableException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccountIntegrationAvailable(AccountIntegrationAvailableException e) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleAccountIntegrationAvailable(AccountIntegrationAvailableException e) {
         logWarning(e, e.getStatus().value());
-        return responseException(e.getStatus(), "ACCOUNT_INTEGRATION_REQUIRED", null);
+        Map<String, String> data = Map.of("reason", "ACCOUNT_INTEGRATION_REQUIRED");
+        return responseException(e.getStatus(), e.getMessage(), data);
     }
 
-    /** 온보딩 부분 일치 차단 (case C, §3.5 / §3.6.2). 어느 필드가 일치했는지는 노출하지 않는다(계정 존재 유추 방지). */
+    /** 온보딩 부분 일치 차단 (case C, §3.5 / §3.6.2). message 는 한글 안내, 프론트는 data.reason 으로 분기한다. 어느 필드가 일치했는지는 노출하지 않는다(계정 존재 유추 방지). */
     @ExceptionHandler({EmailAlreadyUsedException.class, PhoneAlreadyUsedException.class})
     public ResponseEntity<ApiResponse<Map<String, String>>> handleOnboardingConflict(BaseException e) {
         logWarning(e, e.getStatus().value());
-        Map<String, String> data = Map.of("reason", "EMAIL_OR_PHONE_PARTIAL_MATCH");
-        return responseException(e.getStatus(), "ACCOUNT_CONFLICT_BLOCKED", data);
+        Map<String, String> data = Map.of("reason", "ACCOUNT_CONFLICT_BLOCKED");
+        return responseException(e.getStatus(), e.getMessage(), data);
     }
 
     @ExceptionHandler(BaseException.class)
