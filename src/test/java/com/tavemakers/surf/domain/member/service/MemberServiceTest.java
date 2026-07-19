@@ -98,10 +98,40 @@ class MemberServiceTest {
     }
 
     @Test
-    @DisplayName("전화번호가 공백이라 정규화 결과가 빈 문자열이어도, 무관한 제약 위반을 PhoneAlreadyUsed로 오분류하지 않고 원 예외를 그대로 전파한다")
+    @DisplayName("이메일이 null/공백이면 IllegalArgumentException — DTO 검증에 의존하지 않는 서비스 자체 방어")
+    void signup_blankEmail_throwsIllegalArgument() {
+        Member member = registeringMember();
+
+        assertThatThrownBy(() -> memberService.signup(
+                member, "홍길동", "서울대", "서울대학원", "   ", "010-1234-5678"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> memberService.signup(
+                member, "홍길동", "서울대", "서울대학원", null, "010-1234-5678"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        then(memberBlacklistGetService).shouldHaveNoInteractions();
+        assertThat(member.getStatus()).isEqualTo(MemberStatus.REGISTERING);
+    }
+
+    @Test
+    @DisplayName("공백/구분자만 있는 전화번호는 null로 정규화되어 검증·저장에 전달된다 (빈 문자열 조회·UNIQUE '' 점유 방지)")
+    void signup_blankPhone_foldsToNull() {
+        Member member = registeringMember();
+
+        memberService.signup(member, "홍길동", "서울대", "서울대학원", "test@example.com", " -- ");
+
+        then(memberBlacklistGetService).should()
+                .validateNotBlacklisted(null, "test@example.com", null);
+        then(onboardingAccountValidator).should()
+                .validateForOnboarding(member, "test@example.com", null);
+        assertThat(member.getPhoneNumber()).isNull();
+    }
+
+    @Test
+    @DisplayName("전화번호가 공백이어도(정규화 → null), 무관한 제약 위반을 PhoneAlreadyUsed로 오분류하지 않고 원 예외를 그대로 전파한다")
     void signup_blankPhone_doesNotMismapUnrelatedConstraintViolation() {
         Member member = registeringMember();
-        // 정규화: phone "   " → "" (String.contains("")는 항상 true → 오분류 함정)
+        // 정규화: phone "   " → null (빈 문자열로 남기면 String.contains("")가 항상 true → 오분류 함정)
         DataIntegrityViolationException unrelated = new DataIntegrityViolationException(
                 "constraint",
                 new RuntimeException("Duplicate entry 'S2024' for key 'uk_member_student_no'"));

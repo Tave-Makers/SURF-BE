@@ -35,8 +35,9 @@ public class OnboardingAccountValidator {
             return;
         }
 
-        // case B) 이메일·전화번호가 모두 동일한 단일 회원이며, 온보딩 완료 상태 + 연동 가능한 provider(정확히 1개·미보유)일 때만 통합 필요 감지
-        if (emailOwner != null && phoneOwner != null
+        // case B) REGISTERING self 기준, 이메일·전화번호가 모두 동일한 단일 회원이 온보딩 완료 상태 + 연동 가능 provider(정확히 1개·미보유)일 때만 통합 필요 감지 — 비REGISTERING self(WAITING 재제출 등)는 case C로 차단 (5.A-4)
+        if (self.isRegistering()
+                && emailOwner != null && phoneOwner != null
                 && emailOwner.getId().equals(phoneOwner.getId())
                 && isIntegrationTarget(emailOwner)
                 && isProviderLinkable(self, emailOwner)) {

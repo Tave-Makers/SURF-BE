@@ -69,6 +69,18 @@ class OnboardingAccountValidatorTest {
     }
 
     @Test
+    @DisplayName("case C) self가 REGISTERING이 아니면(WAITING 재제출 등) 완전 일치·연동 가능이어도 통합 감지가 아니라 차단한다")
+    void caseC_selfNotRegistering_throwsBlocked() {
+        Member self = member(1L, MemberStatus.WAITING, Provider.KAKAO); // 이미 온보딩 완료한 self의 재제출
+        Member owner = member(2L, MemberStatus.APPROVED, Provider.APPLE); // KAKAO 미보유 — self가 REGISTERING이었다면 case B
+        given(memberRepository.findByEmail(EMAIL)).willReturn(Optional.of(owner));
+        given(memberRepository.findByPhoneNumber(PHONE)).willReturn(Optional.of(owner));
+
+        assertThatThrownBy(() -> validator.validateForOnboarding(self, EMAIL, PHONE))
+                .isInstanceOf(EmailAlreadyUsedException.class);
+    }
+
+    @Test
     @DisplayName("case C) 이메일만 일치하면 EmailAlreadyUsedException 으로 차단한다")
     void caseC_emailOnly_throwsEmailUsed() {
         Member self = member(1L, MemberStatus.REGISTERING, Provider.KAKAO);

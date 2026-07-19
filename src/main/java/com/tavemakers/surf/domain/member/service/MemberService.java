@@ -35,11 +35,15 @@ public class MemberService {
             String rawEmail,
             String rawPhone
     ) {
-        // 이메일 및 전화번호 정규화
+        // 이메일 필수 방어 — DTO 검증에 기대지 않는다. 빈 값이 findByEmail("") 조회·UNIQUE '' 점유로 샌다
+        if (!StringUtils.hasText(rawEmail)) {
+            throw new IllegalArgumentException("이메일은 필수 입력값입니다.");
+        }
+
+        // 이메일 및 전화번호 정규화 — 전화번호는 숫자만 남기고, 빈 결과는 null(미입력)로 접는다
         final String normalizedEmail = rawEmail.trim().toLowerCase(Locale.ROOT);
-        final String normalizedPhone = rawPhone == null
-                ? null
-                : rawPhone.replaceAll("\\D", "");
+        final String phoneDigits = rawPhone == null ? "" : rawPhone.replaceAll("\\D", "");
+        final String normalizedPhone = phoneDigits.isEmpty() ? null : phoneDigits;
 
         memberBlacklistGetService.validateNotBlacklisted(null, normalizedEmail, normalizedPhone);
 
