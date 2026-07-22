@@ -40,6 +40,11 @@ public class MemberService {
             throw new IllegalArgumentException("이메일은 필수 입력값입니다.");
         }
 
+        // 통합으로 소셜 계정이 이전된 회원(잔존 access token)의 온보딩 차단 — 고아 회원 방지 (§3.6.3)
+        if (member.getSocialAccounts().isEmpty()) {
+            throw new IllegalArgumentException("소셜 계정이 연결되지 않은 회원은 온보딩할 수 없습니다.");
+        }
+
         // 이메일 및 전화번호 정규화 — 전화번호는 숫자만 남기고, 빈 결과는 null(미입력)로 접는다
         final String normalizedEmail = rawEmail.trim().toLowerCase(Locale.ROOT);
         final String phoneDigits = rawPhone == null ? "" : rawPhone.replaceAll("\\D", "");

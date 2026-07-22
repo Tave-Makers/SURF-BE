@@ -1,7 +1,9 @@
 package com.tavemakers.surf.domain.member.service;
 
 import com.tavemakers.surf.application.member.query.MemberBlacklistGetService;
+import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.SocialAccount;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
@@ -40,9 +42,14 @@ class MemberServiceTest {
     private MemberService memberService;
 
     private Member registeringMember() {
-        return Member.builder()
+        Member member = Member.builder()
                 .status(MemberStatus.REGISTERING)
                 .build();
+        member.addSocialAccount(SocialAccount.builder()
+                .provider(Provider.KAKAO)
+                .providerId("pid-kakao")
+                .build());
+        return member;
     }
 
     @Test
@@ -95,6 +102,19 @@ class MemberServiceTest {
         assertThat(member.getName()).isNull();
         assertThat(member.getEmail()).isNull();
         assertThat(member.getStatus()).isEqualTo(MemberStatus.REGISTERING);
+    }
+
+    @Test
+    @DisplayName("소셜 계정이 없는 회원(통합으로 이전됨)은 온보딩할 수 없다 — 고아 회원 방지 가드")
+    void signup_withoutSocialAccount_throws() {
+        Member integratedAway = Member.builder().status(MemberStatus.REGISTERING).build();
+
+        assertThatThrownBy(() -> memberService.signup(
+                integratedAway, "홍길동", "서울대", "서울대학원", "test@example.com", "010-1234-5678"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        then(memberBlacklistGetService).shouldHaveNoInteractions();
+        assertThat(integratedAway.getStatus()).isEqualTo(MemberStatus.REGISTERING);
     }
 
     @Test
