@@ -21,6 +21,10 @@ import lombok.NoArgsConstructor;
                 @UniqueConstraint(
                         name = "uk_social_provider_provider_id",
                         columnNames = {"provider", "provider_id"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_social_member_provider",
+                        columnNames = {"member_id", "provider"}
                 )
         },
         indexes = {
@@ -127,6 +131,20 @@ public class SocialAccount extends BaseEntity {
         // 양방향 일관성 유지
         if (!member.getSocialAccounts().contains(this)) {
             member.getSocialAccounts().add(this);
+        }
+    }
+
+    /**
+     * 계정 통합 — 소유권을 기존 회원으로 이전한다 (§3.6).
+     * 기존 소유자 컬렉션에서 제거하면 orphanRemoval로 이 행이 삭제되므로, FK만 갱신하고 대상 컬렉션에만 추가한다.
+     */
+    public void reassignTo(Member newMember) {
+        if (newMember == null) {
+            throw new IllegalArgumentException("newMember는 null일 수 없습니다.");
+        }
+        this.member = newMember;
+        if (!newMember.getSocialAccounts().contains(this)) {
+            newMember.getSocialAccounts().add(this);
         }
     }
 

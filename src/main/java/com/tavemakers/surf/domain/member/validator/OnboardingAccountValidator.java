@@ -41,7 +41,10 @@ public class OnboardingAccountValidator {
                 && emailOwner.getId().equals(phoneOwner.getId())
                 && isIntegrationTarget(emailOwner)
                 && isProviderLinkable(self, emailOwner)) {
-            throw new AccountIntegrationAvailableException();
+            SocialAccount socialAccount = self.getSocialAccounts().get(0); // isProviderLinkable에서 정확히 1개 보장
+            throw AccountIntegrationAvailableException.detected(
+                    self.getId(), socialAccount.getId(), socialAccount.getProvider(),
+                    normalizedEmail, normalizedPhone);
         }
 
         // case C) 부분 일치 / 서로 다른 회원 / 통합 불가 상태 → 온보딩 차단

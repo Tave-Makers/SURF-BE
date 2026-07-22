@@ -2,9 +2,11 @@ package com.tavemakers.surf.domain.member.repository;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +27,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     /** 통합(계정 매칭) 판단 기준 — 온보딩 입력 전화번호로 기존 회원 조회 (Phase 3, §3.5). */
     Optional<Member> findByPhoneNumber(String phoneNumber);
+
+    /** 통합 확정 시 임시 회원 행 락 조회 — 온보딩 커밋과 직렬화해 REGISTERING 상태를 최신으로 재검증한다 (§3.6.3). */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Member> findWithLockingById(Long id);
 
     //현재 활동 중 + 특정 이름을 가진 회원 리스트 반환
     List<Member> findByActivityStatusAndNameAndStatusNot(Boolean activityStatus, String name, MemberStatus status);
