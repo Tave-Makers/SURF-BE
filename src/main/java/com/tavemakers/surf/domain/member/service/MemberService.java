@@ -50,7 +50,7 @@ public class MemberService {
         final String phoneDigits = rawPhone == null ? "" : rawPhone.replaceAll("\\D", "");
         final String normalizedPhone = phoneDigits.isEmpty() ? null : phoneDigits;
 
-        memberBlacklistGetService.validateNotBlacklisted(null, normalizedEmail, normalizedPhone);
+        memberBlacklistGetService.validateNotBlacklisted(normalizedEmail, normalizedPhone);
 
         // 온보딩 계정 검증 (case A/B/C, §3.5)
         onboardingAccountValidator.validateForOnboarding(member, normalizedEmail, normalizedPhone);

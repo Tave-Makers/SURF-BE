@@ -61,7 +61,7 @@ class MemberServiceTest {
                 member, "홍길동", "서울대", "서울대학원", " TEST@Example.COM ", "010-1234-5678");
 
         then(memberBlacklistGetService).should()
-                .validateNotBlacklisted(null, "test@example.com", "01012345678");
+                .validateNotBlacklisted("test@example.com", "01012345678");
 
         assertThat(result).isSameAs(member);
         assertThat(result.getName()).isEqualTo("홍길동");
@@ -83,7 +83,7 @@ class MemberServiceTest {
         memberService.signup(member, "홍길동", "서울대", "서울대학원", "test@example.com", null);
 
         then(memberBlacklistGetService).should()
-                .validateNotBlacklisted(null, "test@example.com", null);
+                .validateNotBlacklisted("test@example.com", null);
         assertThat(member.getPhoneNumber()).isNull();
     }
 
@@ -93,7 +93,7 @@ class MemberServiceTest {
         Member member = registeringMember();
         willThrow(new MemberBlacklistedException())
                 .given(memberBlacklistGetService)
-                .validateNotBlacklisted(null, "blacklisted@test.com", "01012345678");
+                .validateNotBlacklisted("blacklisted@test.com", "01012345678");
 
         assertThatThrownBy(() -> memberService.signup(
                 member, "홍길동", "서울대", "서울대학원", "blacklisted@test.com", "010-1234-5678"))
@@ -141,7 +141,7 @@ class MemberServiceTest {
         memberService.signup(member, "홍길동", "서울대", "서울대학원", "test@example.com", " -- ");
 
         then(memberBlacklistGetService).should()
-                .validateNotBlacklisted(null, "test@example.com", null);
+                .validateNotBlacklisted("test@example.com", null);
         then(onboardingAccountValidator).should()
                 .validateForOnboarding(member, "test@example.com", null);
         assertThat(member.getPhoneNumber()).isNull();

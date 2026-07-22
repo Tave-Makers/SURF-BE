@@ -63,7 +63,7 @@ public class SocialAccountIntegrateUsecase {
         if (existingMember.hasProvider(pending.getProvider())) {
             throw new ProviderAlreadyLinkedException();
         }
-        memberBlacklistGetService.validateNotBlacklisted(null, pending.getNormalizedEmail(), pending.getNormalizedPhone());
+        memberBlacklistGetService.validateNotBlacklisted(pending.getNormalizedEmail(), pending.getNormalizedPhone());
 
         // 임시 회원 행 락 — 온보딩 커밋과 직렬화해 REGISTERING을 최신 상태로 재검증한다(발급 후 온보딩 완료 회원의 로그인 수단 탈취 방지, 5.A-4)
         Member tempMember = memberRepository.findWithLockingById(pending.getTempMemberId())

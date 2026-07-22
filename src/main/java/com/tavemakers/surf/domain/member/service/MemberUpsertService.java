@@ -34,9 +34,11 @@ public class MemberUpsertService {
 
     /**
      * SocialAccount 로 기존 회원을 조회하고, 있으면 provider 가 준 이메일로 providerEmail 을 갱신한다.
+     * <p>매칭된 기존 회원은 통합 이메일/전화번호(Member.email / Member.phoneNumber) 기준으로
+     * 블랙리스트를 검사한다 — provider 이메일(SocialAccount.providerEmail)은 검증 기준이 아니다 (5.A-8).
      * <p>탈퇴(WITHDRAWN) 회원에 매칭되면 잔존 SocialAccount 를 정리하고 빈 결과를 반환해
      * 신규 가입 경로로 보낸다 — withdraw 가 소셜 계정을 지우기 전에 탈퇴한 기존 데이터의 자가 치유.
-     * (탈퇴자가 재로그인하면 새 계정으로 가입 시작. 퇴출/제명자는 블랙리스트가 신규 가입을 차단한다.)
+     * (탈퇴자가 재로그인하면 새 계정으로 가입 시작. 퇴출/제명자는 온보딩/통합 단계 블랙리스트가 재가입을 차단한다.)
      */
     private Optional<Member> findExistingMember(Provider provider, OAuthUserInfoDTO info) {
         return socialAccountRepository.findByProviderAndProviderId(provider, info.oauthId())
@@ -49,6 +51,7 @@ public class MemberUpsertService {
                         socialAccountRepository.flush();
                         return Optional.empty();
                     }
+                    memberBlacklistGetService.validateNotBlacklisted(member.getEmail(), member.getPhoneNumber());
                     refreshProviderEmail(socialAccount, info.email());
                     return Optional.of(member);
                 });
@@ -56,12 +59,11 @@ public class MemberUpsertService {
 
     /**
      * 신규 소셜 계정 로그인 — REGISTERING 회원 + SocialAccount 를 현재 트랜잭션에서 생성/연결한다.
+     * <p>provider 이메일만으로는 차단하지 않는다 — 블랙리스트 기준은 통합 이메일/전화번호이며,
+     * 신규 사용자는 온보딩(MemberService.signup)과 계정 통합(SocialAccountIntegrateUsecase)에서 검증된다.
      * <p>동시 첫 로그인 경합 시 한쪽은 UNIQUE 제약 위반으로 트랜잭션이 롤백되며(재시도 시 정상 진입), 오염된 세션에서 복구를 시도하지 않는다.
      */
     private Member createNewSocialMember(Provider provider, OAuthUserInfoDTO info) {
-        Long kakaoId = provider == Provider.KAKAO ? Long.parseLong(info.oauthId()) : null;
-        memberBlacklistGetService.validateNotBlacklisted(kakaoId, info.email(), null);
-
         Member member = Member.createRegisteringFromOAuth(provider, info);
         SocialAccount socialAccount = SocialAccount.createFromOAuth(provider, info);
         member.addSocialAccount(socialAccount);
