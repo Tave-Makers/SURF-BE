@@ -6,10 +6,12 @@ import com.tavemakers.surf.presentation.member.dto.response.*;
 import com.tavemakers.surf.domain.member.dto.CareerCreateCommand;
 import com.tavemakers.surf.domain.member.dto.CareerUpdateCommand;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.PendingSocialIntegration;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
+import com.tavemakers.surf.domain.member.exception.AccountIntegrationAvailableException;
 import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
 import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
@@ -30,6 +32,7 @@ import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -43,6 +46,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.tavemakers.surf.domain.member.exception.ErrorMessage.ACCOUNT_INTEGRATION_AVAILABLE;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +65,7 @@ public class MemberUsecase {
     private final MemberPatchService memberPatchService;
     private final MemberService memberService;
     private final MemberWithdrawService memberWithdrawService;
+    private final PendingIntegrationUsecase pendingIntegrationUsecase;
     private final ApplicationContext context;
     private final LogEventEmitter logEventEmitter;
     //</editor-fold>
@@ -321,8 +327,26 @@ public class MemberUsecase {
             throw new MemberSignupRejectedException();
         }
 
-        return proxy.signupCreate(member, request);
+        try {
+            return proxy.signupCreate(member, request);
+        } catch (AccountIntegrationAvailableException e) {
+            // case B: 온보딩 tx는 롤백됨 → pending을 REQUIRES_NEW로 독립 커밋하고 토큰을 실어 재전파 (§3.6)
+            throw AccountIntegrationAvailableException.issued(
+                    issueIntegrationToken(e), PendingSocialIntegration.TTL_SECONDS,
+                    ACCOUNT_INTEGRATION_AVAILABLE.getMessage());
+        }
+    }
 
+    /** pending 발급 — 동시 이중 제출의 UNIQUE 경쟁에서 지면 승자의 토큰을 재조회해 반환한다(멱등 발급). */
+    private String issueIntegrationToken(AccountIntegrationAvailableException e) {
+        try {
+            return pendingIntegrationUsecase.issue(
+                    e.getTempMemberId(), e.getSocialAccountId(), e.getProvider(),
+                    e.getNormalizedEmail(), e.getNormalizedPhone());
+        } catch (DataIntegrityViolationException race) {
+            return pendingIntegrationUsecase.findIssuedToken(e.getSocialAccountId())
+                    .orElseThrow(() -> race);
+        }
     }
 
     /** 회원가입 create 로그 (온보딩) */
