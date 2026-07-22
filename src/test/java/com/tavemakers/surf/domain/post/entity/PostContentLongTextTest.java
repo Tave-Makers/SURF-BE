@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.post.entity;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -39,9 +38,6 @@ class PostContentLongTextTest {
     void setUp() {
         // Member 생성
         member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("longtext-test-123456789")
-                .kakaoId(123456789L)
                 .name("테스트유저")
                 .email("test@test.com")
                 .phoneNumber("01000000000")

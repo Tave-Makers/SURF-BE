@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.team.service;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.application.member.query.TrackGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -118,9 +117,6 @@ class TeamDeleteCleanupTest {
 
     private Member persistMember(String prefix) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(prefix + System.nanoTime() + "@test.com")
                 .phoneNumber(String.valueOf(System.nanoTime()))

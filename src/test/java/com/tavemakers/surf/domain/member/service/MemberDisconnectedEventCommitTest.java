@@ -75,8 +75,6 @@ class MemberDisconnectedEventCommitTest {
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         return tx.execute(status -> {
             Member member = Member.builder()
-                    .provider(Provider.KAKAO)
-                    .providerId("legacy-" + System.nanoTime())
                     .name("회원")
                     .email("commit" + System.nanoTime() + "@test.com")
                     .status(MemberStatus.APPROVED)

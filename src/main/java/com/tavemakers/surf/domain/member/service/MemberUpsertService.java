@@ -64,7 +64,7 @@ public class MemberUpsertService {
      * <p>동시 첫 로그인 경합 시 한쪽은 UNIQUE 제약 위반으로 트랜잭션이 롤백되며(재시도 시 정상 진입), 오염된 세션에서 복구를 시도하지 않는다.
      */
     private Member createNewSocialMember(Provider provider, OAuthUserInfoDTO info) {
-        Member member = Member.createRegisteringFromOAuth(provider, info);
+        Member member = Member.createRegisteringFromOAuth(info);
         SocialAccount socialAccount = SocialAccount.createFromOAuth(provider, info);
         member.addSocialAccount(socialAccount);
 

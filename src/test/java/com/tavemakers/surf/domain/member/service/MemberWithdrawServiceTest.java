@@ -37,8 +37,6 @@ class MemberWithdrawServiceTest {
 
     private Member approvedMember(Long id, SocialAccount... socialAccounts) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO) // 레거시 컬럼(Phase 6 제거 예정) — 스냅샷 캡처와 무관
-                .providerId("legacy-" + id)
                 .name("홍길동")
                 .email("hong" + id + "@test.com")
                 .status(MemberStatus.APPROVED)
@@ -155,8 +153,6 @@ class MemberWithdrawServiceTest {
     @DisplayName("expel — 이미 WITHDRAWN 상태면 연결 해제 이벤트는 발행하되 withdraw()는 다시 수행하지 않는다")
     void expel_whenAlreadyWithdrawn_skipsWithdrawButStillDisconnects() {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("legacy-11")
                 .name("홍길동")
                 .email("hong2@test.com")
                 .status(MemberStatus.WITHDRAWN)
