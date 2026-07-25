@@ -1,6 +1,5 @@
 package com.tavemakers.surf.infrastructure.post.repository;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -55,9 +54,6 @@ class PostJdbcRepositoryTest {
         entityManager.persist(category);
 
         Member author = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email("author" + System.nanoTime() + "@test.com")
                 .status(MemberStatus.APPROVED)

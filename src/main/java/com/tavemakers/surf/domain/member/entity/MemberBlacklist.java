@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
         indexes = {
-                @Index(name = "idx_member_blacklist_kakao_id", columnList = "kakao_id"),
                 @Index(name = "idx_member_blacklist_email", columnList = "email"),
                 @Index(name = "idx_member_blacklist_phone_number", columnList = "phone_number")
         }
@@ -26,8 +25,6 @@ public class MemberBlacklist extends BaseEntity {
     private Long id;
 
     private Long memberId;
-
-    private Long kakaoId;
 
     @Column(nullable = false)
     private String name;
@@ -47,7 +44,6 @@ public class MemberBlacklist extends BaseEntity {
     @Builder
     private MemberBlacklist(
             Long memberId,
-            Long kakaoId,
             String name,
             String email,
             String phoneNumber,
@@ -55,7 +51,6 @@ public class MemberBlacklist extends BaseEntity {
             Long processedBy
     ) {
         this.memberId = memberId;
-        this.kakaoId = kakaoId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
@@ -63,6 +58,7 @@ public class MemberBlacklist extends BaseEntity {
         this.processedBy = processedBy;
     }
 
+    /** 재가입 차단 기준은 통합 이메일/전화번호(회원 기준)다 — provider 식별자(kakaoId 등)는 저장하지 않는다 (5.A-8). */
     public static MemberBlacklist of(
             Member member,
             MemberBlacklistActionType actionType,
@@ -72,7 +68,6 @@ public class MemberBlacklist extends BaseEntity {
     ) {
         return MemberBlacklist.builder()
                 .memberId(member.getId())
-                .kakaoId(member.getKakaoId())
                 .name(member.getName())
                 .email(normalizedEmail)
                 .phoneNumber(normalizedPhoneNumber)

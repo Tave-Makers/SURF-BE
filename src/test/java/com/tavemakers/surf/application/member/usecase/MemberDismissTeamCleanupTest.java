@@ -1,6 +1,5 @@
 package com.tavemakers.surf.application.member.usecase;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.comment.service.CommentLikeService;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -189,9 +188,6 @@ class MemberDismissTeamCleanupTest {
 
     private Member persistMember(String prefix) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(prefix + System.nanoTime() + "@test.com")
                 .phoneNumber(String.valueOf(System.nanoTime()))

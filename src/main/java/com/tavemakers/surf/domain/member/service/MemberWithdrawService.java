@@ -32,14 +32,11 @@ public class MemberWithdrawService {
 
     /**
      * 연결 해제 이벤트 발행 — 외부 API(Kakao/Apple)와 refresh 무효화는 커밋 후 리스너가 처리.
-     * member.withdraw()가 appleRefreshToken/kakaoId를 지우기 전에 값을 이벤트에 캡처한다.
+     * member.withdraw()가 socialAccounts.clear()로 지우기 전에 연결된 모든 소셜 계정의
+     * provider별 unlink/revoke 값을 불변 스냅샷으로 캡처한다 (Kakao+Apple 다중 연결 회원은 양쪽 모두 해제).
      */
     public void disconnectMember(Member member) {
-        eventPublisher.publishEvent(new MemberDisconnectedEvent(
-                member.getId(),
-                member.getProvider(),
-                member.getKakaoId(),
-                member.getAppleRefreshToken()
-        ));
+        eventPublisher.publishEvent(
+                MemberDisconnectedEvent.from(member.getId(), member.getSocialAccounts()));
     }
 }
