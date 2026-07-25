@@ -1,7 +1,6 @@
 package com.tavemakers.surf.application.score.query;
 
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -77,9 +76,6 @@ class PersonalScoreConcurrencyTest {
 
     private Member persistMember(String email) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(email)
                 .status(MemberStatus.APPROVED)

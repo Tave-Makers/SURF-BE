@@ -12,7 +12,6 @@ class MemberGenerationStatusSyncTest {
 
     private Member createMember(MemberType memberType, boolean activityStatus) {
         return Member.builder()
-                .kakaoId(987654321L)
                 .name("기수동기화테스트")
                 .email("generation@test.com")
                 .status(MemberStatus.APPROVED)

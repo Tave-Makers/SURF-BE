@@ -1,6 +1,5 @@
 package com.tavemakers.surf.application.reservation.task;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -132,9 +131,6 @@ class PostPublishRunnerRaceTest {
 
     private Member persistMember(String email) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(email)
                 .status(MemberStatus.APPROVED)

@@ -45,8 +45,6 @@ class MemberUpsertServiceBlacklistTest {
     /** 온보딩 완료(APPROVED) 회원 — 통합 이메일/전화번호 보유. */
     private Member approvedMember(String email, String phone) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("legacy-" + System.nanoTime())
                 .name("기존회원")
                 .email(email)
                 .phoneNumber(phone)

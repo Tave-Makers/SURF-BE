@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.MemberBlacklist;
 import com.tavemakers.surf.domain.member.entity.enums.MemberBlacklistActionType;
@@ -36,8 +35,6 @@ class MemberBlacklistCreateServiceTest {
 
     private Member member(String email, String phone) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("legacy-1")
                 .name("회원")
                 .email(email)
                 .phoneNumber(phone)

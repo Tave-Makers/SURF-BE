@@ -29,7 +29,6 @@ class MemberGenerationSyncServiceTest {
 
     private Member createApprovedMember(String email) {
         return Member.builder()
-                .kakaoId(System.nanoTime())
                 .name("승인회원")
                 .email(email)
                 .status(MemberStatus.APPROVED)

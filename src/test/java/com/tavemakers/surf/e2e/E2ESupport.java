@@ -3,6 +3,7 @@ package com.tavemakers.surf.e2e;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.member.entity.SocialAccount;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
@@ -86,13 +87,10 @@ public abstract class E2ESupport {
     @MockBean
     protected JavaMailSender javaMailSender;
 
-    /** 승인 상태의 회원을 실제 DB에 저장한다(카카오 provider). */
+    /** 승인 상태의 회원을 카카오 SocialAccount 연결과 함께 실제 DB에 저장한다 (실 데이터와 동일한 형태). */
     protected Member persistMember(MemberRole role) {
         long seq = PROVIDER_SEQ.getAndIncrement();
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("e2e-provider-" + seq)
-                .kakaoId(900000L + seq)
                 .name("E2E회원" + seq)
                 .email("e2e" + seq + "@surf.local")
                 .phoneNumber("0101000" + String.format("%04d", seq))
@@ -102,6 +100,11 @@ public abstract class E2ESupport {
                 .memberType(MemberType.YB)
                 .activityStatus(true)
                 .build();
+        member.addSocialAccount(SocialAccount.builder()
+                .provider(Provider.KAKAO)
+                .providerId("e2e-provider-" + seq)
+                .kakaoId(900000L + seq)
+                .build());
         Member saved = memberRepository.save(member);
         memberRepository.flush();
         return saved;

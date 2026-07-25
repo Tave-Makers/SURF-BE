@@ -103,12 +103,8 @@ public class AppleLoginUsecase {
         return payload;
     }
 
-    /**
-     * Apple refresh_token 을 SocialAccount(신규 정규 저장소)와 Member(레거시, 탈퇴 revoke 호환)에 함께 저장한다.
-     * SocialAccount 로 탈퇴 로직이 이관되면(Phase 5) Member 쪽 저장은 제거한다.
-     */
+    /** Apple refresh_token 을 SocialAccount(정규 저장소)에 저장한다 — 탈퇴 시 revoke 에 사용. */
     private void updateAppleRefreshToken(Member member, String refreshToken) {
-        member.updateAppleRefreshToken(refreshToken);
         member.findSocialAccount(Provider.APPLE)
                 .ifPresent(sa -> sa.updateAppleRefreshToken(refreshToken));
     }
