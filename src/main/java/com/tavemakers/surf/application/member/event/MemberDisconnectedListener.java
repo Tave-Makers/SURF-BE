@@ -50,6 +50,7 @@ public class MemberDisconnectedListener {
     @Value("${kakao.unlink-uri}")
     private String unlinkUri;
 
+    /** 커밋 이후 refresh 토큰을 무효화하고 연결된 각 provider(Kakao/Apple)를 해제한다. */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(MemberDisconnectedEvent event) {
@@ -88,10 +89,19 @@ public class MemberDisconnectedListener {
             log.warn("[APPLE][REVOKE] appleRefreshToken 없음 — revoke 생략");
             return;
         }
-        // App(Bundle ID) 기준으로 먼저 시도, 이후 Web(Service ID) 기준으로 시도
+        // App(Bundle ID)·Web(Service ID)를 각각 독립 시도 — 한쪽 실패가 다른 쪽 시도를 막지 않는다
         // Apple /auth/revoke는 잘못된 client_id로 호출해도 HTTP 200을 반환하므로 에러 로그 오염 없음
-        appleApiClient.revokeAppToken(appleRefreshToken);
-        appleApiClient.revokeToken(appleRefreshToken);
+        revokeAppleQuietly(() -> appleApiClient.revokeAppToken(appleRefreshToken), "revokeAppToken");
+        revokeAppleQuietly(() -> appleApiClient.revokeToken(appleRefreshToken), "revokeToken");
+    }
+
+    /** Apple revoke 단계 격리 — 한 호출 실패가 다음 호출을 막지 않도록 개별 보호한다. */
+    private void revokeAppleQuietly(Runnable revoke, String label) {
+        try {
+            revoke.run();
+        } catch (Exception e) {
+            log.error("[APPLE][REVOKE] {} 실패", label, e);
+        }
     }
 
     private void unlinkKakao(Long kakaoId) {

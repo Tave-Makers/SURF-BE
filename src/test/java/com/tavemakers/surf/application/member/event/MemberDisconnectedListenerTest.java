@@ -67,6 +67,20 @@ class MemberDisconnectedListenerTest {
     }
 
     @Test
+    @DisplayName("Apple revokeAppToken이 실패해도 revokeToken은 시도된다 (단계별 격리)")
+    void handle_appleRevokeAppTokenFails_stillRevokesToken() {
+        willThrow(new RuntimeException("app revoke 실패"))
+                .given(appleApiClient).revokeAppToken("apple-rt");
+
+        assertThatCode(() -> listener.handle(event(
+                new SocialAccountSnapshot(Provider.APPLE, null, "apple-rt"))))
+                .doesNotThrowAnyException();
+
+        then(appleApiClient).should().revokeAppToken("apple-rt");
+        then(appleApiClient).should().revokeToken("apple-rt");
+    }
+
+    @Test
     @DisplayName("refresh 토큰 무효화가 실패해도 provider 연결 해제는 계속 수행된다 (장애 격리)")
     void handle_refreshInvalidationFailure_doesNotBlockProviders() {
         willThrow(new IllegalStateException("redis down"))

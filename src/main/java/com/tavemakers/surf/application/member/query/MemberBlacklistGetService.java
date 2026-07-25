@@ -16,10 +16,7 @@ public class MemberBlacklistGetService {
 
     private final MemberBlacklistRepository memberBlacklistRepository;
 
-    /**
-     * 블랙리스트 검증 — 기준은 통합 이메일/전화번호(Member.email / Member.phoneNumber)다 (5.A-8).
-     * provider가 준 이메일(SocialAccount.providerEmail)은 회원 식별에 쓰지 않으므로 검증 입력으로 삼지 않는다.
-     */
+    /** 통합 이메일·전화번호를 기준으로 블랙리스트 여부를 검증한다(provider 이메일은 식별에 쓰지 않음, 5.A-8). */
     public void validateNotBlacklisted(String email, String phoneNumber) {
         String normalizedEmail = normalizeEmail(email);
         String normalizedPhoneNumber = normalizePhoneNumber(phoneNumber);

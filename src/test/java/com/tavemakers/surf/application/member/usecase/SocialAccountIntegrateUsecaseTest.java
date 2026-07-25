@@ -25,9 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,9 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 /** 소셜 계정 통합(연동) 검증·확정 로직 (§3.6). */
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +51,6 @@ class SocialAccountIntegrateUsecaseTest {
     @Mock private MemberGetService memberGetService;
     @Mock private MemberBlacklistGetService memberBlacklistGetService;
     @Mock private ApplicationEventPublisher eventPublisher;
-    @Mock private ApplicationContext context;
 
     @InjectMocks private SocialAccountIntegrateUsecase usecase;
 
@@ -108,7 +103,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.of(temp));
         given(socialAccountRepository.findById(SA_ID)).willReturn(Optional.of(socialAccount));
 
-        SocialAccountIntegrateResDTO result = usecase.integrateOnce(EXISTING_ID, pending.getToken());
+        SocialAccountIntegrateResDTO result = usecase.integrate(EXISTING_ID, pending.getToken());
 
         assertThat(result.provider()).isEqualTo("APPLE");
         assertThat(socialAccount.getMember()).isSameAs(existing);
@@ -123,7 +118,7 @@ class SocialAccountIntegrateUsecaseTest {
     void integrate_tokenNotFound() {
         given(pendingSocialIntegrationRepository.findByToken("bad")).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, "bad"))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, "bad"))
                 .isInstanceOf(PendingIntegrationNotFoundException.class);
     }
 
@@ -133,7 +128,7 @@ class SocialAccountIntegrateUsecaseTest {
         PendingSocialIntegration expired = pending(LocalDateTime.now().minusHours(1)); // expiresAt 과거
         given(pendingSocialIntegrationRepository.findByToken(expired.getToken())).willReturn(Optional.of(expired));
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, expired.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, expired.getToken()))
                 .isInstanceOf(PendingIntegrationExpiredException.class);
         then(memberGetService).should(never()).getMember(EXISTING_ID);
     }
@@ -146,7 +141,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -158,7 +153,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -170,7 +165,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -182,7 +177,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(ProviderAlreadyLinkedException.class);
         then(socialAccountRepository).should(never()).findById(SA_ID);
     }
@@ -197,7 +192,7 @@ class SocialAccountIntegrateUsecaseTest {
         willThrow(new MemberBlacklistedException())
                 .given(memberBlacklistGetService).validateNotBlacklisted(EMAIL, PHONE);
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(MemberBlacklistedException.class);
         then(socialAccountRepository).should(never()).findById(SA_ID);
         then(pendingSocialIntegrationRepository).should(never()).delete(pending);
@@ -212,7 +207,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -225,7 +220,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.of(tempMember(MemberStatus.WAITING)));
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
         then(pendingSocialIntegrationRepository).should(never()).delete(pending);
     }
@@ -240,7 +235,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.of(tempMember(MemberStatus.REGISTERING)));
         given(socialAccountRepository.findById(SA_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -255,7 +250,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.of(tempMember(MemberStatus.REGISTERING)));
         given(socialAccountRepository.findById(SA_ID)).willReturn(Optional.of(notOwned));
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
         then(pendingSocialIntegrationRepository).should(never()).delete(pending);
     }
@@ -272,7 +267,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(memberRepository.findWithLockingById(TEMP_ID)).willReturn(Optional.of(temp));
         given(socialAccountRepository.findById(SA_ID)).willReturn(Optional.of(mismatched));
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(IntegrationNotEligibleException.class);
     }
 
@@ -290,39 +285,10 @@ class SocialAccountIntegrateUsecaseTest {
         willThrow(new DataIntegrityViolationException("uk_social_member_provider"))
                 .given(socialAccountRepository).flush();
 
-        assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(ProviderAlreadyLinkedException.class);
         then(pendingSocialIntegrationRepository).should(never()).delete(pending);
         then(eventPublisher).shouldHaveNoInteractions();
         then(memberRepository).should(never()).delete(temp);
-    }
-
-    @Test
-    @DisplayName("발급 부재 경로와의 lock 교차로 인한 PessimisticLockingFailureException은 bounded 재시도로 흡수한다")
-    void integrate_retriesOnPessimisticLockFailure() {
-        SocialAccountIntegrateUsecase self = mock(SocialAccountIntegrateUsecase.class);
-        given(context.getBean(SocialAccountIntegrateUsecase.class)).willReturn(self);
-        SocialAccountIntegrateResDTO ok = new SocialAccountIntegrateResDTO("APPLE");
-        given(self.integrateOnce(EXISTING_ID, "tok"))
-                .willThrow(new CannotAcquireLockException("deadlock")) // 1회차: transient 데드락
-                .willReturn(ok);                                        // 2회차: 성공
-
-        SocialAccountIntegrateResDTO result = usecase.integrate(EXISTING_ID, "tok");
-
-        assertThat(result).isSameAs(ok);
-        then(self).should(times(2)).integrateOnce(EXISTING_ID, "tok");
-    }
-
-    @Test
-    @DisplayName("재시도 상한을 소진하면 마지막 lock 예외를 전파한다")
-    void integrate_exhaustsRetriesThenThrows() {
-        SocialAccountIntegrateUsecase self = mock(SocialAccountIntegrateUsecase.class);
-        given(context.getBean(SocialAccountIntegrateUsecase.class)).willReturn(self);
-        given(self.integrateOnce(EXISTING_ID, "tok"))
-                .willThrow(new CannotAcquireLockException("deadlock"));
-
-        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, "tok"))
-                .isInstanceOf(CannotAcquireLockException.class);
-        then(self).should(times(3)).integrateOnce(EXISTING_ID, "tok"); // INTEGRATE_MAX_ATTEMPTS
     }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "계정 통합", description = "소셜 계정 통합(연동) API")
 public class SocialAccountIntegrateController {
+
+    /** 통합 재시도 상한 — 발급 부재 경로와의 lock 교차로 인한 transient 데드락/락 타임아웃 재시도 횟수. */
+    private static final int INTEGRATE_MAX_ATTEMPTS = 3;
 
     private final SocialAccountIntegrateUsecase socialAccountIntegrateUsecase;
 
@@ -31,9 +35,19 @@ public class SocialAccountIntegrateController {
             @Valid @RequestBody SocialAccountIntegrateReqDTO request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
-        SocialAccountIntegrateResDTO data =
-                socialAccountIntegrateUsecase.integrate(memberId, request.integrationToken());
+        SocialAccountIntegrateResDTO data = integrateWithRetry(memberId, request.integrationToken());
 
         return ApiResponse.response(HttpStatus.OK, "계정 통합 완료", data);
+    }
+
+    /** 프록시를 통해 매 시도마다 새 트랜잭션으로 통합을 실행 — transient 데드락/락 타임아웃을 bounded 재시도로 흡수한다. */
+    private SocialAccountIntegrateResDTO integrateWithRetry(Long memberId, String integrationToken) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return socialAccountIntegrateUsecase.integrate(memberId, integrationToken);
+            } catch (PessimisticLockingFailureException lockFailure) {
+                if (attempt >= INTEGRATE_MAX_ATTEMPTS) throw lockFailure;
+            }
+        }
     }
 }

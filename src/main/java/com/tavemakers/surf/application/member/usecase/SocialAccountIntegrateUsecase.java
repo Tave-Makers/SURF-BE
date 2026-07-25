@@ -18,10 +18,8 @@ import com.tavemakers.surf.domain.member.repository.TrackRepository;
 import com.tavemakers.surf.domain.member.repository.SocialAccountRepository;
 import com.tavemakers.surf.presentation.member.dto.response.SocialAccountIntegrateResDTO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,26 +41,13 @@ public class SocialAccountIntegrateUsecase {
     private final MemberGetService memberGetService;
     private final MemberBlacklistGetService memberBlacklistGetService;
     private final ApplicationEventPublisher eventPublisher;
-    private final ApplicationContext context;
 
-    /** 통합 재시도 상한 — 발급 경로와의 lock 교차로 인한 transient 데드락/락 타임아웃 재시도 횟수. */
-    private static final int INTEGRATE_MAX_ATTEMPTS = 3;
-
-    /** 소셜 계정 통합 진입점 — transient 데드락/락 타임아웃을 bounded 재시도로 흡수한다(재시도는 tx 밖이어야 해 self-proxy로 {@link #integrateOnce} 호출). */
-    public SocialAccountIntegrateResDTO integrate(Long existingMemberId, String integrationToken) {
-        SocialAccountIntegrateUsecase self = context.getBean(SocialAccountIntegrateUsecase.class);
-        for (int attempt = 1; ; attempt++) {
-            try {
-                return self.integrateOnce(existingMemberId, integrationToken);
-            } catch (PessimisticLockingFailureException lockFailure) {
-                if (attempt >= INTEGRATE_MAX_ATTEMPTS) throw lockFailure;
-            }
-        }
-    }
-
-    /** 기존 회원 로그인 권한으로 pending 토큰·연락처·상태·provider·블랙리스트를 재검증한 뒤 SocialAccount를 기존 회원에 재연결한다. */
+    /**
+     * 기존 회원 로그인 권한으로 pending 토큰·연락처·상태·provider·블랙리스트를 재검증한 뒤 SocialAccount를 기존 회원에 재연결한다.
+     * 발급(issue) 부재 경로와의 lock 교차로 생기는 transient 데드락/락 타임아웃 재시도는 호출부(컨트롤러)가 담당한다.
+     */
     @Transactional
-    public SocialAccountIntegrateResDTO integrateOnce(Long existingMemberId, String integrationToken) {
+    public SocialAccountIntegrateResDTO integrate(Long existingMemberId, String integrationToken) {
         // 행 쓰기 락으로 동시 통합 요청을 직렬화한다 — 부재는 이미 사용/무효(1회성 보장)
         PendingSocialIntegration pending = pendingSocialIntegrationRepository.findByToken(integrationToken)
                 .orElseThrow(PendingIntegrationNotFoundException::new);

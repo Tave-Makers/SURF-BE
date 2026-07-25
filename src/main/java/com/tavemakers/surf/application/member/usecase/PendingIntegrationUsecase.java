@@ -30,10 +30,8 @@ public class PendingIntegrationUsecase {
     private final MemberRepository memberRepository;
     private final SocialAccountRepository socialAccountRepository;
 
-    /**
-     * 온보딩 롤백과 독립적으로(REQUIRES_NEW) 통합 대기 row를 커밋하고 멱등 토큰을 반환한다. (§3.6)
-     * 유효·동일 컨텍스트의 기존 pending이면 재사용, 아니면 재검증 후 재발급한다. READ_COMMITTED는 부재 pending 락 조회의 gap lock 데드락을 피한다.
-     */
+    /** 온보딩 롤백과 독립적으로(REQUIRES_NEW) 통합 대기 row를 커밋하고 멱등 토큰을 반환한다 — 유효·동일 컨텍스트면 재사용, 아니면 재검증 후 재발급. (§3.6) */
+    // READ_COMMITTED: 부재 pending 락 조회의 gap lock 데드락 회피
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     public IssuedIntegrationToken issue(Long tempMemberId, Long socialAccountId, Provider provider,
                                         String normalizedEmail, String normalizedPhone) {
