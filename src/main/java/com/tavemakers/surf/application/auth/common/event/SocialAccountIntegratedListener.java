@@ -20,6 +20,7 @@ public class SocialAccountIntegratedListener {
 
     private final RefreshTokenService refreshTokenService;
 
+    /** 통합 완료 후 임시 회원의 refresh token을 전부 무효화한다. */
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(SocialAccountIntegratedEvent event) {

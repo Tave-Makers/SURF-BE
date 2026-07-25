@@ -89,8 +89,17 @@ public class PendingSocialIntegration extends BaseEntity {
                 .build();
     }
 
-    /** 만료 여부 — {@code expiresAt} 경과 시 true. */
+    /** 만료 여부 — {@code expiresAt} 이상이면 true(경계 시각에 TTL 소진). */
     public boolean isExpired(LocalDateTime now) {
-        return now.isAfter(expiresAt);
+        return !now.isBefore(expiresAt);
+    }
+
+    /** 발급 컨텍스트 동일성 — 임시 회원·provider·연락처가 같은 재요청만 멱등 재사용 대상이다(연락처가 바뀐 요청은 다른 명령). */
+    public boolean matchesContext(Long tempMemberId, Provider provider,
+                                  String normalizedEmail, String normalizedPhone) {
+        return this.tempMemberId.equals(tempMemberId)
+                && this.provider == provider
+                && this.normalizedEmail.equals(normalizedEmail)
+                && this.normalizedPhone.equals(normalizedPhone);
     }
 }

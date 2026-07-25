@@ -6,7 +6,7 @@ import com.tavemakers.surf.domain.auth.common.enums.Provider;
 public record SocialAccountIntegrateResDTO(
         String provider
 ) {
-    public static SocialAccountIntegrateResDTO of(Provider provider) {
+    public static SocialAccountIntegrateResDTO from(Provider provider) {
         return new SocialAccountIntegrateResDTO(provider.name());
     }
 }

@@ -6,7 +6,6 @@ import com.tavemakers.surf.presentation.member.dto.response.*;
 import com.tavemakers.surf.domain.member.dto.CareerCreateCommand;
 import com.tavemakers.surf.domain.member.dto.CareerUpdateCommand;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.domain.member.entity.PendingSocialIntegration;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
@@ -33,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -41,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +71,9 @@ public class MemberUsecase {
     private final ApplicationContext context;
     private final LogEventEmitter logEventEmitter;
     //</editor-fold>
+
+    /** pending 발급 재시도 상한 — 부재 행 락 실패(데드락/타임아웃)의 transient 재시도 횟수. */
+    private static final int ISSUE_MAX_ATTEMPTS = 3;
 
     /** 마이페이지 + 프로필 조회 */
     public MyPageProfileResDTO getMyPageAndProfile(Long targetId) {
@@ -331,22 +336,30 @@ public class MemberUsecase {
             return proxy.signupCreate(member, request);
         } catch (AccountIntegrationAvailableException e) {
             // case B: 온보딩 tx는 롤백됨 → pending을 REQUIRES_NEW로 독립 커밋하고 토큰을 실어 재전파 (§3.6)
+            IssuedIntegrationToken issued = issueIntegrationToken(e);
             throw AccountIntegrationAvailableException.issued(
-                    issueIntegrationToken(e), PendingSocialIntegration.TTL_SECONDS,
+                    issued.token(), remainingSeconds(issued.expiresAt()),
                     ACCOUNT_INTEGRATION_AVAILABLE.getMessage());
         }
     }
 
-    /** pending 발급 — 동시 이중 제출의 UNIQUE 경쟁에서 지면 승자의 토큰을 재조회해 반환한다(멱등 발급). */
-    private String issueIntegrationToken(AccountIntegrationAvailableException e) {
-        try {
-            return pendingIntegrationUsecase.issue(
-                    e.getTempMemberId(), e.getSocialAccountId(), e.getProvider(),
-                    e.getNormalizedEmail(), e.getNormalizedPhone());
-        } catch (DataIntegrityViolationException race) {
-            return pendingIntegrationUsecase.findIssuedToken(e.getSocialAccountId())
-                    .orElseThrow(() -> race);
+    /** pending 발급 — 동시 발급의 UNIQUE 충돌·락 실패는 fresh 트랜잭션 재시도로 수렴시킨다(재시도 시 issue가 컨텍스트 비교로 재사용/교체). */
+    private IssuedIntegrationToken issueIntegrationToken(AccountIntegrationAvailableException e) {
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return pendingIntegrationUsecase.issue(
+                        e.getTempMemberId(), e.getSocialAccountId(), e.getProvider(),
+                        e.getNormalizedEmail(), e.getNormalizedPhone());
+            } catch (DataIntegrityViolationException | PessimisticLockingFailureException transientFailure) {
+                if (attempt >= ISSUE_MAX_ATTEMPTS) throw transientFailure;
+            }
         }
+    }
+
+    /** 발급 토큰의 실제 잔여 TTL(초) — 밀리초를 올림해 갓 발급한 토큰이 1799로 내려가지 않게 한다(만료 시 0). */
+    private long remainingSeconds(LocalDateTime expiresAt) {
+        long millis = Duration.between(LocalDateTime.now(), expiresAt).toMillis();
+        return millis <= 0L ? 0L : (long) Math.ceil(millis / 1000.0);
     }
 
     /** 회원가입 create 로그 (온보딩) */

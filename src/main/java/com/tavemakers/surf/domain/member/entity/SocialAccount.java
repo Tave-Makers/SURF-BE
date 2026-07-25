@@ -134,10 +134,7 @@ public class SocialAccount extends BaseEntity {
         }
     }
 
-    /**
-     * 계정 통합 — 소유권을 기존 회원으로 이전한다 (§3.6).
-     * 기존 소유자 컬렉션에서 제거하면 orphanRemoval로 이 행이 삭제되므로, FK만 갱신하고 대상 컬렉션에만 추가한다.
-     */
+    /** 계정 통합 — 소유권을 기존 회원으로 이전한다. orphanRemoval에 의한 의도치 않은 삭제를 막기 위해 기존 컬렉션에서는 제거하지 않고 FK와 대상 컬렉션만 갱신한다 (§3.6). */
     public void reassignTo(Member newMember) {
         if (newMember == null) {
             throw new IllegalArgumentException("newMember는 null일 수 없습니다.");

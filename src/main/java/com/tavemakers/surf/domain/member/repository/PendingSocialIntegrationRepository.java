@@ -4,6 +4,8 @@ import com.tavemakers.surf.domain.member.entity.PendingSocialIntegration;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,8 +17,8 @@ public interface PendingSocialIntegrationRepository extends JpaRepository<Pendin
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<PendingSocialIntegration> findByToken(String token);
 
-    /** 재발급 시 기존 pending을 제거한다 — 1 SocialAccount = 1 pending(UNIQUE) 유지. */
-    void deleteBySocialAccountId(Long socialAccountId);
-
-    Optional<PendingSocialIntegration> findBySocialAccountId(Long socialAccountId);
+    /** SocialAccount ID로 대기 row를 행 쓰기 락 조회 — 발급을 integrate·동시 발급과 pending 행 기준으로 직렬화한다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from PendingSocialIntegration p where p.socialAccountId = :socialAccountId")
+    Optional<PendingSocialIntegration> findBySocialAccountIdForUpdate(@Param("socialAccountId") Long socialAccountId);
 }

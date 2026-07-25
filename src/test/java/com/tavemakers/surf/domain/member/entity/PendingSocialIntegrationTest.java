@@ -29,7 +29,7 @@ class PendingSocialIntegrationTest {
     }
 
     @Test
-    @DisplayName("isExpired()는 expiresAt 경과 시에만 true")
+    @DisplayName("isExpired()는 expiresAt 이상이면 true")
     void isExpired_afterExpiry() {
         LocalDateTime now = LocalDateTime.now();
         PendingSocialIntegration pending = PendingSocialIntegration.issue(
@@ -37,6 +37,8 @@ class PendingSocialIntegrationTest {
 
         assertThat(pending.isExpired(now)).isFalse();
         assertThat(pending.isExpired(now.plusSeconds(PendingSocialIntegration.TTL_SECONDS - 1))).isFalse();
+        // 경계: 정확히 expiresAt(= now + TTL)이면 만료로 판정한다
+        assertThat(pending.isExpired(now.plusSeconds(PendingSocialIntegration.TTL_SECONDS))).isTrue();
         assertThat(pending.isExpired(now.plusSeconds(PendingSocialIntegration.TTL_SECONDS + 1))).isTrue();
     }
 }
