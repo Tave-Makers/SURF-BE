@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MemberBlacklistRepository extends JpaRepository<MemberBlacklist, Long> {
 
-    boolean existsByKakaoId(Long kakaoId);
-
     boolean existsByEmail(String email);
 
     boolean existsByPhoneNumber(String phoneNumber);

@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.badge.service;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.badge.entity.Badge;
 import com.tavemakers.surf.domain.badge.exception.MemberBadgeAlreadyExistsException;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
@@ -104,9 +103,6 @@ class MemberBadgeAssignConcurrencyTest {
 
     private Member persistMember(String email) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(email)
                 .status(MemberStatus.APPROVED)

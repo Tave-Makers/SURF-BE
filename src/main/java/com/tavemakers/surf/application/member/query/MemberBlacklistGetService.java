@@ -16,12 +16,15 @@ public class MemberBlacklistGetService {
 
     private final MemberBlacklistRepository memberBlacklistRepository;
 
-    public void validateNotBlacklisted(Long kakaoId, String email, String phoneNumber) {
+    /**
+     * 블랙리스트 검증 — 기준은 통합 이메일/전화번호(Member.email / Member.phoneNumber)다 (5.A-8).
+     * provider가 준 이메일(SocialAccount.providerEmail)은 회원 식별에 쓰지 않으므로 검증 입력으로 삼지 않는다.
+     */
+    public void validateNotBlacklisted(String email, String phoneNumber) {
         String normalizedEmail = normalizeEmail(email);
         String normalizedPhoneNumber = normalizePhoneNumber(phoneNumber);
 
-        boolean blacklisted = (kakaoId != null && memberBlacklistRepository.existsByKakaoId(kakaoId))
-                || (StringUtils.hasText(normalizedEmail) && memberBlacklistRepository.existsByEmail(normalizedEmail))
+        boolean blacklisted = (StringUtils.hasText(normalizedEmail) && memberBlacklistRepository.existsByEmail(normalizedEmail))
                 || (StringUtils.hasText(normalizedPhoneNumber) && memberBlacklistRepository.existsByPhoneNumber(normalizedPhoneNumber));
 
         if (blacklisted) {

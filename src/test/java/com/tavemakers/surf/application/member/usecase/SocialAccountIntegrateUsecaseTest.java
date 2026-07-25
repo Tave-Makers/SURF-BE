@@ -195,7 +195,7 @@ class SocialAccountIntegrateUsecaseTest {
         given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
         given(memberGetService.getMember(EXISTING_ID)).willReturn(existing);
         willThrow(new MemberBlacklistedException())
-                .given(memberBlacklistGetService).validateNotBlacklisted(null, EMAIL, PHONE);
+                .given(memberBlacklistGetService).validateNotBlacklisted(EMAIL, PHONE);
 
         assertThatThrownBy(() -> usecase.integrateOnce(EXISTING_ID, pending.getToken()))
                 .isInstanceOf(MemberBlacklistedException.class);

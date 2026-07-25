@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.comment.service;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -71,8 +70,6 @@ class CommentLikeServiceTest {
 
     private Member member(long id) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId("provider-" + id)
                 .name("회원" + id)
                 .status(MemberStatus.APPROVED)
                 .role(MemberRole.MEMBER)

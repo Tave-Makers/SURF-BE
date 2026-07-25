@@ -12,7 +12,6 @@ class MemberTermsAgreementTest {
 
     private Member createMember() {
         return Member.builder()
-                .kakaoId(123456789L)
                 .name("테스트유저")
                 .email("test@test.com")
                 .status(MemberStatus.APPROVED)
