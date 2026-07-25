@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "계정 통합", description = "소셜 계정 통합(연동) API")
-public class SocialAccountIntegrateController {
+public class SocialAccountCreateController {
 
     /** 통합 재시도 상한 — 발급 부재 경로와의 lock 교차로 인한 transient 데드락/락 타임아웃 재시도 횟수. */
     private static final int INTEGRATE_MAX_ATTEMPTS = 3;
@@ -31,7 +31,7 @@ public class SocialAccountIntegrateController {
             description = "온보딩 case B에서 발급받은 integrationToken으로, 기존 계정 로그인 권한에서 신규 소셜 계정을 기존 회원에 연결합니다."
     )
     @PostMapping("/v1/user/social-accounts/integrate")
-    public ApiResponse<SocialAccountIntegrateResDTO> integrate(
+    public ApiResponse<SocialAccountIntegrateResDTO> create(
             @Valid @RequestBody SocialAccountIntegrateReqDTO request
     ) {
         Long memberId = SecurityUtils.getCurrentMemberId();
