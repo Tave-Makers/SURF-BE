@@ -21,4 +21,7 @@ public interface PendingSocialIntegrationRepository extends JpaRepository<Pendin
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from PendingSocialIntegration p where p.socialAccountId = :socialAccountId")
     Optional<PendingSocialIntegration> findBySocialAccountIdForUpdate(@Param("socialAccountId") Long socialAccountId);
+
+    /** SocialAccount ID로 통합 대기 정보를 락 없이 조회한다. */
+    Optional<PendingSocialIntegration> findBySocialAccountId(Long socialAccountId);
 }

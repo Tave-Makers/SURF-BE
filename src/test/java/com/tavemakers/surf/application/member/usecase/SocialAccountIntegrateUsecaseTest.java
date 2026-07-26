@@ -71,7 +71,7 @@ class SocialAccountIntegrateUsecaseTest {
     }
 
     private PendingSocialIntegration pending(LocalDateTime now) {
-        return PendingSocialIntegration.issue(TEMP_ID, SA_ID, PROVIDER, EMAIL, PHONE, now);
+        return PendingSocialIntegration.issue(TEMP_ID, SA_ID, EXISTING_ID, PROVIDER, EMAIL, PHONE, now);
     }
 
     private Member memberOf(Long id, MemberStatus status) {
@@ -134,7 +134,32 @@ class SocialAccountIntegrateUsecaseTest {
     }
 
     @Test
-    @DisplayName("이메일 불일치 — IntegrationNotEligibleException")
+    @DisplayName("감지된 대상이 아닌 회원의 통합 시도 — IntegrationNotEligibleException, 연락처 대조 전에 차단한다")
+    void integrate_notDetectedTarget() {
+        // 대상(EXISTING_ID)이 연락처를 바꾸고 제3자가 그 값을 점유한 상황 — 연락처만 보면 통과한다
+        PendingSocialIntegration pending = pending(LocalDateTime.now());
+        Long squatterId = 999L;
+        given(pendingSocialIntegrationRepository.findByToken(pending.getToken())).willReturn(Optional.of(pending));
+
+        assertThatThrownBy(() -> usecase.integrate(squatterId, pending.getToken()))
+                .isInstanceOf(IntegrationNotEligibleException.class);
+        then(memberGetService).should(never()).getMember(squatterId);
+    }
+
+    @Test
+    @DisplayName("대상이 기록되지 않은 구버전 pending — NPE 없이 IntegrationNotEligibleException")
+    void integrate_legacyPendingWithoutTarget() {
+        // 컬럼 추가(expand) 후 구버전 인스턴스가 만든 행 — 롤링 배포 공존 구간에서 발생 가능
+        PendingSocialIntegration legacy = pending(LocalDateTime.now());
+        ReflectionTestUtils.setField(legacy, "targetMemberId", null);
+        given(pendingSocialIntegrationRepository.findByToken(legacy.getToken())).willReturn(Optional.of(legacy));
+
+        assertThatThrownBy(() -> usecase.integrate(EXISTING_ID, legacy.getToken()))
+                .isInstanceOf(IntegrationNotEligibleException.class);
+    }
+
+    @Test
+    @DisplayName("이메일 불일치 — 대상이 맞아도 연락처가 바뀌었으면 IntegrationNotEligibleException (TOCTOU 방어선 유지)")
     void integrate_emailMismatch() {
         PendingSocialIntegration pending = pending(LocalDateTime.now());
         Member existing = existingMember(MemberStatus.WAITING, "other@test.com", PHONE);

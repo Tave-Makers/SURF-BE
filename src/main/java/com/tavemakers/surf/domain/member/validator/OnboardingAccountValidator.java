@@ -13,10 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * 온보딩 시 통합 이메일·전화번호를 기존 회원과 대조해 case A(정상)/B(통합 필요 감지)/C(부분 일치 차단)를 판별한다. (§3.5)
- * 부분 일치는 어떤 경우에도 통과시키지 않는다. (5.A-7)
- */
+/** 온보딩 연락처를 기존 회원과 대조해 계정 통합 가능 여부를 검증한다. */
 @Component
 @RequiredArgsConstructor
 public class OnboardingAccountValidator {
@@ -35,7 +32,7 @@ public class OnboardingAccountValidator {
             return;
         }
 
-        // case B) REGISTERING self 기준, 이메일·전화번호가 모두 동일한 단일 회원이 온보딩 완료 상태 + 연동 가능 provider(정확히 1개·미보유)일 때만 통합 필요 감지 — 비REGISTERING self(WAITING 재제출 등)는 case C로 차단 (5.A-4)
+        // case B) 연락처 소유자가 같고 신규 소셜 계정을 연결할 수 있으면 통합 대상으로 판정한다.
         if (self.isRegistering()
                 && emailOwner != null && phoneOwner != null
                 && emailOwner.getId().equals(phoneOwner.getId())
@@ -43,7 +40,7 @@ public class OnboardingAccountValidator {
                 && isProviderLinkable(self, emailOwner)) {
             SocialAccount socialAccount = self.getSocialAccounts().get(0); // isProviderLinkable에서 정확히 1개 보장
             throw AccountIntegrationAvailableException.detected(
-                    self.getId(), socialAccount.getId(), socialAccount.getProvider(),
+                    self.getId(), socialAccount.getId(), emailOwner.getId(), socialAccount.getProvider(),
                     normalizedEmail, normalizedPhone);
         }
 
@@ -54,18 +51,18 @@ public class OnboardingAccountValidator {
         throw new PhoneAlreadyUsedException();
     }
 
-    /** 조회 결과에서 본인(self)은 제외한다. (REGISTERING self 는 email/phone 이 비어 있어 실제로는 매칭되지 않음) */
+    /** 연락처 조회 결과에서 온보딩 요청 회원을 제외한다. */
     private Member findOtherOwner(Optional<Member> found, Member self) {
         return found.filter(m -> !m.getId().equals(self.getId())).orElse(null);
     }
 
-    /** 통합 대상은 온보딩 완료(WAITING/APPROVED) 회원으로 제한한다. (5.A-4) */
+    /** 회원 상태가 계정 통합 대상에 해당하는지 확인한다. */
     private boolean isIntegrationTarget(Member member) {
         MemberStatus status = member.getStatus();
         return status == MemberStatus.WAITING || status == MemberStatus.APPROVED;
     }
 
-    /** self 소셜 계정이 정확히 1개이고 기존 회원이 그 provider 를 미보유해야 연동 가능하다 (1 provider=1 account, 5.A-3). */
+    /** 임시 회원의 단일 소셜 계정을 기존 회원에게 연결할 수 있는지 확인한다. */
     private boolean isProviderLinkable(Member self, Member existing) {
         List<SocialAccount> accounts = self.getSocialAccounts();
         if (accounts.size() != 1) {

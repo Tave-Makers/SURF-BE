@@ -39,6 +39,7 @@ class PendingIntegrationUsecaseTest {
 
     private static final Long TEMP_ID = 1L;
     private static final Long SA_ID = 2L;
+    private static final Long TARGET_ID = 3L;
     private static final Provider PROVIDER = Provider.KAKAO;
     private static final String EMAIL = "user@test.com";
     private static final String PHONE = "01011112222";
@@ -63,7 +64,7 @@ class PendingIntegrationUsecaseTest {
     }
 
     private IssuedIntegrationToken issue() {
-        return pendingIntegrationUsecase.issue(TEMP_ID, SA_ID, PROVIDER, EMAIL, PHONE);
+        return pendingIntegrationUsecase.issue(TEMP_ID, SA_ID, TARGET_ID, PROVIDER, EMAIL, PHONE);
     }
 
     @Test
@@ -81,6 +82,7 @@ class PendingIntegrationUsecaseTest {
         assertThat(issued.expiresAt()).isEqualTo(saved.getExpiresAt());
         assertThat(saved.getTempMemberId()).isEqualTo(TEMP_ID);
         assertThat(saved.getSocialAccountId()).isEqualTo(SA_ID);
+        assertThat(saved.getTargetMemberId()).isEqualTo(TARGET_ID);
         assertThat(saved.getProvider()).isEqualTo(PROVIDER);
     }
 
@@ -88,7 +90,7 @@ class PendingIntegrationUsecaseTest {
     @DisplayName("유효한 기존 pending — 동일 토큰·만료를 그대로 반환하고 삭제·재발급하지 않는다(멱등)")
     void issue_existingValid_returnsSameToken() {
         PendingSocialIntegration valid = PendingSocialIntegration.issue(
-                TEMP_ID, SA_ID, PROVIDER, EMAIL, PHONE, LocalDateTime.now());
+                TEMP_ID, SA_ID, TARGET_ID, PROVIDER, EMAIL, PHONE, LocalDateTime.now());
         given(pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(SA_ID)).willReturn(Optional.of(valid));
 
         IssuedIntegrationToken issued = issue();
@@ -104,7 +106,7 @@ class PendingIntegrationUsecaseTest {
     @DisplayName("만료된 기존 pending — 삭제 후 재검증하고 새 토큰을 발급한다")
     void issue_existingExpired_deletesAndReissues() {
         PendingSocialIntegration expired = PendingSocialIntegration.issue(
-                TEMP_ID, SA_ID, PROVIDER, EMAIL, PHONE,
+                TEMP_ID, SA_ID, TARGET_ID, PROVIDER, EMAIL, PHONE,
                 LocalDateTime.now().minusSeconds(PendingSocialIntegration.TTL_SECONDS + 60));
         given(pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(SA_ID)).willReturn(Optional.of(expired));
         givenTransferable();
@@ -147,7 +149,7 @@ class PendingIntegrationUsecaseTest {
     void issue_existingValid_differentContext_replaces() {
         // 같은 SocialAccount지만 이메일이 다른(온보딩 연락처를 바꿔 재제출한) 유효 pending
         PendingSocialIntegration otherContext = PendingSocialIntegration.issue(
-                TEMP_ID, SA_ID, PROVIDER, "other@test.com", PHONE, LocalDateTime.now());
+                TEMP_ID, SA_ID, TARGET_ID, PROVIDER, "other@test.com", PHONE, LocalDateTime.now());
         given(pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(SA_ID)).willReturn(Optional.of(otherContext));
         givenTransferable();
 
@@ -161,5 +163,43 @@ class PendingIntegrationUsecaseTest {
                 .isEqualTo(captor.getValue().getToken())
                 .isNotEqualTo(otherContext.getToken());
         assertThat(captor.getValue().getNormalizedEmail()).isEqualTo(EMAIL); // 현재 요청의 새 컨텍스트로 발급
+    }
+
+    @Test
+    @DisplayName("통합 대상이 달라진 재요청 — 멱등 재사용이 아니라 삭제 후 새 대상으로 재발급한다")
+    void issue_existingValid_differentTarget_replaces() {
+        // 연락처는 그대로지만 감지된 대상이 바뀐 유효 pending — 이전 대상을 가리키는 토큰이 재사용되면 안 된다
+        PendingSocialIntegration otherTarget = PendingSocialIntegration.issue(
+                TEMP_ID, SA_ID, 999L, PROVIDER, EMAIL, PHONE, LocalDateTime.now());
+        given(pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(SA_ID)).willReturn(Optional.of(otherTarget));
+        givenTransferable();
+
+        IssuedIntegrationToken issued = issue();
+
+        then(pendingSocialIntegrationRepository).should().delete(otherTarget);
+        ArgumentCaptor<PendingSocialIntegration> captor = ArgumentCaptor.forClass(PendingSocialIntegration.class);
+        then(pendingSocialIntegrationRepository).should().saveAndFlush(captor.capture());
+        assertThat(issued.token())
+                .isEqualTo(captor.getValue().getToken())
+                .isNotEqualTo(otherTarget.getToken());
+        assertThat(captor.getValue().getTargetMemberId()).isEqualTo(TARGET_ID);
+    }
+
+    @Test
+    @DisplayName("대상이 기록되지 않은 구버전 pending — NPE 없이 삭제 후 재발급한다")
+    void issue_legacyPendingWithoutTarget_replaces() {
+        PendingSocialIntegration legacy = PendingSocialIntegration.issue(
+                TEMP_ID, SA_ID, TARGET_ID, PROVIDER, EMAIL, PHONE, LocalDateTime.now());
+        ReflectionTestUtils.setField(legacy, "targetMemberId", null);
+        given(pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(SA_ID)).willReturn(Optional.of(legacy));
+        givenTransferable();
+
+        IssuedIntegrationToken issued = issue();
+
+        then(pendingSocialIntegrationRepository).should().delete(legacy);
+        ArgumentCaptor<PendingSocialIntegration> captor = ArgumentCaptor.forClass(PendingSocialIntegration.class);
+        then(pendingSocialIntegrationRepository).should().saveAndFlush(captor.capture());
+        assertThat(issued.token()).isEqualTo(captor.getValue().getToken());
+        assertThat(captor.getValue().getTargetMemberId()).isEqualTo(TARGET_ID);
     }
 }

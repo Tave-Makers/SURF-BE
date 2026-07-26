@@ -18,10 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-/**
- * 통합 대기 row 발급 — 온보딩 case B 감지 시 호출된다.
- * 온보딩 트랜잭션은 감지 예외로 롤백되므로, pending row는 {@code REQUIRES_NEW}로 독립 커밋해야 살아남는다. (§3.6)
- */
+/** 온보딩 트랜잭션과 분리해 계정 통합 대기 정보를 발급한다. */
 @Service
 @RequiredArgsConstructor
 public class PendingIntegrationUsecase {
@@ -30,11 +27,11 @@ public class PendingIntegrationUsecase {
     private final MemberRepository memberRepository;
     private final SocialAccountRepository socialAccountRepository;
 
-    /** 온보딩 롤백과 독립적으로(REQUIRES_NEW) 통합 대기 row를 커밋하고 멱등 토큰을 반환한다 — 유효·동일 컨텍스트면 재사용, 아니면 재검증 후 재발급. (§3.6) */
+    /** 동일한 발급 요청은 기존 토큰을 반환하고 변경된 요청은 토큰을 재발급한다. */
     // READ_COMMITTED: 부재 pending 락 조회의 gap lock 데드락 회피
     @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
-    public IssuedIntegrationToken issue(Long tempMemberId, Long socialAccountId, Provider provider,
-                                        String normalizedEmail, String normalizedPhone) {
+    public IssuedIntegrationToken issue(Long tempMemberId, Long socialAccountId, Long targetMemberId,
+                                        Provider provider, String normalizedEmail, String normalizedPhone) {
         LocalDateTime now = LocalDateTime.now();
 
         // 기존 pending 행 쓰기 락 — integrate·동시 발급과 직렬화
@@ -42,9 +39,9 @@ public class PendingIntegrationUsecase {
                 pendingSocialIntegrationRepository.findBySocialAccountIdForUpdate(socialAccountId);
         if (existing.isPresent()) {
             PendingSocialIntegration pending = existing.get();
-            // 유효·동일 컨텍스트면 그대로 반환(멱등). 연락처가 바뀐 재요청은 다른 명령이라 아래에서 교체한다
+            // 유효·동일 컨텍스트면 그대로 반환(멱등). 연락처·대상이 바뀐 재요청은 다른 명령이라 아래에서 교체한다
             if (!pending.isExpired(now)
-                    && pending.matchesContext(tempMemberId, provider, normalizedEmail, normalizedPhone)) {
+                    && pending.matchesContext(tempMemberId, targetMemberId, provider, normalizedEmail, normalizedPhone)) {
                 return new IssuedIntegrationToken(pending.getToken(), pending.getExpiresAt());
             }
             // 만료/컨텍스트 불일치 — 삭제를 먼저 flush해야 재발급 INSERT가 UNIQUE에 걸리지 않는다
@@ -57,12 +54,12 @@ public class PendingIntegrationUsecase {
 
         // 신규 발급 — 동시 발급의 UNIQUE 경쟁은 호출부 재시도로 수렴한다
         PendingSocialIntegration pending = PendingSocialIntegration.issue(
-                tempMemberId, socialAccountId, provider, normalizedEmail, normalizedPhone, now);
+                tempMemberId, socialAccountId, targetMemberId, provider, normalizedEmail, normalizedPhone, now);
         pendingSocialIntegrationRepository.saveAndFlush(pending);
         return new IssuedIntegrationToken(pending.getToken(), pending.getExpiresAt());
     }
 
-    /** 신규 pending 생성 전 재검증 — 임시 회원이 REGISTERING이고 SocialAccount 소유·provider가 일치하는지 확인해 좀비 pending을 막는다. */
+    /** 통합 대기 정보 생성 전 임시 회원과 소셜 계정의 이전 가능 여부를 검증한다. */
     private void revalidateTransferable(Long tempMemberId, Long socialAccountId, Provider provider) {
         Member tempMember = memberRepository.findWithLockingById(tempMemberId)
                 .orElseThrow(IntegrationNotEligibleException::new);

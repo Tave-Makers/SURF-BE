@@ -18,6 +18,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
@@ -65,7 +66,14 @@ class OnboardingAccountValidatorTest {
         given(memberRepository.findByPhoneNumber(PHONE)).willReturn(Optional.of(owner));
 
         assertThatThrownBy(() -> validator.validateForOnboarding(self, EMAIL, PHONE))
-                .isInstanceOf(AccountIntegrationAvailableException.class);
+                .isInstanceOfSatisfying(AccountIntegrationAvailableException.class, e -> {
+                    // 감지 시점에 확정된 대상이 pending 발급 컨텍스트로 전달되어야 한다 (이슈 #354)
+                    assertThat(e.getTargetMemberId()).isEqualTo(owner.getId());
+                    assertThat(e.getTempMemberId()).isEqualTo(self.getId());
+                    assertThat(e.getProvider()).isEqualTo(Provider.KAKAO);
+                    assertThat(e.getNormalizedEmail()).isEqualTo(EMAIL);
+                    assertThat(e.getNormalizedPhone()).isEqualTo(PHONE);
+                });
     }
 
     @Test

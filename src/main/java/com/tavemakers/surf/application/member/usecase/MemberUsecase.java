@@ -26,7 +26,6 @@ import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
 import com.tavemakers.surf.application.score.query.PersonalScoreGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
-import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +37,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.tavemakers.surf.global.logging.LogEventEmitter;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -348,7 +346,7 @@ public class MemberUsecase {
         for (int attempt = 1; ; attempt++) {
             try {
                 return pendingIntegrationUsecase.issue(
-                        e.getTempMemberId(), e.getSocialAccountId(), e.getProvider(),
+                        e.getTempMemberId(), e.getSocialAccountId(), e.getTargetMemberId(), e.getProvider(),
                         e.getNormalizedEmail(), e.getNormalizedPhone());
             } catch (DataIntegrityViolationException | PessimisticLockingFailureException transientFailure) {
                 if (attempt >= ISSUE_MAX_ATTEMPTS) throw transientFailure;
