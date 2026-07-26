@@ -49,7 +49,7 @@ public class IntegrationTargetGetService {
         List<SocialAccount> targetSocialAccounts = socialAccountRepository.findAllByMemberId(target.getId());
         validateEligibleTarget(pending, target, targetSocialAccounts);
 
-        return IntegrationTargetResDTO.of(pending, target, targetSocialAccounts);
+        return IntegrationTargetResDTO.from(pending, target, targetSocialAccounts);
     }
 
     /** 인증 회원이 온보딩 이전 상태인지 검증한다. */

@@ -28,7 +28,7 @@ public record IntegrationTargetResDTO(
 ) {
 
     /** 통합 대기 정보와 대상 회원으로 응답을 생성한다. */
-    public static IntegrationTargetResDTO of(
+    public static IntegrationTargetResDTO from(
             PendingSocialIntegration pending,
             Member target,
             List<SocialAccount> targetSocialAccounts
