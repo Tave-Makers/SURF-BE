@@ -16,8 +16,8 @@ public class MemberBlacklistCreateService {
 
     private final MemberBlacklistRepository memberBlacklistRepository;
 
+    /** 재가입 차단 기준은 통합 이메일/전화번호(Member.email / Member.phoneNumber)다 (5.A-8). */
     public void createIfAbsent(Member member, MemberBlacklistActionType actionType, Long processedBy) {
-        Long kakaoId = member.getKakaoId();
         String normalizedEmail = normalizeEmail(member.getEmail());
         String normalizedPhoneNumber = normalizePhoneNumber(member.getPhoneNumber());
 
@@ -25,7 +25,7 @@ public class MemberBlacklistCreateService {
             throw new IllegalStateException("블랙리스트 생성 실패: 회원 이메일 없음");
         }
 
-        if (isBlacklisted(kakaoId, normalizedEmail, normalizedPhoneNumber)) {
+        if (isBlacklisted(normalizedEmail, normalizedPhoneNumber)) {
             return;
         }
 
@@ -34,9 +34,8 @@ public class MemberBlacklistCreateService {
         );
     }
 
-    private boolean isBlacklisted(Long kakaoId, String email, String phoneNumber) {
-        return (kakaoId != null && memberBlacklistRepository.existsByKakaoId(kakaoId))
-                || (StringUtils.hasText(email) && memberBlacklistRepository.existsByEmail(email))
+    private boolean isBlacklisted(String email, String phoneNumber) {
+        return (StringUtils.hasText(email) && memberBlacklistRepository.existsByEmail(email))
                 || (StringUtils.hasText(phoneNumber) && memberBlacklistRepository.existsByPhoneNumber(phoneNumber));
     }
 

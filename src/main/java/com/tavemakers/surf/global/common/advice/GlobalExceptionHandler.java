@@ -48,11 +48,17 @@ public class GlobalExceptionHandler {
         return responseException(e.getStatus(), e.getMessage(), data);
     }
 
-    /** 온보딩 통합 필요 감지 (case B, §3.5 / §3.6.2). message 는 한글 안내, 프론트는 data.reason 으로 분기한다. integrationToken 등 data 페이로드는 Phase 4 에서 추가한다. */
+    /** 온보딩 통합 필요 감지 (case B, §3.5 / §3.6.2). message 는 한글 안내, 프론트는 data.reason 으로 분기한다. issued 단계면 1회성 integrationToken·만료·안내 문구를 data 에 함께 담는다. */
     @ExceptionHandler(AccountIntegrationAvailableException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleAccountIntegrationAvailable(AccountIntegrationAvailableException e) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleAccountIntegrationAvailable(AccountIntegrationAvailableException e) {
         logWarning(e, e.getStatus().value());
-        Map<String, String> data = Map.of("reason", "ACCOUNT_INTEGRATION_REQUIRED");
+        Map<String, Object> data = new HashMap<>();
+        data.put("reason", "ACCOUNT_INTEGRATION_REQUIRED");
+        if (e.getIntegrationToken() != null) {
+            data.put("integrationToken", e.getIntegrationToken());
+            data.put("expiresInSeconds", e.getExpiresInSeconds());
+            data.put("guideMessage", e.getGuideMessage());
+        }
         return responseException(e.getStatus(), e.getMessage(), data);
     }
 

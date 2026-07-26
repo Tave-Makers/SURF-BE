@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.comment.repository;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -109,9 +108,6 @@ class CommentDuplicateQueryTest {
     private Member persistMember(String prefix) {
         long seed = System.nanoTime();
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(prefix + seed)
-                .kakaoId(seed)
                 .name("회원")
                 .email(prefix + seed + "@test.com")
                 .phoneNumber(String.valueOf(seed))

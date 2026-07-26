@@ -1,6 +1,5 @@
 package com.tavemakers.surf.application.letter.usecase;
 
-import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
 import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
 import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
@@ -150,9 +149,6 @@ class LetterUsecaseCreateLetterTest {
 
     private Member persistMember(String prefix) {
         Member member = Member.builder()
-                .provider(Provider.KAKAO)
-                .providerId(String.valueOf(System.nanoTime()))
-                .kakaoId(System.nanoTime())
                 .name("회원")
                 .email(prefix + System.nanoTime() + "@test.com")
                 .phoneNumber(String.valueOf(System.nanoTime()))
