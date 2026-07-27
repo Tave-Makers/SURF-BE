@@ -5,6 +5,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.PendingSocialIntegration;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
+import com.tavemakers.surf.domain.member.entity.enums.Part;
 import com.tavemakers.surf.domain.member.exception.IntegrationNotEligibleException;
 import com.tavemakers.surf.domain.member.exception.PendingIntegrationExpiredException;
 import com.tavemakers.surf.domain.member.exception.PendingIntegrationNotFoundException;
@@ -57,6 +58,9 @@ class IntegrationTargetGetServiceTest {
         Member m = Member.builder().status(status).name("홍길동").email(email).phoneNumber(phone).build();
         ReflectionTestUtils.setField(m, "id", TARGET_ID);
         ReflectionTestUtils.setField(m, "profileImageUrl", "https://cdn/profile.jpg");
+        ReflectionTestUtils.setField(m, "selfIntroduction", "안녕하세요. 백엔드 개발자입니다.");
+        m.addTrack(15, Part.BACKEND);
+        m.addTrack(16, Part.WEB_FRONTEND);
         return m;
     }
 
@@ -102,6 +106,25 @@ class IntegrationTargetGetServiceTest {
         assertThat(result.providers()).containsExactly("KAKAO"); // 임시 회원의 APPLE 이 섞이지 않는다
         assertThat(result.username()).isEqualTo("홍길동");
         assertThat(result.profileImageUrl()).isEqualTo("https://cdn/profile.jpg");
+        assertThat(result.trackList())
+                .extracting("generation", "part")
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple(15, "BACKEND"),
+                        org.assertj.core.groups.Tuple.tuple(16, "WEB_FRONTEND")
+                );
+        assertThat(result.selfIntroduction()).isEqualTo("안녕하세요. 백엔드 개발자입니다.");
+    }
+
+    @Test
+    @DisplayName("통합 대상의 트랙이 없으면 빈 목록을 반환한다")
+    void getTarget_emptyTrackList() {
+        Member target = targetOf(MemberStatus.APPROVED, EMAIL, PHONE);
+        target.getTracks().clear();
+        givenEligible(target);
+
+        IntegrationTargetResDTO result = service.getIntegrationTarget(TEMP_ID);
+
+        assertThat(result.trackList()).isEmpty();
     }
 
     @Test

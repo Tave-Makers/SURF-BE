@@ -24,7 +24,13 @@ public record IntegrationTargetResDTO(
         String username,
 
         @Schema(description = "통합 대상 프로필 이미지 URL")
-        String profileImageUrl
+        String profileImageUrl,
+
+        @Schema(description = "통합 대상 트랙 목록")
+        List<TrackResDTO> trackList,
+
+        @Schema(description = "통합 대상 자기소개", example = "안녕하세요. 백엔드 개발자 홍길동입니다.")
+        String selfIntroduction
 ) {
 
     /** 통합 대기 정보와 대상 회원으로 응답을 생성한다. */
@@ -36,13 +42,18 @@ public record IntegrationTargetResDTO(
         List<String> providers = targetSocialAccounts.stream()
                 .map(socialAccount -> socialAccount.getProvider().name())
                 .toList();
+        List<TrackResDTO> trackList = target.getTracks().stream()
+                .map(TrackResDTO::from)
+                .toList();
 
         return new IntegrationTargetResDTO(
                 providers,
                 pending.getNormalizedEmail(),
                 pending.getNormalizedPhone(),
                 target.getName(),
-                target.getProfileImageUrl()
+                target.getProfileImageUrl(),
+                trackList,
+                target.getSelfIntroduction()
         );
     }
 }
