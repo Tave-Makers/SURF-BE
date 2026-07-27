@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -47,6 +48,10 @@ public class PendingSocialIntegration extends BaseEntity {
     @Column(nullable = false)
     private Long socialAccountId;
 
+    /** 통합 필요 감지 시점에 확정된 기존 회원 */
+    @Column(nullable = false)
+    private Long targetMemberId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
     private Provider provider;
@@ -64,24 +69,28 @@ public class PendingSocialIntegration extends BaseEntity {
 
     @Builder
     private PendingSocialIntegration(String token, Long tempMemberId, Long socialAccountId,
-                                     Provider provider, String normalizedEmail, String normalizedPhone,
+                                     Long targetMemberId, Provider provider,
+                                     String normalizedEmail, String normalizedPhone,
                                      LocalDateTime expiresAt) {
         this.token = token;
         this.tempMemberId = tempMemberId;
         this.socialAccountId = socialAccountId;
+        this.targetMemberId = targetMemberId;
         this.provider = provider;
         this.normalizedEmail = normalizedEmail;
         this.normalizedPhone = normalizedPhone;
         this.expiresAt = expiresAt;
     }
 
-    /** 임시 회원·소셜 계정·온보딩 입력값으로 대기 row를 발급한다. 토큰은 1회성 예측 불가 값, 만료는 {@code now + TTL}. */
-    public static PendingSocialIntegration issue(Long tempMemberId, Long socialAccountId, Provider provider,
-                                                 String normalizedEmail, String normalizedPhone, LocalDateTime now) {
+    /** 임시 회원과 통합 대상 정보로 1회성 통합 대기 정보를 발급한다. */
+    public static PendingSocialIntegration issue(Long tempMemberId, Long socialAccountId, Long targetMemberId,
+                                                 Provider provider, String normalizedEmail, String normalizedPhone,
+                                                 LocalDateTime now) {
         return PendingSocialIntegration.builder()
                 .token(UUID.randomUUID().toString().replace("-", ""))
                 .tempMemberId(tempMemberId)
                 .socialAccountId(socialAccountId)
+                .targetMemberId(targetMemberId)
                 .provider(provider)
                 .normalizedEmail(normalizedEmail)
                 .normalizedPhone(normalizedPhone)
@@ -94,12 +103,28 @@ public class PendingSocialIntegration extends BaseEntity {
         return !now.isBefore(expiresAt);
     }
 
-    /** 발급 컨텍스트 동일성 — 임시 회원·provider·연락처가 같은 재요청만 멱등 재사용 대상이다(연락처가 바뀐 요청은 다른 명령). */
-    public boolean matchesContext(Long tempMemberId, Provider provider,
+    /** 임시 회원·통합 대상·소셜 제공자·연락처가 동일한 발급 요청인지 확인한다. */
+    public boolean matchesContext(Long tempMemberId, Long targetMemberId, Provider provider,
                                   String normalizedEmail, String normalizedPhone) {
         return this.tempMemberId.equals(tempMemberId)
+                && Objects.equals(this.targetMemberId, targetMemberId)
                 && this.provider == provider
                 && this.normalizedEmail.equals(normalizedEmail)
                 && this.normalizedPhone.equals(normalizedPhone);
+    }
+
+    /** 저장된 통합 대상과 회원이 일치하는지 확인한다. */
+    public boolean isTargetMember(Long memberId) {
+        return this.targetMemberId != null && Objects.equals(this.targetMemberId, memberId);
+    }
+
+    /** 통합 대상 회원이 기록되어 있는지 확인한다. */
+    public boolean hasTargetMember() {
+        return this.targetMemberId != null;
+    }
+
+    /** 발급 시점 연락처와 대상 회원의 현재 연락처가 일치하는지 확인한다. */
+    public boolean matchesContactInfo(String email, String phoneNumber) {
+        return this.normalizedEmail.equals(email) && this.normalizedPhone.equals(phoneNumber);
     }
 }

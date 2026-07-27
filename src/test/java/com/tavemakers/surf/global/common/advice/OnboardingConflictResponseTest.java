@@ -42,7 +42,7 @@ class OnboardingConflictResponseTest {
     @DisplayName("case B (detected) — 토큰 미발급 단계면 data 는 reason 만 담고 토큰 키는 없다")
     void caseB_detected() {
         ResponseEntity<ApiResponse<Map<String, Object>>> res = handler.handleAccountIntegrationAvailable(
-                AccountIntegrationAvailableException.detected(1L, 2L, Provider.KAKAO, "e@test.com", "01011112222"));
+                AccountIntegrationAvailableException.detected(1L, 2L, 3L, Provider.KAKAO, "e@test.com", "01011112222"));
 
         assertThat(res.getBody().data())
                 .containsEntry("reason", "ACCOUNT_INTEGRATION_REQUIRED")

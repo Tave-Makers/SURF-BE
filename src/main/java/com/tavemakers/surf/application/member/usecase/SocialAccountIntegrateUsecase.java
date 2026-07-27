@@ -25,10 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-/**
- * 소셜 계정 통합(연동) — 기존 계정 로그인 권한으로 호출한다. (§3.6)
- * pending 토큰·email·phone·상태·provider·블랙리스트를 재검증하고, 신규 SocialAccount를 기존 회원으로 재연결한다.
- */
+/** 기존 회원에게 신규 소셜 계정을 통합한다. */
 @Service
 @RequiredArgsConstructor
 public class SocialAccountIntegrateUsecase {
@@ -42,10 +39,7 @@ public class SocialAccountIntegrateUsecase {
     private final MemberBlacklistGetService memberBlacklistGetService;
     private final ApplicationEventPublisher eventPublisher;
 
-    /**
-     * 기존 회원 로그인 권한으로 pending 토큰·연락처·상태·provider·블랙리스트를 재검증한 뒤 SocialAccount를 기존 회원에 재연결한다.
-     * 발급(issue) 부재 경로와의 lock 교차로 생기는 transient 데드락/락 타임아웃 재시도는 호출부(컨트롤러)가 담당한다.
-     */
+    /** 통합 조건을 검증하고 소셜 계정을 기존 회원에게 이전한다. */
     @Transactional
     public SocialAccountIntegrateResDTO integrate(Long existingMemberId, String integrationToken) {
         // 행 쓰기 락으로 동시 통합 요청을 직렬화한다 — 부재는 이미 사용/무효(1회성 보장)
@@ -55,9 +49,14 @@ public class SocialAccountIntegrateUsecase {
             throw new PendingIntegrationExpiredException();
         }
 
+        // 감지 시점에 확정된 대상과 현재 인증 회원이 일치해야 한다.
+        if (!pending.isTargetMember(existingMemberId)) {
+            throw new IntegrationNotEligibleException();
+        }
+
+        // 통합 감지 후 대상 회원의 연락처가 변경되었는지 다시 확인한다.
         Member existingMember = memberGetService.getMember(existingMemberId);
-        if (!pending.getNormalizedEmail().equals(existingMember.getEmail())
-                || !pending.getNormalizedPhone().equals(existingMember.getPhoneNumber())) {
+        if (!pending.matchesContactInfo(existingMember.getEmail(), existingMember.getPhoneNumber())) {
             throw new IntegrationNotEligibleException();
         }
         MemberStatus status = existingMember.getStatus();
