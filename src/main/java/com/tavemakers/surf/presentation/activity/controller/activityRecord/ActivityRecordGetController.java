@@ -1,5 +1,6 @@
 package com.tavemakers.surf.presentation.activity.controller.activityRecord;
 
+import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.presentation.activity.dto.activityRecord.response.AdminActivityRecordSliceResDTO;
 import com.tavemakers.surf.application.activity.usecase.ActivityRecordUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -23,10 +24,12 @@ public class ActivityRecordGetController {
     @GetMapping("/v1/admin/scores/members/{memberId}/activity-records")
     public ApiResponse<AdminActivityRecordSliceResDTO> getAdminActivityRecords(
             @PathVariable Long memberId,
+            @RequestParam ScoreType scoreType,
             @RequestParam int pageNum,
             @RequestParam int pageSize
     ) {
-        AdminActivityRecordSliceResDTO response = activityRecordUsecase.getAdminActivityRecordList(memberId, pageNum, pageSize);
+        AdminActivityRecordSliceResDTO response =
+                activityRecordUsecase.getAdminActivityRecordList(memberId, scoreType, pageNum, pageSize);
         return ApiResponse.response(HttpStatus.OK, ACTIVITY_RECORD_READ.getMessage(), response);
     }
 

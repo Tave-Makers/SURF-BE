@@ -42,6 +42,8 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +198,49 @@ public class MemberUsecase {
                                 Collectors.toList()
                         )
                 ));
+    }
+
+    /** 활동 기수에 해당하는 멤버를 파트별로 조회 */
+    @Transactional(readOnly = true)
+    public List<MemberGroupedByPartResDTO> getMembersGroupedByPart(Integer generation) {
+        List<Track> generationTracks = trackGetService.getActiveTracksByGenerationWithMember(generation);
+
+        if (generationTracks.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Part, List<MemberGroupedByPartResDTO.MemberCardDTO>> groupedByPart = generationTracks.stream()
+                .collect(Collectors.groupingBy(
+                        Track::getPart,
+                        Collectors.mapping(
+                                track -> MemberGroupedByPartResDTO.MemberCardDTO.of(
+                                        track.getMember(),
+                                        List.of(track)
+                                ),
+                                Collectors.toList()
+                        )
+                ));
+
+        return Arrays.stream(Part.values())
+                .filter(groupedByPart::containsKey)
+                .map(part -> MemberGroupedByPartResDTO.of(
+                        part,
+                        groupedByPart.get(part).stream()
+                                .collect(Collectors.collectingAndThen(
+                                        Collectors.toMap(
+                                                MemberGroupedByPartResDTO.MemberCardDTO::memberId,
+                                                member -> member,
+                                                (left, right) -> left
+                                        ),
+                                        deduped -> deduped.values().stream()
+                                                .sorted(Comparator.comparing(
+                                                        MemberGroupedByPartResDTO.MemberCardDTO::name,
+                                                        Comparator.nullsLast(String::compareTo)
+                                                ))
+                                                .toList()
+                                ))
+                ))
+                .toList();
     }
 
     /** 회원 프로필 및 경력 정보 수정 */

@@ -29,6 +29,15 @@ public interface TrackRepository extends JpaRepository<Track, Long> {
             "AND t.generation = (SELECT MAX(t2.generation) FROM Track t2 WHERE t2.member = t.member)")
     List<Track> findAllWithActiveMember();
 
+    @Query("SELECT t FROM Track t JOIN FETCH t.member m " +
+            "WHERE t.generation = :generation " +
+            "AND m.activityStatus = true " +
+            "AND m.status = com.tavemakers.surf.domain.member.entity.enums.MemberStatus.APPROVED " +
+            "AND m.isDeleted = false")
+
+    /** 특정 기수의 활동 회원 트랙 목록을 조회합니다. */
+    List<Track> findAllActiveByGenerationWithMember(@Param("generation") Integer generation);
+
     List<Track> findByMemberId(Long memberId);
 
     @Query("SELECT DISTINCT t.generation FROM Track t ORDER BY t.generation DESC")

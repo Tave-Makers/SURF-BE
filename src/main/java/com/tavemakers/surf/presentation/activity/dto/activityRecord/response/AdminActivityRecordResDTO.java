@@ -18,6 +18,7 @@ public record AdminActivityRecordResDTO(
         String activityName,
         ScoreType scoreType,
         LocalDate activityDate,
+        BigDecimal prefixSum,
         BigDecimal appliedScore
 ) {
     /** 관리자용 활동기록 응답 DTO 생성 */
@@ -28,6 +29,7 @@ public record AdminActivityRecordResDTO(
                 .activityName(record.getActivityType().getDisplayName())
                 .scoreType(record.getScoreType())
                 .activityDate(record.getActivityDate())
+                .prefixSum(record.getPrefixSum())
                 .appliedScore(record.getAppliedScore())
                 .build();
     }

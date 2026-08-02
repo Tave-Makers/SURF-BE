@@ -160,9 +160,14 @@ public class ActivityRecordUsecase {
 
     /** 관리자용 회원의 전체 활동기록 페이징 조회 */
     @Transactional(readOnly = true)
-    public AdminActivityRecordSliceResDTO getAdminActivityRecordList(Long memberId, int pageNum, int pageSize) {
+    public AdminActivityRecordSliceResDTO getAdminActivityRecordList(
+            Long memberId,
+            ScoreType scoreType,
+            int pageNum,
+            int pageSize
+    ) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Slice<ActivityRecord> slice = activityRecordGetService.findAllActiveByMemberId(memberId, pageable);
+        Slice<ActivityRecord> slice = activityRecordGetService.findActivityRecordList(memberId, scoreType, pageable);
 
         return AdminActivityRecordSliceResDTO.from(slice.map(AdminActivityRecordResDTO::from));
     }

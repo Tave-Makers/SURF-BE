@@ -33,9 +33,14 @@ public class TrackGetService {
                 .toList();
     }
 
-    //트랙과 함께 모든 회원 반환
+    /** 트랙과 함께 모든 회원 반환 */
     public List<Track> getAllTracksWithMember() {
         return trackRepository.findAllWithActiveMember();
+    }
+
+    /** 특정 기수의 활동 멤버 track 조회 */
+    public List<Track> getActiveTracksByGenerationWithMember(Integer generation) {
+        return trackRepository.findAllActiveByGenerationWithMember(generation);
     }
 
     public List<Integer> getExistsAllGenerations() {

@@ -9,19 +9,25 @@ public record MemberScoreRankingResDTO(
         Long memberId,
         String profileImageUrl,
         String name,
+        Integer generation,
         String part,
         BigDecimal rewardTotal,
         BigDecimal penaltyTotal,
         BigDecimal totalScore
 ) {
-    /** 개인별 상/벌점 현황 DTO 생성 */
-    public static MemberScoreRankingResDTO of(Member member, Part part,
-                                               BigDecimal rewardTotal, BigDecimal penaltyTotal,
-                                               BigDecimal totalScore) {
+    public static MemberScoreRankingResDTO of(
+            Member member,
+            Integer generation,
+            Part part,
+            BigDecimal rewardTotal,
+            BigDecimal penaltyTotal,
+            BigDecimal totalScore
+    ) {
         return new MemberScoreRankingResDTO(
                 member.getId(),
                 member.getProfileImageUrl(),
                 member.getName(),
+                generation,
                 part != null ? part.getDisplayName() : null,
                 rewardTotal,
                 penaltyTotal,
