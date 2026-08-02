@@ -201,6 +201,7 @@ public class MemberUsecase {
     }
 
     /** 활동 기수에 해당하는 멤버를 파트별로 조회 */
+    @Transactional(readOnly = true)
     public List<MemberGroupedByPartResDTO> getMembersGroupedByPart(Integer generation) {
         List<Track> generationTracks = trackGetService.getActiveTracksByGenerationWithMember(generation);
 
