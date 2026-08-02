@@ -12,6 +12,7 @@ public record MemberGroupedByPartResDTO(
         String partDisplayName,
         List<MemberCardDTO> members
 ) {
+    /** 파트별 회원 응답을 생성합니다. */
     public static MemberGroupedByPartResDTO of(Part part, List<MemberCardDTO> members) {
         return new MemberGroupedByPartResDTO(
                 part.name(),
@@ -26,6 +27,7 @@ public record MemberGroupedByPartResDTO(
             String profileImageUrl,
             List<TrackResDTO> tracks
     ) {
+        /** 회원과 트랙 정보를 회원 카드 응답으로 변환합니다. */
         public static MemberCardDTO of(Member member, List<Track> tracks) {
             List<TrackResDTO> trackDtos = tracks.stream()
                     .sorted(Comparator.reverseOrder())
