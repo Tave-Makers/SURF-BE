@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.PendingSocialIntegration;
 import com.tavemakers.surf.domain.member.entity.SocialAccount;
+import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
 import com.tavemakers.surf.domain.member.exception.IntegrationNotEligibleException;
@@ -55,7 +56,9 @@ class IntegrationTargetGetServiceTest {
     }
 
     private Member targetOf(MemberStatus status, String email, String phone) {
-        Member m = Member.builder().status(status).name("홍길동").email(email).phoneNumber(phone).build();
+        // 기본값(MEMBER)이 아닌 역할을 넣어 대상 회원의 값이 그대로 실리는지 확인한다
+        Member m = Member.builder().status(status).role(MemberRole.MANAGER)
+                .name("홍길동").email(email).phoneNumber(phone).build();
         ReflectionTestUtils.setField(m, "id", TARGET_ID);
         ReflectionTestUtils.setField(m, "profileImageUrl", "https://cdn/profile.jpg");
         ReflectionTestUtils.setField(m, "selfIntroduction", "안녕하세요. 백엔드 개발자입니다.");
@@ -106,6 +109,7 @@ class IntegrationTargetGetServiceTest {
         assertThat(result.providers()).containsExactly("KAKAO"); // 임시 회원의 APPLE 이 섞이지 않는다
         assertThat(result.username()).isEqualTo("홍길동");
         assertThat(result.profileImageUrl()).isEqualTo("https://cdn/profile.jpg");
+        assertThat(result.role()).isEqualTo("MANAGER");
         assertThat(result.trackList())
                 .extracting("generation", "part")
                 .containsExactly(

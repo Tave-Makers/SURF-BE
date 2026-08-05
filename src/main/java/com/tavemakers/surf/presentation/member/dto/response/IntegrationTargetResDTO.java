@@ -26,6 +26,9 @@ public record IntegrationTargetResDTO(
         @Schema(description = "통합 대상 프로필 이미지 URL")
         String profileImageUrl,
 
+        @Schema(description = "통합 대상 역할", example = "MEMBER")
+        String role,
+
         @Schema(description = "통합 대상 트랙 목록")
         List<TrackResDTO> trackList,
 
@@ -52,6 +55,7 @@ public record IntegrationTargetResDTO(
                 pending.getNormalizedPhone(),
                 target.getName(),
                 target.getProfileImageUrl(),
+                target.getRole().name(),
                 trackList,
                 target.getSelfIntroduction()
         );
