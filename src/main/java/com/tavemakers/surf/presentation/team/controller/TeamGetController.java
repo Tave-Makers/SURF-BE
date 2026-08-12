@@ -24,12 +24,13 @@ public class TeamGetController {
     private final TeamUsecase teamUsecase;
 
     /** 팀 목록 조회 (파라미터 미입력 시 전체 조회, STUDY, PROJECT로 구분)*/
-    @Operation(summary = "팀 목록 조회", description = "팀 목록을 기수별로 구분하여 조회합니다. type 파라미터로 스터디/프로젝트 분리 가능 (STUDY, PROJECT)")
+    @Operation(summary = "팀 목록 조회", description = "팀 목록을 기수별로 구분하여 조회합니다. type 파라미터로 스터디/프로젝트 분리 가능, generation 파라미터로 기수 선택 가능")
     @GetMapping("/v1/admin/teams")
     public ApiResponse<List<TeamGenerationSectionResDTO>> getTeams(
-            @RequestParam(required = false) TeamType type
+            @RequestParam(required = false) TeamType type,
+            @RequestParam(required = false) Integer generation
     ) {
-        List<TeamGenerationSectionResDTO> response = teamUsecase.getTeams(type);
+        List<TeamGenerationSectionResDTO> response = teamUsecase.getTeams(type, generation);
         return ApiResponse.response(HttpStatus.OK, TEAM_READ.getMessage(), response);
     }
 

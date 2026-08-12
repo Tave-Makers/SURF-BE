@@ -26,8 +26,8 @@ public class TeamUsecase {
 
     /** 팀 목록 조회 */
     @Transactional(readOnly = true)
-    public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
-        return teamGetService.getTeams(type);
+    public List<TeamGenerationSectionResDTO> getTeams(TeamType type, Integer generation) {
+        return teamGetService.getTeams(type, generation);
     }
 
     /** 팀 상세 조회 */
