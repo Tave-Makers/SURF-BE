@@ -49,8 +49,8 @@ public class TeamGetService {
     }
 
     /** 팀 목록 조회 (기수별 섹션으로 구성) */
-    public List<TeamGenerationSectionResDTO> getTeams(TeamType type) {
-        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(type).stream()
+    public List<TeamGenerationSectionResDTO> getTeams(TeamType type, Integer generation) {
+        List<TeamListResDTO> teams = teamRepository.findAllForAccordion(type, generation).stream()
                 .map(TeamListResDTO::from)
                 .toList();
 

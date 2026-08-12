@@ -17,9 +17,10 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
         select t
           from Team t
          where (:type is null or t.type = :type)
+           and (:generation is null or t.generation = :generation)
          order by t.generation desc, t.id desc
     """)
-    List<Team> findAllForAccordion(TeamType type);
+    List<Team> findAllForAccordion(@Param("type") TeamType type, @Param("generation") Integer generation);
 
     @EntityGraph(attributePaths = {
             "leader",
