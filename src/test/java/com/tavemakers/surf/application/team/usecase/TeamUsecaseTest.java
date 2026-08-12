@@ -101,11 +101,11 @@ class TeamUsecaseTest {
     @DisplayName("getTeams: 조회를 TeamGetService 에 위임하고 결과를 그대로 반환한다 (순수 위임 대표 케이스)")
     void getTeams_위임() {
         List<TeamGenerationSectionResDTO> sections = List.of(new TeamGenerationSectionResDTO(9, List.of()));
-        given(teamGetService.getTeams(TeamType.STUDY)).willReturn(sections);
+        given(teamGetService.getTeams(TeamType.STUDY, null)).willReturn(sections);
 
-        List<TeamGenerationSectionResDTO> result = teamUsecase.getTeams(TeamType.STUDY);
+        List<TeamGenerationSectionResDTO> result = teamUsecase.getTeams(TeamType.STUDY, null);
 
         assertThat(result).isSameAs(sections);
-        then(teamGetService).should().getTeams(TeamType.STUDY);
+        then(teamGetService).should().getTeams(TeamType.STUDY, null);
     }
 }
