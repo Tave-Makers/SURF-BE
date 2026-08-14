@@ -10,10 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.tavemakers.surf.presentation.report.controller.ResponseMessage.REPORT_CREATED;
 
@@ -27,6 +24,7 @@ public class ReportCreateController {
 
     @Operation(summary = "신고 접수", description = "게시글, 댓글, 프로필 신고를 접수합니다.")
     @PostMapping("/v1/user/reports")
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<ReportResDTO> createReport(@Valid @RequestBody ReportCreateReqDTO request) {
         Long memberId = SecurityUtils.getCurrentMemberId();
         ReportResDTO response = reportUsecase.createReport(memberId, request);
