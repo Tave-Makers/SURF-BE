@@ -1,11 +1,12 @@
 package com.tavemakers.surf.application.comment.query;
 
+import com.tavemakers.surf.domain.comment.entity.Comment;
+import com.tavemakers.surf.domain.comment.exception.CommentNotFoundException;
+import com.tavemakers.surf.domain.comment.repository.CommentRepository;
+import com.tavemakers.surf.domain.comment.service.CommentLikeService;
 import com.tavemakers.surf.presentation.comment.dto.response.CommentListResDTO;
 import com.tavemakers.surf.presentation.comment.dto.response.CommentResDTO;
 import com.tavemakers.surf.presentation.comment.dto.response.MentionResDTO;
-import com.tavemakers.surf.domain.comment.entity.Comment;
-import com.tavemakers.surf.domain.comment.repository.CommentRepository;
-import com.tavemakers.surf.domain.comment.service.CommentLikeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -15,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 댓글 목록 read-model 조립. 댓글/멘션/좋아요 조회를 오케스트레이션하고 표현형(DTO)을 구성한다.
- * 트랜잭션(readOnly) 경계는 호출자(CommentUsecase)가 소유한다.
+ * 댓글 목록 read-model 조립. 댓글/멘션/좋아요 조회를 조합해 표현용 DTO를 구성한다.
+ * 트랜잭션(readOnly) 경계는 호출부(CommentUsecase)가 소유한다.
  */
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,12 @@ public class CommentGetService {
     private final CommentRepository commentRepository;
     private final CommentMentionGetService commentMentionGetService;
     private final CommentLikeService commentLikeService;
+
+    /** 댓글 ID로 엔티티 조회 */
+    public Comment getComment(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(CommentNotFoundException::new);
+    }
 
     /** 댓글 목록 조회 */
     public CommentListResDTO getComments(Long postId, Pageable pageable, Long memberId) {
@@ -36,7 +43,7 @@ public class CommentGetService {
         // 2) 댓글 총 개수 조회
         long totalCount = commentRepository.countByPostId(postId);
 
-        // 3) 각 댓글 → DTO 변환 (멘션 일괄 조회로 N+1 방지)
+        // 3) 각 댓글 -> DTO 변환 (멘션 일괄 조회로 N+1 방지)
         List<Comment> comments = commentSlice.getContent();
         List<Long> commentIds = comments.stream().map(Comment::getId).toList();
         Map<Long, List<MentionResDTO>> mentionMap =
