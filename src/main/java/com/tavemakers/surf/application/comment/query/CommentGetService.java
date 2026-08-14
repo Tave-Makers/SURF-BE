@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ public class CommentGetService {
     private final CommentLikeService commentLikeService;
 
     /** 댓글 ID로 엔티티 조회 */
+    @Transactional(readOnly = true)
     public Comment getComment(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
