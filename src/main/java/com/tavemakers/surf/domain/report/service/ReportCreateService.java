@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ReportService {
+public class ReportCreateService {
 
     private final ReportRepository reportRepository;
 

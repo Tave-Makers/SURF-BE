@@ -12,7 +12,7 @@ import com.tavemakers.surf.domain.report.entity.Report;
 import com.tavemakers.surf.domain.report.entity.ReportTargetType;
 import com.tavemakers.surf.domain.report.exception.ReportSnapshotSerializationException;
 import com.tavemakers.surf.domain.report.exception.SelfReportNotAllowedException;
-import com.tavemakers.surf.domain.report.service.ReportService;
+import com.tavemakers.surf.domain.report.service.ReportCreateService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.presentation.report.dto.request.ReportCreateReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.ReportPreviewResDTO;
@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ReportUsecase {
 
-    private final ReportService reportService;
+    private final ReportCreateService reportService;
     private final PostGetService postGetService;
     private final CommentGetService commentGetService;
     private final MemberGetService memberGetService;

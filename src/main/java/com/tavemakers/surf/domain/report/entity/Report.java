@@ -68,6 +68,7 @@ public class Report extends BaseEntity {
         this.snapshotJson = snapshotJson;
     }
 
+    /** 신고 엔티티 생성 */
     public static Report of(
             Long reporterMemberId,
             Long reportedMemberId,
