@@ -4,9 +4,9 @@ import com.tavemakers.surf.application.block.query.BlockAdminGetService;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.domain.block.entity.Block;
 import com.tavemakers.surf.domain.block.entity.enums.BlockDirection;
+import com.tavemakers.surf.domain.block.event.BlockForceReleasedEvent;
 import com.tavemakers.surf.domain.block.service.BlockDeleteService;
 import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.presentation.block.dto.response.BlockAdminResDTO;
 import com.tavemakers.surf.presentation.block.dto.response.BlockAdminSliceResDTO;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
@@ -28,8 +29,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -52,7 +51,7 @@ class BlockAdminUsecaseTest {
     private MemberGetService memberGetService;
 
     @Mock
-    private LogEventEmitter logEventEmitter;
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private BlockAdminUsecase blockAdminUsecase;
@@ -91,22 +90,20 @@ class BlockAdminUsecaseTest {
     }
 
     @Test
-    @DisplayName("강제 해제는 삭제된 관계의 양쪽 회원까지 감사 로그로 남긴다")
-    void 강제_해제는_감사_로그를_남긴다() {
+    @DisplayName("강제 해제는 삭제된 관계의 양쪽 회원을 실은 이벤트를 발행한다")
+    void 강제_해제는_감사_이벤트를_발행한다() {
         given(blockDeleteService.deleteById(101L))
                 .willReturn(block(101L, 1L, 2L, LocalDateTime.of(2026, 8, 15, 10, 0)));
 
         blockAdminUsecase.forceDelete(ADMIN, 101L);
 
-        @SuppressWarnings("unchecked")
-        ArgumentCaptor<Map<String, Object>> props = ArgumentCaptor.forClass(Map.class);
-        then(logEventEmitter).should().emit(eq("block_released_by_admin"), props.capture(), anyString());
-        assertThat(props.getValue()).containsExactlyInAnyOrderEntriesOf(Map.of(
-                "admin_id", ADMIN,
-                "block_id", 101L,
-                "blocker_id", 1L,
-                "blocked_id", 2L
-        ));
+        // 커밋 실패 시 "강제 해제" 성공 로그가 남지 않도록, usecase는 emit하지 않고 이벤트만 발행한다.
+        // 실제 적재는 AFTER_COMMIT 리스너가 한다 (BlockForceReleasedLogListenerTest).
+        ArgumentCaptor<BlockForceReleasedEvent> event =
+                ArgumentCaptor.forClass(BlockForceReleasedEvent.class);
+        then(eventPublisher).should().publishEvent(event.capture());
+        assertThat(event.getValue())
+                .isEqualTo(new BlockForceReleasedEvent(ADMIN, 101L, 1L, 2L));
     }
 
     private Block block(Long id, Long blockerId, Long blockedId, LocalDateTime createdAt) {

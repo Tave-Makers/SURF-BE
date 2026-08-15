@@ -4,13 +4,14 @@ import com.tavemakers.surf.application.block.query.BlockAdminGetService;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.domain.block.entity.Block;
 import com.tavemakers.surf.domain.block.entity.enums.BlockDirection;
+import com.tavemakers.surf.domain.block.event.BlockForceReleasedEvent;
 import com.tavemakers.surf.domain.block.service.BlockDeleteService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
-import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.presentation.block.dto.response.BlockAdminResDTO;
 import com.tavemakers.surf.presentation.block.dto.response.BlockAdminSliceResDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class BlockAdminUsecase {
     private final BlockAdminGetService blockAdminGetService;
     private final BlockDeleteService blockDeleteService;
     private final MemberGetService memberGetService;
-    private final LogEventEmitter logEventEmitter;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 차단 관계 목록. 양쪽 회원을 페이지 단위로 한 번에 조회해 N+1을 막는다.
@@ -55,18 +56,15 @@ public class BlockAdminUsecase {
      * 관리자 강제 해제. 사용자 해제와 달리 방향을 따지지 않고 block_id로 지운다.
      *
      * <p>남의 차단 관계를 임의로 푸는 동작이라 누가 무엇을 풀었는지 감사 로그를 남긴다.
-     * 삭제된 레코드에서 blocker/blocked를 읽어야 하므로 어노테이션이 아니라 emitter로 기록한다.
+     * 다만 여기서 직접 emit하면 커밋 실패 시에도 "강제 해제" 이벤트가 남으므로, 이벤트를 발행해
+     * {@code BlockForceReleasedLogListener}가 AFTER_COMMIT에 기록하게 한다.
      */
     @Transactional
     public void forceDelete(Long adminId, Long blockId) {
         Block block = blockDeleteService.deleteById(blockId);
 
-        logEventEmitter.emit("block_released_by_admin", Map.of(
-                "admin_id", adminId,
-                "block_id", blockId,
-                "blocker_id", block.getBlockerId(),
-                "blocked_id", block.getBlockedId()
-        ), "관리자 차단 강제 해제");
+        eventPublisher.publishEvent(new BlockForceReleasedEvent(
+                adminId, blockId, block.getBlockerId(), block.getBlockedId()));
     }
 
     /** 한 페이지에 등장하는 blocker·blocked를 한 번에 조회하기 위해 ID를 모은다 */
