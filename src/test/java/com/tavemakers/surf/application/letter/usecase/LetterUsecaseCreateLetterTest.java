@@ -1,17 +1,19 @@
 package com.tavemakers.surf.application.letter.usecase;
 
-import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.application.letter.query.LetterGetService;
+import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
+import com.tavemakers.surf.domain.letter.exception.LetterBlockedException;
+import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
-import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
+import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +37,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 
 /**
  * 쪽지 생성 R5 수정(저장 커밋 후 트랜잭션 밖 메일 발송) 검증.
@@ -89,6 +93,8 @@ class LetterUsecaseCreateLetterTest {
     @MockBean
     private MemberGetService memberGetService;
     @MockBean
+    private BlockGetService blockGetService;
+    @MockBean
     private EmailSender emailSender;
     @MockBean
     private LogEventEmitter logEventEmitter;
@@ -132,6 +138,19 @@ class LetterUsecaseCreateLetterTest {
         assertThat(countLetters())
                 .as("저장이 메일 발송보다 먼저 커밋되어 쪽지 레코드가 남아야 한다")
                 .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("차단 관계이면 쪽지·LetterSentEvent·이메일이 모두 생성되지 않는다")
+    void 차단시_저장_이벤트_이메일이_모두_없다() {
+        given(blockGetService.existsBetween(sender.getId(), receiver.getId())).willReturn(true);
+
+        assertThatThrownBy(() -> letterUsecase.createLetter(sender.getId(), req()))
+                .isInstanceOf(LetterBlockedException.class);
+
+        assertThat(countLetters()).as("차단된 쪽지는 DB에 저장되지 않아야 한다").isZero();
+        assertThat(afterCommitProbe.fired.get()).as("LetterSentEvent가 발행되지 않아야 한다").isZero();
+        then(emailSender).should(never()).sendMail(anyString(), anyString(), anyString());
     }
 
     private LetterCreateReqDTO req() {
