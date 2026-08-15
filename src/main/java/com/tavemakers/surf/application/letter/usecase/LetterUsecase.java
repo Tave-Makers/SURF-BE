@@ -45,7 +45,14 @@ public class LetterUsecase {
         Member receiver = memberGetService.getMember(req.receiverId());
 
         // 3) 어느 방향이든 차단 관계가 있으면 저장·이벤트·메일보다 먼저 거부한다
-        if (blockGetService.existsBetween(senderId, receiver.getId())) {
+        if (blockGetService.existsBetween(senderId, req.receiverId())) {
+            // 차단 방향은 응답과 마찬가지로 로그에도 남기지 않는다
+            Map<String, Object> blockedProps = new HashMap<>();
+            blockedProps.put("sender_id", senderId);
+            blockedProps.put("receiver_id", req.receiverId());
+            blockedProps.put("status_code", 403);
+            blockedProps.put("error_code", "LETTER_BLOCKED");
+            logEventEmitter.emitError("letter_send_api_failed", blockedProps, "쪽지 전송 실패 - 차단 관계");
             throw new LetterBlockedException();
         }
 

@@ -11,6 +11,7 @@ import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -18,10 +19,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.inOrder;
@@ -83,6 +87,26 @@ class LetterUsecaseBlockGuardTest {
 
         then(letterCreateService).should(never()).save(any());
         then(emailSender).should(never()).sendMail(anyString(), anyString(), anyString());
+
+        assertBlockedFailureLogged(senderId, receiverId);
+    }
+
+    /**
+     * 차단 거부도 메일 실패와 동일한 실패 이벤트를 남긴다.
+     * 남기지 않으면 진입 시 emit 한 letter_send_api_called 만 있고 종결 이벤트가 없어,
+     * 분석 퍼널에서 원인 불명 이탈이 되고 차단 발동 횟수를 측정할 수 없다.
+     */
+    @SuppressWarnings("unchecked")
+    private void assertBlockedFailureLogged(Long senderId, Long receiverId) {
+        ArgumentCaptor<Map<String, Object>> props = ArgumentCaptor.forClass(Map.class);
+        then(logEventEmitter).should()
+                .emitError(eq("letter_send_api_failed"), props.capture(), anyString());
+
+        assertThat(props.getValue())
+                .containsEntry("sender_id", senderId)
+                .containsEntry("receiver_id", receiverId)
+                .containsEntry("status_code", 403)
+                .containsEntry("error_code", "LETTER_BLOCKED");
     }
 
     /** 발신자·수신자를 검증한 다음 차단 관계를 검사하는 순서를 고정한다 */
