@@ -1,5 +1,6 @@
 package com.tavemakers.surf.application.reservation.task;
 
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -84,6 +85,8 @@ class PostPublishRunnerRaceTest {
     private PlatformTransactionManager transactionManager;
 
     // PostGetService 의 잠금 조회 외 부가 의존성 — 이 테스트에서는 호출되지 않는다.
+    @MockBean
+    private BlockGetService blockGetService;
     @MockBean
     private ScrapGetService scrapGetService;
     @MockBean
