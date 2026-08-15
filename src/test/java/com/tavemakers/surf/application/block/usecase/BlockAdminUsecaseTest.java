@@ -24,14 +24,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 
 /**
  * BlockAdminUsecase 단위 테스트 — 양쪽 회원 조립과 강제 해제 감사 로그를 검증한다.
@@ -68,7 +65,8 @@ class BlockAdminUsecaseTest {
 
         BlockAdminSliceResDTO response = blockAdminUsecase.getBlocks(null, null, pageable);
 
-        then(memberGetService).should(times(1)).getMembers(anySet());
+        // 정확한 집합으로 검증한다 — blocker나 blocked 한쪽을 빠뜨려도 드러나야 한다
+        then(memberGetService).should().getMembers(Set.of(1L, 2L, 3L));
         assertThat(response.content()).extracting(BlockAdminResDTO::blockId).containsExactly(101L, 102L);
         assertThat(response.content().get(0).blocker().memberId()).isEqualTo(1L);
         assertThat(response.content().get(0).blocker().name()).isEqualTo("회원1");

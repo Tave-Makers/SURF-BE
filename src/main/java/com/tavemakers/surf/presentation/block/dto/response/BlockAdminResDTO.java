@@ -23,6 +23,7 @@ public record BlockAdminResDTO(
         LocalDateTime blockedAt
 ) {
 
+    /** 차단 관계와 양쪽 회원으로 관리자 목록 행을 만든다 */
     public static BlockAdminResDTO of(Block block, Member blocker, Member blocked) {
         return new BlockAdminResDTO(
                 block.getId(),

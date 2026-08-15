@@ -26,6 +26,7 @@ public record BlockedMemberResDTO(
         LocalDateTime blockedAt
 ) {
 
+    /** 차단 대상 회원과 차단 일시로 응답을 만든다 */
     public static BlockedMemberResDTO of(Member member, LocalDateTime blockedAt) {
         return new BlockedMemberResDTO(
                 member.getId(),

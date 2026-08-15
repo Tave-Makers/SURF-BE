@@ -21,6 +21,7 @@ public record BlockSliceResDTO(
         boolean hasNext
 ) {
 
+    /** 매핑이 끝난 Slice를 응답 형태로 감싼다 */
     public static BlockSliceResDTO from(Slice<BlockedMemberResDTO> slice) {
         return new BlockSliceResDTO(
                 slice.getContent(),

@@ -31,7 +31,6 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 
 /**
  * BlockUsecase 단위 테스트 — 도메인 서비스는 mock 처리하고, 검증 순서·위임 인자·DTO 매핑을 확인한다.
@@ -120,7 +119,8 @@ class BlockUsecaseTest {
 
         BlockSliceResDTO response = blockUsecase.getMyBlocks(ME, pageable);
 
-        then(memberGetService).should(times(1)).getMembers(anySet());
+        // 정확한 집합으로 검증한다 — 조회 1회(N+1 방지)와 대상 누락을 함께 잡는다
+        then(memberGetService).should().getMembers(Set.of(2L, 3L));
         assertThat(response.content()).extracting(BlockedMemberResDTO::memberId).containsExactly(2L, 3L);
         assertThat(response.content()).extracting(BlockedMemberResDTO::name).containsExactly("홍길동", "김철수");
         assertThat(response.content().get(1).profileImageUrl()).isNull();

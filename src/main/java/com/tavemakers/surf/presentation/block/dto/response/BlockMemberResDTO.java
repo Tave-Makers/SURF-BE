@@ -17,6 +17,7 @@ public record BlockMemberResDTO(
         String profileImageUrl
 ) {
 
+    /** 회원 엔티티에서 표시용 요약만 추린다 */
     public static BlockMemberResDTO from(Member member) {
         return new BlockMemberResDTO(
                 member.getId(),

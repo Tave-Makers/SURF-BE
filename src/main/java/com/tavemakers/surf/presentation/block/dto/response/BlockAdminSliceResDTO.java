@@ -21,6 +21,7 @@ public record BlockAdminSliceResDTO(
         boolean hasNext
 ) {
 
+    /** 매핑이 끝난 Slice를 응답 형태로 감싼다 */
     public static BlockAdminSliceResDTO from(Slice<BlockAdminResDTO> slice) {
         return new BlockAdminSliceResDTO(
                 slice.getContent(),
