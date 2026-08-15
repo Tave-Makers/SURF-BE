@@ -197,6 +197,24 @@ class BlockRepositoryTest {
     }
 
     @Test
+    @DisplayName("전체 조회는 회원 구분 없이 모든 관계를 최신순으로 준다 — 관리자 목록의 memberId 미지정 경로")
+    void 전체_조회는_모든_관계를_포함한다() {
+        Member other = persistMember("other");
+        blockRepository.save(Block.of(blocker.getId(), blocked.getId()));
+        blockRepository.save(Block.of(other.getId(), blocked.getId()));
+        blockRepository.save(Block.of(blocked.getId(), other.getId()));
+        em.flush();
+        em.clear();
+
+        Slice<Block> slice = blockRepository.findAllByOrderByCreatedAtDescIdDesc(PageRequest.of(0, 2));
+
+        assertThat(slice.getContent()).hasSize(2);
+        assertThat(slice.hasNext()).isTrue();
+        List<Long> ids = slice.getContent().stream().map(Block::getId).toList();
+        assertThat(ids).isSortedAccordingTo((a, b) -> Long.compare(b, a));
+    }
+
+    @Test
     @DisplayName("countByBlockerId는 내가 등록한 차단만 센다")
     void 내가_등록한_차단만_센다() {
         blockRepository.save(Block.of(blocker.getId(), blocked.getId()));
