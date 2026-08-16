@@ -27,6 +27,7 @@ public class AdminReportPatchController {
 
     private final AdminReportUsecase adminReportUsecase;
 
+    /** 관리자가 신고 상태를 RESOLVED 또는 REJECTED로 변경한다. */
     @Operation(summary = "신고 상태 변경", description = "관리자가 신고 상태를 RESOLVED 또는 REJECTED로 변경합니다.")
     @PatchMapping("/v1/admin/reports/{reportId}/status")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PRESIDENT')")

@@ -32,6 +32,7 @@ public class AdminReportGetController {
 
     private final AdminReportUsecase adminReportUsecase;
 
+    /** 관리자가 신고 목록을 최신순으로 조회한다. */
     @Operation(summary = "신고 목록 조회", description = "관리자가 신고 목록을 최신순으로 조회합니다.")
     @GetMapping("/v1/admin/reports")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PRESIDENT')")
@@ -46,6 +47,7 @@ public class AdminReportGetController {
         return ApiResponse.response(HttpStatus.OK, REPORT_LIST_READ.getMessage(), response);
     }
 
+    /** 관리자가 특정 신고의 상세 정보를 조회한다. */
     @Operation(summary = "신고 상세 조회", description = "관리자가 특정 신고의 상세 정보를 조회합니다.")
     @GetMapping("/v1/admin/reports/{reportId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PRESIDENT')")

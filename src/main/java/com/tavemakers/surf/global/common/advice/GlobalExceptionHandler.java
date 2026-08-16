@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
         return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
     }
 
-    // @PreAuthorize 등 인가 거부 (AuthorizationDeniedException 포함)
+    /** 권한이 없는 요청에 대해 경로에 맞는 403 응답을 반환한다. */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
             AccessDeniedException e,
