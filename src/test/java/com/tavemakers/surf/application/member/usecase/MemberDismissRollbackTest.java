@@ -1,8 +1,11 @@
 package com.tavemakers.surf.application.member.usecase;
 
+import com.tavemakers.surf.application.block.event.BlockMemberDismissListener;
 import com.tavemakers.surf.domain.badge.event.BadgeMemberDismissListener;
 import com.tavemakers.surf.domain.badge.entity.Badge;
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
+import com.tavemakers.surf.domain.block.entity.Block;
+import com.tavemakers.surf.domain.block.service.BlockDeleteService;
 import com.tavemakers.surf.domain.comment.event.CommentMemberDismissListener;
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.comment.service.CommentLikeService;
@@ -12,7 +15,7 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
-import com.tavemakers.surf.domain.member.event.MemberDismissedEvent;
+import com.tavemakers.surf.domain.member.repository.CareerRepository;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.service.MemberBlacklistCreateService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
@@ -35,8 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.event.EventListener;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,11 +58,14 @@ import static org.mockito.BDDMockito.given;
  * 같은 트랜잭션에서 정리한다. 계정 삭제는 "전부 성공 또는 전부 롤백"이어야 하므로, 리스너 중 하나라도
  * 실패하면 이미 삭제된 다른 도메인 데이터와 member row 까지 전부 되돌아와야 한다.
  *
- * <p>이를 재현하기 위해 테스트 전용 실패 리스너({@link FailingListenerConfig})를 @Import 로 등록한다.
- * 이 리스너가 "가장 늦게" 실행되는 근거는 @Order 가 아니라(LOWEST_PRECEDENCE 는 무순서 리스너의
- * 기본값과 동률이라 상대 순서를 보장하지 못한다) @Import 배열에서 정상 리스너들보다 뒤에 등록되는
- * 순서다 — 정상 리스너들이 먼저 delete 를 수행한 뒤 예외가 나므로, 그 삭제까지 롤백되는지 검증하는
- * 가장 엄격한 시나리오다. 실패 리스너는 이 클래스에만 격리되어 완전성 테스트에는 영향을 주지 않는다.
+ * <p>이를 재현하려면 "리스너들이 이미 지운 뒤"에 실패해야 한다. 실패 지점을 테스트 전용 리스너로
+ * 잡으면 @EventListener 상대 순서에 의존하게 되는데, @Import 배열 순서도 @Order 도(무순서 리스너의
+ * 기본값 LOWEST_PRECEDENCE 와 동률이라) 이를 보장하지 못한다 — 실제로 확인해보면 테스트 리스너가
+ * 정상 리스너보다 먼저 실행되어, 아무것도 지워지지 않은 상태를 롤백 검증하는 무의미한 테스트가 된다.
+ *
+ * <p>그래서 실패 지점을 이벤트 발행 <b>이후</b> 코드인 {@code careerRepository.findByMemberId} 로 옮겼다
+ * ({@link MemberDismissUsecase#dismiss} 참고). 모든 동기 리스너와 명시적 정리가 끝난 뒤 예외가 나므로
+ * 순서 보장 없이도 "가장 많이 지운 상태에서의 전체 롤백"이라는 가장 엄격한 시나리오가 된다.
  *
  * <p>dismiss 가 @Transactional 이므로 실제 롤백을 검증하려면 클래스 트랜잭션을 NOT_SUPPORTED 로
  * 비활성화하고 픽스처는 TransactionTemplate 으로 명시적 커밋한다. 검증은 memberId 기준 조회다.
@@ -78,25 +82,13 @@ import static org.mockito.BDDMockito.given;
         BadgeMemberDismissListener.class,
         NotificationMemberDismissListener.class,
         ScoreMemberDismissListener.class,
-        MemberDismissRollbackTest.FailingListenerConfig.class,
+        BlockDeleteService.class,
+        BlockMemberDismissListener.class,
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class MemberDismissRollbackTest {
 
-    static final String BOOM = "제명 리스너 강제 실패 (롤백 검증용)";
-
-    /**
-     * MemberDismissedEvent 를 마지막에 받아 예외를 던지는 테스트 전용 리스너.
-     * static @TestConfiguration 이라 이 테스트 클래스 컨텍스트에만 등록되며,
-     * "마지막 실행"은 @Import 배열의 등록 순서(정상 리스너들 뒤)로 확보한다.
-     */
-    @TestConfiguration
-    static class FailingListenerConfig {
-        @EventListener
-        public void failOnDismiss(MemberDismissedEvent event) {
-            throw new IllegalStateException(BOOM);
-        }
-    }
+    static final String BOOM = "제명 정리 강제 실패 (롤백 검증용)";
 
     @Autowired
     private MemberDismissUsecase memberDismissUsecase;
@@ -109,6 +101,10 @@ class MemberDismissRollbackTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    /** 이벤트 발행 이후 단계에서 터뜨려 "모든 리스너가 지운 뒤 실패"를 순서 의존 없이 재현한다 */
+    @MockBean
+    private CareerRepository careerRepository;
 
     @MockBean
     private MemberBlacklistCreateService memberBlacklistCreateService;
@@ -130,6 +126,7 @@ class MemberDismissRollbackTest {
     @BeforeEach
     void setUp() {
         given(postDeleteUsecase.deleteAllOwnedBy(anyLong())).willReturn(Collections.emptySet());
+        given(careerRepository.findByMemberId(anyLong())).willThrow(new IllegalStateException(BOOM));
 
         TransactionTemplate tx = new TransactionTemplate(transactionManager);
         this.victimId = tx.execute(status -> {
@@ -157,13 +154,15 @@ class MemberDismissRollbackTest {
 
             entityManager.persist(Letter.create("제목", "내용", null, "reply@test.com", victim, other));
 
+            entityManager.persist(Block.of(victim.getId(), other.getId()));
+
             return victim.getId();
         });
     }
 
     @Test
-    @DisplayName("제명 중 리스너 하나가 실패하면 예외가 전파되고 배지·알림·디바이스토큰·점수·쪽지·member 가 전부 롤백되어 잔존한다")
-    void 리스너_실패시_전체_롤백되어_아무것도_삭제되지_않는다() {
+    @DisplayName("제명 정리 도중 실패하면 예외가 전파되고 배지·알림·디바이스토큰·점수·쪽지·차단·member 가 전부 롤백되어 잔존한다")
+    void 정리_실패시_전체_롤백되어_아무것도_삭제되지_않는다() {
         Member victim = loadInReadTx(victimId);
 
         assertThatThrownBy(() -> memberDismissUsecase.dismiss(victim, 999L))
@@ -178,6 +177,7 @@ class MemberDismissRollbackTest {
         assertThat(countDeviceTokens(victimId)).as("DeviceToken 롤백 잔존").isEqualTo(1);
         assertThat(countScores(victimId)).as("PersonalActivityScore 롤백 잔존").isEqualTo(1);
         assertThat(countLetters(victimId)).as("Letter 롤백 잔존").isEqualTo(1);
+        assertThat(countBlocks(victimId)).as("Block 롤백 잔존").isEqualTo(1);
     }
 
     // ===== 검증 헬퍼 (memberId 기준, 새 읽기 트랜잭션) =====
@@ -201,6 +201,11 @@ class MemberDismissRollbackTest {
     private long countLetters(Long memberId) {
         return countInReadTx(
                 "select count(l) from Letter l where l.sender.id = :id or l.receiver.id = :id", memberId);
+    }
+
+    private long countBlocks(Long memberId) {
+        return countInReadTx(
+                "select count(b) from Block b where b.blockerId = :id or b.blockedId = :id", memberId);
     }
 
     private long countInReadTx(String jpql, Long memberId) {

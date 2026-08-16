@@ -348,3 +348,21 @@ Table home_content {
   created_at     datetime    [note: "생성 시각"]
   updated_at     datetime    [note: "수정 시각"]
 }
+
+// =============================================
+// 차단 (Block)
+// =============================================
+
+Table block {
+  block_id       bigint      [pk, increment, note: "차단 고유 식별자"]
+  blocker_id     bigint      [not null, ref: > member.member_id, note: "차단을 등록한 회원 ID"]
+  blocked_id     bigint      [not null, ref: > member.member_id, note: "차단당한 회원 ID"]
+  created_at     datetime    [not null, note: "차단 시각 (수정되지 않는 관계라 updated_at 없음)"]
+
+  indexes {
+    (blocker_id, blocked_id) [unique, name: "uk_block_blocker_blocked", note: "같은 방향 중복 차단 방지"]
+    blocked_id [name: "idx_block_blocked_id", note: "관계 존재 검사 · 관리자 direction 조회 · 회원 삭제 정리"]
+  }
+
+  note: "A→B와 B→A는 서로 다른 레코드인 단방향 관계. 콘텐츠 숨김은 blocker 기준 단방향, 쪽지·알림 차단은 양방향 검사(existsBetween)."
+}

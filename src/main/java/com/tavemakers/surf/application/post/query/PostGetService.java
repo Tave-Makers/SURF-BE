@@ -1,5 +1,6 @@
 package com.tavemakers.surf.application.post.query;
 
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.presentation.post.dto.response.PostDetailResDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostFileResDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostImageResDTO;
@@ -29,6 +30,7 @@ public class PostGetService {
 
     private final PostRepository postRepository;
 
+    private final BlockGetService blockGetService;
     private final ScrapGetService scrapGetService;
     private final PostLikeService postLikeService;
     private final PostImageGetService imageGetService;
@@ -80,11 +82,30 @@ public class PostGetService {
         return postRepository.existsByCategoryId(categoryId);
     }
 
+    /**
+     * 사용자에게 보여도 되는 게시글인지 검증 — 없거나 작성자를 차단했으면 404.
+     *
+     * <p>댓글 목록처럼 게시글에 딸린 사용자 조회가 앞단에서 호출한다.
+     * 차단 사실을 상대에게 노출하지 않기 위해 403이 아니라 404로 존재 자체를 숨긴다.
+     *
+     * <p>scheduler/event가 쓰는 {@link #getPost}·{@link #readPost}·{@link #findPostById}에는
+     * 이 필터를 적용하지 않는다 — 내부 조합까지 차단으로 가리면 예약 발행·알림이 깨진다.
+     */
+    @Transactional(readOnly = true)
+    public void validateVisiblePost(Long postId, Long viewerId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+        validateNotBlockedAuthor(post, viewerId);
+    }
+
     /** 게시글 상세 조회 (DTO 반환) */
     @Transactional
     public PostDetailResDTO getPostDetail(Long postId, Long memberId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
+        // 차단 가드는 조회수 증가·스크랩·좋아요·첨부 조회보다 먼저 둔다.
+        // 뒤로 밀리면 숨겨야 할 글의 조회수가 오르고 부수효과가 남는다.
+        validateNotBlockedAuthor(post, memberId);
         boolean scrappedByMe = scrapGetService.isScrappedByMe(memberId, postId);
         boolean likedByMe = postLikeService.isLikedByMe(memberId, postId);
         boolean isMine = post.isOwner(memberId);
@@ -103,6 +124,13 @@ public class PostGetService {
         }
 
         return PostDetailResDTO.of(post, scrappedByMe, likedByMe, isMine, imageUrlList, fileUrlList, reservedAt, viewCount);
+    }
+
+    /** 내가 차단한 작성자의 글이면 존재하지 않는 것으로 취급한다 */
+    private void validateNotBlockedAuthor(Post post, Long viewerId) {
+        if (blockGetService.isBlockedByMe(viewerId, post.getMember().getId())) {
+            throw new PostNotFoundException();
+        }
     }
 
     /** 스크랩 수 원자적 증가 */

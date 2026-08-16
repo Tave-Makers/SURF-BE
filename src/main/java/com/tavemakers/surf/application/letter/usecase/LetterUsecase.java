@@ -1,14 +1,16 @@
 package com.tavemakers.surf.application.letter.usecase;
 
-import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.entity.Letter;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.application.letter.query.LetterGetService;
-import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.domain.letter.entity.Letter;
+import com.tavemakers.surf.domain.letter.exception.LetterBlockedException;
+import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
+import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
+import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -23,6 +25,7 @@ import java.util.Map;
 public class LetterUsecase {
 
     private final MemberGetService memberGetService;
+    private final BlockGetService blockGetService;
     private final LetterCreateService letterCreateService;
     private final EmailSender emailSender;
     private final LetterGetService letterGetService;
@@ -41,7 +44,19 @@ public class LetterUsecase {
         // 2) 수신자 조회
         Member receiver = memberGetService.getMember(req.receiverId());
 
-        // validation 로그 (@Valid 통과 이후 실행되므로 result=true)
+        // 3) 어느 방향이든 차단 관계가 있으면 저장·이벤트·메일보다 먼저 거부한다
+        if (blockGetService.existsBetween(senderId, req.receiverId())) {
+            // 차단 방향은 응답과 마찬가지로 로그에도 남기지 않는다
+            Map<String, Object> blockedProps = new HashMap<>();
+            blockedProps.put("sender_id", senderId);
+            blockedProps.put("receiver_id", req.receiverId());
+            blockedProps.put("status_code", 403);
+            blockedProps.put("error_code", "LETTER_BLOCKED");
+            logEventEmitter.emitError("letter_send_api_failed", blockedProps, "쪽지 전송 실패 - 차단 관계");
+            throw new LetterBlockedException();
+        }
+
+        // 4) validation 로그 (@Valid 통과 이후 실행되므로 result=true)
         String replyEmail = req.replyEmail();
         String emailDomain = replyEmail.contains("@")
                 ? replyEmail.substring(replyEmail.indexOf('@') + 1) : "";
@@ -61,7 +76,7 @@ public class LetterUsecase {
                 "validation_result", true
         ));
 
-        // 3) 엔티티 생성
+        // 5) 엔티티 생성
         Letter letter = Letter.create(
                 req.title(),
                 req.content(),
@@ -71,10 +86,10 @@ public class LetterUsecase {
                 receiver
         );
 
-        // 4) 저장 + 알림 이벤트 발행 (트랜잭션 커밋 → AFTER_COMMIT 리스너 발화)
+        // 6) 저장 + 알림 이벤트 발행 (트랜잭션 커밋 → AFTER_COMMIT 리스너 발화)
         Letter saved = letterCreateService.save(letter);
 
-        // 5) 이메일 본문 생성
+        // 7) 이메일 본문 생성
         String emailBody = """
         [Surf에서 %s님이 보낸 쪽지입니다.]
 
@@ -90,7 +105,7 @@ public class LetterUsecase {
                         req.sns() != null ? req.sns() : "-"
                 );
 
-        // 6) 이메일 전송 (트랜잭션 밖, 실패 시 예외 — 저장된 쪽지는 유지)
+        // 8) 이메일 전송 (트랜잭션 밖, 실패 시 예외 — 저장된 쪽지는 유지)
         boolean emailSent = false;
         try {
             emailSender.sendMail(receiver.getEmail(), req.title(), emailBody);
@@ -113,7 +128,7 @@ public class LetterUsecase {
                 "email_sent", emailSent
         ));
 
-        // 7) 저장된 엔티티 기반으로 Response 생성
+        // 9) 저장된 엔티티 기반으로 Response 생성
         return LetterResDTO.from(saved);
     }
 

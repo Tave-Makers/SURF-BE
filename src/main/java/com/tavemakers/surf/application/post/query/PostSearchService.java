@@ -1,5 +1,6 @@
 package com.tavemakers.surf.application.post.query;
 
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.presentation.post.dto.response.PostResDTO;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.post.repository.PostRepository;
@@ -10,6 +11,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -17,14 +20,18 @@ public class PostSearchService {
 
     private final PostRepository postRepository;
     private final RecentSearchService recentSearchService;
+    private final BlockGetService blockGetService;
     private final FlagsMapper flagsMapper;
 
     /** 게시글 제목 및 내용 검색 — boardId 지정 시 해당 게시판 내에서만 검색 */
     public Slice<PostResDTO> search(Long viewerId, String param, Long boardId, Pageable pageable) {
+        // 0) 차단 작성자는 쿼리에서 제외한다 — 검색 결과에서도 숨김 정책은 동일하다
+        Set<Long> excludedAuthorIds = blockGetService.getMyBlockedMemberIds(viewerId);
+
         // 1) 게시글 검색 (boardId 있으면 게시판 내 검색, 없으면 통합 검색)
         Slice<Post> slice = (boardId != null)
-                ? postRepository.searchInBoard(boardId, param, pageable)
-                : postRepository.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(param, param, pageable);
+                ? postRepository.searchInBoardExcludingAuthors(boardId, param, excludedAuthorIds, pageable)
+                : postRepository.searchExcludingAuthors(param, excludedAuthorIds, pageable);
 
         // 2) 최근 검색어 저장
         recentSearchService.saveQuery(viewerId, param);
