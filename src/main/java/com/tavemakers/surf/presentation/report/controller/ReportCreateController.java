@@ -17,7 +17,7 @@ import static com.tavemakers.surf.presentation.report.controller.ResponseMessage
 @RestController
 @RequiredArgsConstructor
 @RequestMapping
-@Tag(name = "신고", description = "게시글/댓글/프로필 신고 API")
+@Tag(name = "신고", description = "사용자의 신고 접수/관리자의 신고 내역 조회 및 처리 관련 API")
 public class ReportCreateController {
 
     private final ReportUsecase reportUsecase;
