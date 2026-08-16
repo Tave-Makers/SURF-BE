@@ -57,7 +57,7 @@ public record AdminReportDetailResDTO(
         LocalDateTime createdAt
 ) {
     /** 관리자 상세 응답을 생성한다. */
-    public static AdminReportDetailResDTO of(
+    public static AdminReportDetailResDTO from(
             Report report,
             String reporterName,
             String reportedName,

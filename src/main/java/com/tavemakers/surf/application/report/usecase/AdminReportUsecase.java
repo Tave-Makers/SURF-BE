@@ -57,7 +57,7 @@ public class AdminReportUsecase {
         String reportedName = memberGetService.getMember(report.getReportedMemberId()).getName();
         String resolvedByName = resolveMemberName(report.getResolvedBy());
 
-        return AdminReportDetailResDTO.of(
+        return AdminReportDetailResDTO.from(
                 report,
                 reporterName,
                 reportedName,
@@ -92,7 +92,7 @@ public class AdminReportUsecase {
         String reportedName = memberGetService.getMember(report.getReportedMemberId()).getName();
         String resolvedByName = memberGetService.getMember(adminMemberId).getName();
 
-        return AdminReportDetailResDTO.of(
+        return AdminReportDetailResDTO.from(
                 report,
                 reporterName,
                 reportedName,
