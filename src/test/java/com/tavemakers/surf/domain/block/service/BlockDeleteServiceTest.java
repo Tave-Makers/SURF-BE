@@ -78,6 +78,29 @@ class BlockDeleteServiceTest {
     }
 
     @Test
+    @DisplayName("관리자 강제 해제는 방향을 따지지 않고 block_id로 지우며 삭제된 관계를 돌려준다")
+    void 강제_해제는_삭제된_관계를_반환한다() {
+        persistBlock(blocked.getId(), blocker.getId());
+        Long blockId = blockRepository.findByBlockerIdAndBlockedId(blocked.getId(), blocker.getId())
+                .orElseThrow().getId();
+
+        Block deleted = blockDeleteService.deleteById(blockId);
+        em.flush();
+
+        // 감사 로그에 blocker/blocked를 남기려면 삭제된 레코드가 반환되어야 한다
+        assertThat(deleted.getBlockerId()).isEqualTo(blocked.getId());
+        assertThat(deleted.getBlockedId()).isEqualTo(blocker.getId());
+        assertThat(blockRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("없는 block_id를 강제 해제하면 404")
+    void 없는_관계의_강제_해제는_404다() {
+        assertThatThrownBy(() -> blockDeleteService.deleteById(999L))
+                .isInstanceOf(BlockNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("제명 정리는 회원이 관련된 모든 차단을 지운다")
     void 제명_정리는_양방향을_지운다() {
         persistBlock(blocker.getId(), blocked.getId());

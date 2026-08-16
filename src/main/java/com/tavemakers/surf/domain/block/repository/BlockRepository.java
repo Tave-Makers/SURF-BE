@@ -37,6 +37,9 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     /** 나를 차단한 목록 (최신순) — 관리자 direction 조회용, 사용자에게 노출하지 않는다 */
     Slice<Block> findByBlockedIdOrderByCreatedAtDescIdDesc(Long blockedId, Pageable pageable);
 
+    /** 전체 차단 관계 (최신순) — 관리자 조회용, memberId 필터가 없을 때 */
+    Slice<Block> findAllByOrderByCreatedAtDescIdDesc(Pageable pageable);
+
     /** 특정 회원이 관련된 모든 차단 관계 (양방향) — 관리자 조회용 */
     @Query("""
            select b

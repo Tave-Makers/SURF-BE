@@ -26,6 +26,17 @@ public class BlockDeleteService {
         return block;
     }
 
+    /**
+     * block_id로 강제 해제 — 관리자 전용. 삭제한 레코드를 반환해 호출자가 감사 로그를 남길 수 있게 한다.
+     * 사용자 해제와 달리 방향을 따지지 않으므로 사용자 경로에서 쓰면 남의 차단을 풀 수 있다.
+     */
+    public Block deleteById(Long blockId) {
+        Block block = blockRepository.findById(blockId)
+                .orElseThrow(BlockNotFoundException::new);
+        blockRepository.delete(block);
+        return block;
+    }
+
     /** 회원 제명(hard delete) 시 해당 회원이 관련된 양방향 차단 관계를 모두 제거 */
     public void deleteAllRelatedTo(Long memberId) {
         blockRepository.deleteAllRelatedTo(memberId);

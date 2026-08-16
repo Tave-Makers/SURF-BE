@@ -1,8 +1,11 @@
 package com.tavemakers.surf.application.member.usecase;
 
+import com.tavemakers.surf.application.block.event.BlockMemberDismissListener;
 import com.tavemakers.surf.domain.badge.event.BadgeMemberDismissListener;
 import com.tavemakers.surf.domain.badge.entity.Badge;
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
+import com.tavemakers.surf.domain.block.entity.Block;
+import com.tavemakers.surf.domain.block.service.BlockDeleteService;
 import com.tavemakers.surf.domain.comment.event.CommentMemberDismissListener;
 import com.tavemakers.surf.domain.comment.service.CommentDeleteService;
 import com.tavemakers.surf.domain.comment.service.CommentLikeService;
@@ -78,6 +81,8 @@ import static org.mockito.BDDMockito.given;
         BadgeMemberDismissListener.class,
         NotificationMemberDismissListener.class,
         ScoreMemberDismissListener.class,
+        BlockDeleteService.class,
+        BlockMemberDismissListener.class,
         MemberDismissRollbackTest.FailingListenerConfig.class,
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -157,6 +162,8 @@ class MemberDismissRollbackTest {
 
             entityManager.persist(Letter.create("제목", "내용", null, "reply@test.com", victim, other));
 
+            entityManager.persist(Block.of(victim.getId(), other.getId()));
+
             return victim.getId();
         });
     }
@@ -178,6 +185,7 @@ class MemberDismissRollbackTest {
         assertThat(countDeviceTokens(victimId)).as("DeviceToken 롤백 잔존").isEqualTo(1);
         assertThat(countScores(victimId)).as("PersonalActivityScore 롤백 잔존").isEqualTo(1);
         assertThat(countLetters(victimId)).as("Letter 롤백 잔존").isEqualTo(1);
+        assertThat(countBlocks(victimId)).as("Block 롤백 잔존").isEqualTo(1);
     }
 
     // ===== 검증 헬퍼 (memberId 기준, 새 읽기 트랜잭션) =====
@@ -201,6 +209,11 @@ class MemberDismissRollbackTest {
     private long countLetters(Long memberId) {
         return countInReadTx(
                 "select count(l) from Letter l where l.sender.id = :id or l.receiver.id = :id", memberId);
+    }
+
+    private long countBlocks(Long memberId) {
+        return countInReadTx(
+                "select count(b) from Block b where b.blockerId = :id or b.blockedId = :id", memberId);
     }
 
     private long countInReadTx(String jpql, Long memberId) {
