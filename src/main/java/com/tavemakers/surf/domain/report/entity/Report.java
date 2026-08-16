@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.report.entity;
 
 import com.tavemakers.surf.global.common.entity.BaseEntity;
+import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -104,6 +105,7 @@ public class Report extends BaseEntity {
 
     /** 신고를 처리 완료 상태로 변경한다. */
     public void resolve(Long adminMemberId, String adminMemo) {
+        validatePendingStatus();
         this.status = ReportStatus.RESOLVED;
         this.resolvedBy = adminMemberId;
         this.resolvedAt = LocalDateTime.now();
@@ -112,9 +114,16 @@ public class Report extends BaseEntity {
 
     /** 신고를 반려 상태로 변경한다. */
     public void reject(Long adminMemberId, String adminMemo) {
+        validatePendingStatus();
         this.status = ReportStatus.REJECTED;
         this.resolvedBy = adminMemberId;
         this.resolvedAt = LocalDateTime.now();
         this.adminMemo = adminMemo;
+    }
+
+    private void validatePendingStatus() {
+        if (status != ReportStatus.PENDING) {
+            throw new InvalidReportStatusChangeException();
+        }
     }
 }
