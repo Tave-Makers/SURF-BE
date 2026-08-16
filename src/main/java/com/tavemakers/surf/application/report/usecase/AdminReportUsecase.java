@@ -16,7 +16,7 @@ import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeExce
 import com.tavemakers.surf.domain.report.exception.ReportSnapshotDeserializationException;
 import com.tavemakers.surf.domain.report.repository.ReportRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
-import com.tavemakers.surf.presentation.report.dto.request.ReportStatusUpdateReqDTO;
+import com.tavemakers.surf.presentation.report.dto.request.ReportStatusPatchReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportDetailResDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportListItemResDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportSliceResDTO;
@@ -70,7 +70,7 @@ public class AdminReportUsecase {
     /** 신고 상태를 처리 완료 또는 반려로 변경한다. */
     @Transactional
     @LogEvent(value = "report.admin.status.update", message = "관리자 신고 상태 변경")
-    public AdminReportDetailResDTO updateStatus(Long reportId, Long adminMemberId, ReportStatusUpdateReqDTO request) {
+    public AdminReportDetailResDTO patchReportStatus(Long reportId, Long adminMemberId, ReportStatusPatchReqDTO request) {
         validateStatusChange(request.status());
 
         int updatedCount = reportRepository.updateStatusIfCurrentStatusMatches(

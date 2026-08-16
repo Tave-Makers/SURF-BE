@@ -12,7 +12,7 @@ import com.tavemakers.surf.domain.report.entity.ReportReasonType;
 import com.tavemakers.surf.domain.report.entity.ReportStatus;
 import com.tavemakers.surf.domain.report.entity.ReportTargetType;
 import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeException;
-import com.tavemakers.surf.presentation.report.dto.request.ReportStatusUpdateReqDTO;
+import com.tavemakers.surf.presentation.report.dto.request.ReportStatusPatchReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportDetailResDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportSliceResDTO;
 import com.tavemakers.surf.presentation.report.dto.response.ReportPreviewResDTO;
@@ -101,10 +101,10 @@ class AdminReportUsecaseTest {
         given(memberGetService.getMember(20L)).willReturn(member(20L, "피신고자"));
         given(memberGetService.getMember(1L)).willReturn(member(1L, "관리자"));
 
-        AdminReportDetailResDTO result = adminReportUsecase.updateStatus(
+        AdminReportDetailResDTO result = adminReportUsecase.patchReportStatus(
                 1L,
                 1L,
-                new ReportStatusUpdateReqDTO(ReportStatus.RESOLVED, "스팸 확인 후 처리")
+                new ReportStatusPatchReqDTO(ReportStatus.RESOLVED, "스팸 확인 후 처리")
         );
 
         assertThat(result.status()).isEqualTo(ReportStatus.RESOLVED);
@@ -119,10 +119,10 @@ class AdminReportUsecaseTest {
     void updateStatus_throwsWhenReportAlreadyProcessed() throws Exception {
         given(reportGetService.getReport(1L)).willReturn(report(1L, ReportStatus.RESOLVED));
 
-        assertThatThrownBy(() -> adminReportUsecase.updateStatus(
+        assertThatThrownBy(() -> adminReportUsecase.patchReportStatus(
                 1L,
                 1L,
-                new ReportStatusUpdateReqDTO(ReportStatus.REJECTED, "재처리 시도")
+                new ReportStatusPatchReqDTO(ReportStatus.REJECTED, "재처리 시도")
         )).isInstanceOf(InvalidReportStatusChangeException.class);
     }
 }

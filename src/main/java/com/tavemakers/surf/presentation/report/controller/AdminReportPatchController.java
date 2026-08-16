@@ -3,7 +3,7 @@ package com.tavemakers.surf.presentation.report.controller;
 import com.tavemakers.surf.application.report.usecase.AdminReportUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
-import com.tavemakers.surf.presentation.report.dto.request.ReportStatusUpdateReqDTO;
+import com.tavemakers.surf.presentation.report.dto.request.ReportStatusPatchReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportDetailResDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,12 +31,12 @@ public class AdminReportPatchController {
     @Operation(summary = "신고 상태 변경", description = "관리자가 신고 상태를 RESOLVED 또는 REJECTED로 변경합니다.")
     @PatchMapping("/v1/admin/reports/{reportId}/status")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER','PRESIDENT')")
-    public ApiResponse<AdminReportDetailResDTO> updateStatus(
+    public ApiResponse<AdminReportDetailResDTO> patchReportStatus(
             @PathVariable Long reportId,
-            @Valid @RequestBody ReportStatusUpdateReqDTO request
+            @Valid @RequestBody ReportStatusPatchReqDTO request
     ) {
         Long adminMemberId = SecurityUtils.getCurrentMemberId();
-        AdminReportDetailResDTO response = adminReportUsecase.updateStatus(reportId, adminMemberId, request);
+        AdminReportDetailResDTO response = adminReportUsecase.patchReportStatus(reportId, adminMemberId, request);
         return ApiResponse.response(HttpStatus.OK, REPORT_STATUS_UPDATED.getMessage(), response);
     }
 }

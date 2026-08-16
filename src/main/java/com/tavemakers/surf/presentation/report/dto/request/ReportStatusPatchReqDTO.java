@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "신고 상태 변경 요청 DTO")
-public record ReportStatusUpdateReqDTO(
+public record ReportStatusPatchReqDTO(
 
         @NotNull(message = "status는 필수입니다.")
         @Schema(description = "변경할 신고 상태", example = "RESOLVED")
