@@ -13,6 +13,7 @@ import com.tavemakers.surf.domain.report.entity.ReportTargetType;
 import com.tavemakers.surf.domain.report.exception.ReportSnapshotSerializationException;
 import com.tavemakers.surf.domain.report.exception.SelfReportNotAllowedException;
 import com.tavemakers.surf.domain.report.service.ReportCreateService;
+import com.tavemakers.surf.domain.report.service.ReportRateLimitService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.presentation.report.dto.request.ReportCreateReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.ReportPreviewResDTO;
@@ -29,11 +30,14 @@ public class ReportUsecase {
     private final PostGetService postGetService;
     private final CommentGetService commentGetService;
     private final MemberGetService memberGetService;
+    private final ReportRateLimitService reportRateLimitService;
     private final ObjectMapper objectMapper;
 
     @Transactional
     @LogEvent(value = "report.create", message = "신고 접수")
     public ReportResDTO createReport(Long reporterMemberId, ReportCreateReqDTO request) {
+        reportRateLimitService.validate(reporterMemberId);
+
         ResolvedTarget resolvedTarget = resolveTarget(request.targetType(), request.targetId());
         validateSelfReport(reporterMemberId, resolvedTarget.reportedMemberId());
 
@@ -45,6 +49,8 @@ public class ReportUsecase {
                 request.reasonType(),
                 toSnapshotJson(resolvedTarget.preview())
         );
+
+        reportRateLimitService.count(reporterMemberId);
 
         return ReportResDTO.from(report, resolvedTarget.preview());
     }
