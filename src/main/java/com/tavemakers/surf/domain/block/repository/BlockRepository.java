@@ -25,10 +25,13 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
            """)
     boolean existsBetween(Long memberId, Long otherMemberId);
 
+    /** (나 → 대상) 단방향 차단 여부 — 중복 등록 판정·프로필 차단 표시용 */
     boolean existsByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
 
+    /** (나 → 대상) 단방향 차단 레코드 — 해제 대상 특정용 */
     Optional<Block> findByBlockerIdAndBlockedId(Long blockerId, Long blockedId);
 
+    /** 내가 등록한 차단 건수 (blocker_id = me 만 센다) */
     long countByBlockerId(Long blockerId);
 
     /** 내가 차단한 목록 (최신순) */

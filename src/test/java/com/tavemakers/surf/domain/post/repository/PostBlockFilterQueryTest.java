@@ -156,10 +156,16 @@ class PostBlockFilterQueryTest {
         persistPost("상대글", blockedAuthor, false);
         em.flush();
 
-        // normalAuthor 가 blockedAuthor 를 차단한 상황에서, blockedAuthor 시점 조회
+        // 같은 차단 관계를 양쪽 시점에서 조회해 비대칭을 대비시킨다.
+        // 차단자 시점: blockedAuthor 를 차단했으므로 제외 집합에 들어가 "상대글"이 빠진다
+        Slice<Post> fromBlockerSide = postRepository.findByBoardIdExcludingAuthors(
+                board.getId(), Set.of(blockedAuthor.getId()), PageRequest.of(0, 20));
+        // 피차단자 시점: 자신은 차단한 적이 없어 제외 집합이 sentinel 이므로 둘 다 보인다
         Slice<Post> fromOtherSide = postRepository.findByBoardIdExcludingAuthors(
                 board.getId(), NO_ONE_BLOCKED, PageRequest.of(0, 20));
 
+        assertThat(fromBlockerSide.getContent()).extracting(Post::getTitle)
+                .containsExactly("내글");
         assertThat(fromOtherSide.getContent()).extracting(Post::getTitle)
                 .containsExactlyInAnyOrder("내글", "상대글");
     }
