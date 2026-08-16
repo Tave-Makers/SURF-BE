@@ -22,6 +22,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
@@ -81,6 +82,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
         ErrorCode errorCode = PARAMETER_NOT_FOUND;
         logWarning(e, HttpStatus.BAD_REQUEST.value());
+        return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
+    }
+
+    /** 요청 파라미터 타입 변환 실패를 400으로 응답한다 */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException e
+    ) {
+        ErrorCode errorCode = METHOD_ARGUMENT_NOT_VALID;
+        logWarning(e, errorCode.getStatus().value());
         return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
     }
 
