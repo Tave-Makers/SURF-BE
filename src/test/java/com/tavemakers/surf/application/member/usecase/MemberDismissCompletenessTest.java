@@ -1,9 +1,12 @@
 package com.tavemakers.surf.application.member.usecase;
 
+import com.tavemakers.surf.application.block.event.BlockMemberDismissListener;
 import com.tavemakers.surf.domain.badge.event.BadgeMemberDismissListener;
 import com.tavemakers.surf.domain.badge.entity.Badge;
 import com.tavemakers.surf.domain.badge.entity.MemberBadge;
 import com.tavemakers.surf.domain.badge.repository.MemberBadgeRepository;
+import com.tavemakers.surf.domain.block.entity.Block;
+import com.tavemakers.surf.domain.block.service.BlockDeleteService;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -85,6 +88,8 @@ import static org.mockito.BDDMockito.given;
         NotificationMemberDismissListener.class,
         BadgeMemberDismissListener.class,
         LetterMemberDismissListener.class,
+        BlockDeleteService.class,
+        BlockMemberDismissListener.class,
         // NOTE: ActivityMemberDismissListener 는 의도적으로 제외한다.
         // ActivityRecord 엔티티의 컬럼 정의(columnDefinition = "TINYINT(1) default 0")를 H2 2.x 가
         // MODE=MySQL 에서도 파싱하지 못해 activity_record 테이블 DDL 생성이 실패한다(운영 MySQL 에서는 정상).
@@ -188,6 +193,10 @@ class MemberDismissCompletenessTest {
             entityManager.persist(comment);
             entityManager.persist(CommentMention.of(comment, victim));
 
+            // 7) 차단 관계 — 제명 대상이 건 것 + 당한 것 (운영 FK 가 RESTRICT 라 양방향 정리가 hard delete 의 선행 조건)
+            entityManager.persist(Block.of(victim.getId(), other.getId()));
+            entityManager.persist(Block.of(other.getId(), victim.getId()));
+
             return victim.getId();
         });
 
@@ -199,10 +208,11 @@ class MemberDismissCompletenessTest {
         assertThat(countScores(victimId)).isEqualTo(1);
         assertThat(countLetters(victimId)).isEqualTo(2);
         assertThat(countMentions(victimId)).isEqualTo(1);
+        assertThat(countBlocks(victimId)).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("APPROVED 회원 제명 시 배지·알림·디바이스토큰·점수·쪽지·멘션이 모두 삭제되고 member row 도 사라진다")
+    @DisplayName("APPROVED 회원 제명 시 배지·알림·디바이스토큰·점수·쪽지·멘션·차단이 모두 삭제되고 member row 도 사라진다")
     void 제명하면_전_도메인_데이터가_빠짐없이_삭제된다() {
         Member victim = loadInReadTx(victimId);
 
@@ -216,6 +226,8 @@ class MemberDismissCompletenessTest {
         assertThat(countScores(victimId)).as("PersonalActivityScore 잔존").isZero();
         assertThat(countLetters(victimId)).as("Letter 잔존").isZero();
         assertThat(countMentions(victimId)).as("CommentMention 잔존").isZero();
+        // 남으면 운영에서 fk_block_blocker/blocked(RESTRICT) 때문에 member hard delete 자체가 실패한다
+        assertThat(countBlocks(victimId)).as("Block 잔존 — 양방향 모두 지워져야 한다").isZero();
     }
 
     // ===== 검증 헬퍼: 새 읽기 트랜잭션에서 memberId 기준 count (NOT_SUPPORTED 라 다른 테스트 데이터와 섞이지 않도록) =====
@@ -244,6 +256,11 @@ class MemberDismissCompletenessTest {
     private long countMentions(Long memberId) {
         return countInReadTx(
                 "select count(cm) from CommentMention cm where cm.mentionedMember.id = :id", memberId);
+    }
+
+    private long countBlocks(Long memberId) {
+        return countInReadTx(
+                "select count(b) from Block b where b.blockerId = :id or b.blockedId = :id", memberId);
     }
 
     private long countInReadTx(String jpql, Long memberId) {

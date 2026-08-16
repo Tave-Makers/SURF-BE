@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.comment.repository;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,31 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     /** 댓글 총 개수 */
     long countByPostId(Long postId);
+
+    // ===== 차단 필터 변형 (이슈 #370) =====
+    // 대댓글은 별도 테이블이 아니라 같은 Slice 의 depth>0 행이므로 이 두 쿼리로 함께 걸러진다.
+    // Slice 와 count 에 반드시 같은 집합을 넘겨야 한다 — 다르면 "댓글 3개"인데 0개가 보이는 불일치가 생긴다.
+    // excludedAuthorIds 는 BlockGetService.getMyBlockedMemberIds 가 돌려주는 값이라 절대 비어 있지 않다.
+
+    /** 게시글 내 댓글 + 대댓글 조회 (작성 시간순) — 차단 작성자 제외 */
+    @Query("""
+        select c from Comment c
+        where c.post.id = :postId
+          and c.member.id not in :excludedAuthorIds
+        order by c.createdAt asc
+    """)
+    Slice<Comment> findByPostIdExcludingAuthors(@Param("postId") Long postId,
+                                                @Param("excludedAuthorIds") Set<Long> excludedAuthorIds,
+                                                Pageable pageable);
+
+    /** 댓글 총 개수 — 차단 작성자 제외 */
+    @Query("""
+        select count(c) from Comment c
+        where c.post.id = :postId
+          and c.member.id not in :excludedAuthorIds
+    """)
+    long countByPostIdExcludingAuthors(@Param("postId") Long postId,
+                                       @Param("excludedAuthorIds") Set<Long> excludedAuthorIds);
 
     /**
      * 직전 중복 댓글 감지 — 같은 작성자가 같은 게시글·같은 부모에 같은 내용을

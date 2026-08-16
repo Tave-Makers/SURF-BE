@@ -6,6 +6,7 @@ import com.tavemakers.surf.presentation.comment.dto.response.CommentResDTO;
 import com.tavemakers.surf.presentation.comment.dto.response.MentionResDTO;
 import com.tavemakers.surf.application.comment.query.CommentGetService;
 import com.tavemakers.surf.application.comment.query.CommentMentionGetService;
+import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.service.CommentService;
 import com.tavemakers.surf.global.logging.LogEvent;
@@ -30,6 +31,7 @@ public class CommentUsecase {
     private final CommentService commentService;
     private final CommentGetService commentGetService;
     private final CommentMentionGetService commentMentionGetService;
+    private final PostGetService postGetService;
     private final LogEventEmitter logEventEmitter;
 
     /** 댓글 생성 */
@@ -62,9 +64,12 @@ public class CommentUsecase {
         commentService.deleteComment(postId, commentId, memberId);
     }
 
-    /** 댓글 목록 조회 */
+    /** 댓글 목록 조회 — 게시글 자체가 차단으로 가려지면 댓글도 보여주지 않는다 */
     @Transactional(readOnly = true)
     public CommentListResDTO getComments(Long postId, Pageable pageable, Long memberId) {
+
+        // 게시글 작성자를 차단했으면 상세와 동일하게 404. 댓글로 우회 열람되면 안 된다.
+        postGetService.validateVisiblePost(postId, memberId);
 
         CommentListResDTO result = commentGetService.getComments(postId, pageable, memberId);
 
