@@ -1,13 +1,15 @@
 package com.tavemakers.surf.domain.post.service.search;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecentSearchService {
@@ -16,27 +18,36 @@ public class RecentSearchService {
     private static final int MAX_SIZE = 10;
     private static final Duration TTL = Duration.ofDays(30); // 필요시 0으로 두면 무기한
 
-    /** 최근 검색어 저장 */
-    @Transactional
+    // 중복 제거 + 앞 삽입 + 트림 + TTL을 한 번의 왕복으로 처리 (기존 4회 왕복 → 1회)
+    // KEYS[1]=recent 키, ARGV[1]=검색어, ARGV[2]=보관 개수-1, ARGV[3]=TTL(초)
+    private static final DefaultRedisScript<Long> SAVE_QUERY_SCRIPT = new DefaultRedisScript<>(
+            "redis.call('LREM', KEYS[1], 0, ARGV[1]); " +
+                    "redis.call('LPUSH', KEYS[1], ARGV[1]); " +
+                    "redis.call('LTRIM', KEYS[1], 0, ARGV[2]); " +
+                    "redis.call('EXPIRE', KEYS[1], ARGV[3]); " +
+                    "return 1",
+            Long.class
+    );
+
+    /** 최근 검색어 저장 — 중복 제거·삽입·트림·TTL을 Redis 왕복 1회로 처리 (실패해도 검색은 계속) */
     public void saveQuery(Long memberId, String raw) {
         if (raw == null) return;
         String q = normalize(raw);
         if (q.isEmpty()) return;
 
-        String key = key(memberId);
-
-        // 1) 중복 제거
-        redis.opsForList().remove(key, 0, q);
-        // 2) 맨 앞에 삽입
-        redis.opsForList().leftPush(key, q);
-        // 3) 10개로 트림
-        redis.opsForList().trim(key, 0, MAX_SIZE - 1);
-        // 4) TTL 갱신
-        redis.expire(key, TTL);
+        try {
+            redis.execute(
+                    SAVE_QUERY_SCRIPT,
+                    List.of(key(memberId)),
+                    q, String.valueOf(MAX_SIZE - 1), String.valueOf(TTL.toSeconds())
+            );
+        } catch (Exception e) {
+            // 부가 기능이므로 Redis 장애가 검색 응답을 실패시키지 않도록 격리한다
+            log.warn("최근 검색어 저장 실패 (검색은 계속 진행): {}", e.getMessage());
+        }
     }
 
     /** 최근 검색어 10개 조회 */
-    @Transactional(readOnly = true)
     public List<String> getRecent10(Long memberId) {
         String key = key(memberId);
         List<String> items = redis.opsForList().range(key, 0, MAX_SIZE - 1);
@@ -44,13 +55,11 @@ public class RecentSearchService {
     }
 
     /** 최근 검색어 전체 삭제 */
-    @Transactional
     public void clearAll(Long memberId) {
         redis.delete(key(memberId));
     }
 
     /** 특정 검색어 삭제 */
-    @Transactional
     public void deleteOne(Long memberId, String rawKeyword) {
         if (rawKeyword == null) return;
 
