@@ -46,7 +46,7 @@ public class BlockAdminUsecase {
         Map<Long, Member> members = findMembersById(collectMemberIds(blocks.getContent()));
 
         return BlockAdminSliceResDTO.from(blocks.map(
-                block -> BlockAdminResDTO.of(
+                block -> BlockAdminResDTO.from(
                         block,
                         requireMember(members, block.getBlockerId()),
                         requireMember(members, block.getBlockedId()))));
