@@ -14,6 +14,7 @@ import com.tavemakers.surf.domain.report.entity.ReportStatus;
 import com.tavemakers.surf.domain.report.entity.ReportTargetType;
 import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeException;
 import com.tavemakers.surf.domain.report.exception.ReportSnapshotDeserializationException;
+import com.tavemakers.surf.domain.report.repository.ReportRepository;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.presentation.report.dto.request.ReportStatusUpdateReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportDetailResDTO;
@@ -27,11 +28,14 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class AdminReportUsecase {
 
     private final ReportGetService reportGetService;
+    private final ReportRepository reportRepository;
     private final MemberGetService memberGetService;
     private final PostGetService postGetService;
     private final CommentGetService commentGetService;
@@ -67,14 +71,22 @@ public class AdminReportUsecase {
     @Transactional
     @LogEvent(value = "report.admin.status.update", message = "관리자 신고 상태 변경")
     public AdminReportDetailResDTO updateStatus(Long reportId, Long adminMemberId, ReportStatusUpdateReqDTO request) {
-        Report report = reportGetService.getReport(reportId);
-        validateStatusChange(report.getStatus(), request.status());
+        validateStatusChange(request.status());
 
-        if (request.status() == ReportStatus.RESOLVED) {
-            report.resolve(adminMemberId, request.adminMemo());
-        } else {
-            report.reject(adminMemberId, request.adminMemo());
+        int updatedCount = reportRepository.updateStatusIfCurrentStatusMatches(
+                reportId,
+                ReportStatus.PENDING,
+                request.status(),
+                adminMemberId,
+                LocalDateTime.now(),
+                request.adminMemo()
+        );
+
+        if (updatedCount == 0) {
+            throw new InvalidReportStatusChangeException();
         }
+
+        Report report = reportGetService.getReport(reportId);
 
         String reporterName = memberGetService.getMember(report.getReporterMemberId()).getName();
         String reportedName = memberGetService.getMember(report.getReportedMemberId()).getName();
@@ -138,10 +150,7 @@ public class AdminReportUsecase {
         );
     }
 
-    private void validateStatusChange(ReportStatus currentStatus, ReportStatus nextStatus) {
-        if (currentStatus != ReportStatus.PENDING) {
-            throw new InvalidReportStatusChangeException();
-        }
+    private void validateStatusChange(ReportStatus nextStatus) {
         if (nextStatus != ReportStatus.RESOLVED && nextStatus != ReportStatus.REJECTED) {
             throw new InvalidReportStatusChangeException();
         }
