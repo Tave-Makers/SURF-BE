@@ -1,17 +1,21 @@
 package com.tavemakers.surf.application.letter.usecase;
 
-import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
-import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
-import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
-import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
+import com.tavemakers.surf.application.block.query.BlockGetService;
 import com.tavemakers.surf.application.letter.query.LetterGetService;
+import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.domain.block.entity.Block;
+import com.tavemakers.surf.domain.block.repository.BlockRepository;
+import com.tavemakers.surf.domain.letter.event.LetterSentEvent;
+import com.tavemakers.surf.domain.letter.exception.LetterBlockedException;
+import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
-import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
+import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
+import com.tavemakers.surf.presentation.letter.dto.response.LetterResDTO;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +39,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.never;
 
 /**
  * 쪽지 생성 R5 수정(저장 커밋 후 트랜잭션 밖 메일 발송) 검증.
@@ -52,12 +58,17 @@ import static org.mockito.BDDMockito.willThrow;
  *
  * <p>usecase 가 더 이상 트랜잭션을 열지 않으므로 테스트 트랜잭션을 NOT_SUPPORTED 로 끄고
  * 픽스처는 TransactionTemplate 으로 명시적 커밋한다 (MemberDismissRollbackTest 패턴).
+ *
+ * <p>차단 가드는 BlockGetService 를 mock 하지 않고 실제 block 레코드로 검증한다. mock 으로
+ * existsBetween 을 stub 하면 "양방향 거부"를 mock 이 대신 주장하게 되어, 구현이
+ * isBlockedByMe(단방향)로 바뀌어도 테스트가 통과한다.
  */
 @DataJpaTest
 @Import({
         LetterUsecase.class,
         LetterCreateService.class,
         LetterGetService.class,
+        BlockGetService.class,
         LetterUsecaseCreateLetterTest.AfterCommitProbe.class,
 })
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -85,6 +96,9 @@ class LetterUsecaseCreateLetterTest {
 
     @Autowired
     private AfterCommitProbe afterCommitProbe;
+
+    @Autowired
+    private BlockRepository blockRepository;
 
     @MockBean
     private MemberGetService memberGetService;
@@ -132,6 +146,37 @@ class LetterUsecaseCreateLetterTest {
         assertThat(countLetters())
                 .as("저장이 메일 발송보다 먼저 커밋되어 쪽지 레코드가 남아야 한다")
                 .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("내가 차단한 상대에게 보내면 쪽지·LetterSentEvent·이메일이 모두 생성되지 않는다")
+    void 내가_차단한_상대에게는_저장_이벤트_이메일이_모두_없다() {
+        persistBlock(sender.getId(), receiver.getId());
+
+        assertBlockedWithoutSideEffects();
+    }
+
+    @Test
+    @DisplayName("나를 차단한 상대에게 보내도 거부된다 — 실제 레코드는 반대 방향뿐이다")
+    void 나를_차단한_상대에게도_저장_이벤트_이메일이_모두_없다() {
+        persistBlock(receiver.getId(), sender.getId());
+
+        assertBlockedWithoutSideEffects();
+    }
+
+    /** 차단 시 §7의 0회 요건 — 저장·AFTER_COMMIT 이벤트·이메일이 모두 발생하지 않는다 */
+    private void assertBlockedWithoutSideEffects() {
+        assertThatThrownBy(() -> letterUsecase.createLetter(sender.getId(), req()))
+                .isInstanceOf(LetterBlockedException.class);
+
+        assertThat(countLetters()).as("차단된 쪽지는 DB에 저장되지 않아야 한다").isZero();
+        assertThat(afterCommitProbe.fired.get()).as("LetterSentEvent가 발행되지 않아야 한다").isZero();
+        then(emailSender).should(never()).sendMail(anyString(), anyString(), anyString());
+    }
+
+    private void persistBlock(Long blockerId, Long blockedId) {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.executeWithoutResult(status -> blockRepository.save(Block.of(blockerId, blockedId)));
     }
 
     private LetterCreateReqDTO req() {

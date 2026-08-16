@@ -2,6 +2,7 @@ package com.tavemakers.surf.application.comment.usecase;
 
 import com.tavemakers.surf.application.comment.query.CommentGetService;
 import com.tavemakers.surf.application.comment.query.CommentMentionGetService;
+import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.board.entity.BoardType;
@@ -49,6 +50,8 @@ class CommentUsecaseTest {
     private CommentGetService commentGetService;
     @Mock
     private CommentMentionGetService commentMentionGetService;
+    @Mock
+    private PostGetService postGetService;
     @Mock
     private LogEventEmitter logEventEmitter;
 
