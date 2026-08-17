@@ -18,6 +18,7 @@ import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.service.MemberGenerationSyncService;
 import com.tavemakers.surf.domain.member.service.MemberBlacklistCreateService;
 import com.tavemakers.surf.domain.member.service.MemberDismissService;
+import com.tavemakers.surf.domain.member.service.TrackService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.member.validator.RoleChangeValidator;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
@@ -61,6 +62,7 @@ public class MemberAdminUsecase {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
+    private final TrackService trackService;
     private final MemberWithdrawService memberWithdrawService;
     private final LogEventEmitter logEventEmitter;
     private final RoleChangeValidator roleChangeValidator;
@@ -218,6 +220,21 @@ public class MemberAdminUsecase {
         Slice<MemberRegistrationDetailResDTO> approvedMemberSlice = memberGetService.getApprovedMemberList(generation, keyword, pageable)
                 .map(MemberRegistrationDetailResDTO::from);
         return ApprovedMemberSliceResDTO.from(approvedMemberSlice);
+    }
+
+    @Transactional
+    public void addTrack(Long memberId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        trackService.addTrackToMember(memberId, generation, part);
+    }
+
+    @Transactional
+    public void updateTrack(Long trackId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        trackService.updateTrack(trackId, generation, part);
+    }
+
+    @Transactional
+    public void deleteTrack(Long trackId) {
+        trackService.deleteTrack(trackId);
     }
 
     private void validateLoginMemberRole(Member member) {
