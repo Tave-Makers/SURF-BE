@@ -62,7 +62,8 @@ public final class DictionarySnapshot {
         if (distinct.isEmpty()) {
             return null;
         }
-        return Trie.builder().addKeywords(distinct).build();
+        // ignoreCase 로 대문자 우회(FUCK 등)를 막는다 — 매치 offset·길이는 원문 기준 그대로다.
+        return Trie.builder().ignoreCase().addKeywords(distinct).build();
     }
 
     /** 트라이가 없으면 빈 결과 — 라이브러리 호출 없이 단락한다. */

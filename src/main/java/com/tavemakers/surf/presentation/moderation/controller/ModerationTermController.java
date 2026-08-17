@@ -28,16 +28,16 @@ import static com.tavemakers.surf.presentation.moderation.controller.ResponseMes
 import static com.tavemakers.surf.presentation.moderation.controller.ResponseMessage.MODERATION_TERM_READ;
 
 /**
- * 금칙어 사전 관리 API — ADMIN 전용.
+ * 금칙어 사전 관리 API — 관리자급(ADMIN·MANAGER·PRESIDENT) 전용.
  *
- * <p>SecurityConfig 의 `/v1/admin/**` 게이트는 MANAGER·PRESIDENT 도 통과시키므로
- * 경로만으로는 ADMIN 전용이 되지 않는다. 클래스 단위 @PreAuthorize 로 별도 제한한다.
+ * <p>사전 편집은 오탐 대응의 1차 수단이므로 운영을 담당하는 관리자급 역할에 열어 둔다.
+ * 클래스 단위 @PreAuthorize 로 해당 역할만 통과시킨다.
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/v1/admin/moderation/terms")
 @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PRESIDENT')")
-@Tag(name = "금칙어 사전", description = "금칙어·허용 표현 사전 관리 API (관리자 전용)")
+@Tag(name = "금칙어 사전", description = "금칙어·허용 표현 사전 관리 API (관리자급 ADMIN·MANAGER·PRESIDENT 전용)")
 public class ModerationTermController {
 
     private final ModerationTermUsecase moderationTermUsecase;
@@ -70,7 +70,7 @@ public class ModerationTermController {
     @DeleteMapping("/{termId}")
     public ApiResponse<Void> deleteTerm(@PathVariable Long termId) {
         moderationTermUsecase.deleteTerm(termId);
-        return ApiResponse.response(HttpStatus.OK, MODERATION_TERM_DELETED.getMessage(), null);
+        return ApiResponse.response(HttpStatus.NO_CONTENT, MODERATION_TERM_DELETED.getMessage(), null);
     }
 
 }

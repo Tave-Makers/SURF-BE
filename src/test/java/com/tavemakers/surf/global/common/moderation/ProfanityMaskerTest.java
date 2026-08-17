@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /** 순수 엔진 테스트 — 사전은 테스트가 직접 구성한다(엔진은 파일·DB를 모른다). */
 class ProfanityMaskerTest {
@@ -125,6 +126,19 @@ class ProfanityMaskerTest {
     }
 
     @Test
+    @DisplayName("대문자로 표기해도 우회되지 않는다 — 트라이 ignoreCase")
+    void 대소문자_우회_탐지() {
+        ProfanityMasker english = new ProfanityMasker(new ModerationProperties(true, "*"));
+        english.replaceSnapshot(DictionarySnapshot.of(List.of("fuck"), List.of("fuck up")));
+
+        assertThat(english.mask("FUCK you")).isEqualTo("**** you");
+        assertThat(english.mask("FuCk you")).isEqualTo("**** you");
+        assertThat(english.mask("fuck you")).isEqualTo("**** you");
+        // 허용 표현도 같은 규칙이라 대문자 표기에서 그대로 살아남는다.
+        assertThat(english.mask("Don't FUCK UP")).isEqualTo("Don't FUCK UP");
+    }
+
+    @Test
     @DisplayName("사전이 비어 있으면 원문 그대로다")
     void 빈_사전() {
         ProfanityMasker empty = new ProfanityMasker(new ModerationProperties(true, "*"));
@@ -153,6 +167,14 @@ class ProfanityMaskerTest {
         assertThat(custom.mask("씨발 진짜")).isEqualTo("## 진짜");
         assertThat(new ModerationProperties(null, null).isEnabled()).isTrue();
         assertThat(new ModerationProperties(null, null).getMaskChar()).isEqualTo("*");
+    }
+
+    @Test
+    @DisplayName("maskChar가 두 글자면 기동을 실패시킨다 — 마스킹 결과가 원문보다 길어지는 것을 막는다")
+    void 마스킹_문자는_한_글자여야_한다() {
+        assertThatThrownBy(() -> new ModerationProperties(true, "**"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("moderation.mask-char");
     }
 
     // ── 스냅숏 교체 ────────────────────────────────────────────────────

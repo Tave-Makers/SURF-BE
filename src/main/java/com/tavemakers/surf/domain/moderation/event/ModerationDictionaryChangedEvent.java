@@ -15,6 +15,7 @@ public record ModerationDictionaryChangedEvent(
         String text
 ) {
 
+    /** 변경된 사전 항목에서 로그용 이벤트를 만든다. */
     public static ModerationDictionaryChangedEvent from(ModerationTerm term) {
         return new ModerationDictionaryChangedEvent(term.getType(), term.getText());
     }

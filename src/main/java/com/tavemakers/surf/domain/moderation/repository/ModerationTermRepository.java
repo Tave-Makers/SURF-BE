@@ -11,15 +11,21 @@ import java.util.Optional;
 
 public interface ModerationTermRepository extends JpaRepository<ModerationTerm, Long> {
 
+    /** 같은 종류·표현의 항목이 이미 있는지 확인한다 — 중복 등록 차단용. */
     boolean existsByTypeAndText(ModerationTermType type, String text);
 
-    // 스냅숏 리빌드 + 종류별 목록 조회
+    /** 종류별 항목을 표현 오름차순으로 조회한다 — 스냅숏 리빌드 및 목록 조회에 쓴다. */
     List<ModerationTerm> findAllByTypeOrderByTextAsc(ModerationTermType type);
 
-    // 전체 목록 조회 (type 필터 미지정)
+    /** 전체 항목을 종류·표현 오름차순으로 조회한다 (type 필터 미지정). */
     List<ModerationTerm> findAllByOrderByTypeAscTextAsc();
 
-    // 폴링 변경 감지용 — 항목이 없으면 null 이므로 Optional 로 받는다
+    /**
+     * 사전 전체에서 가장 최근 수정 시각을 조회한다 — 폴링 기반 변경 감지용.
+     *
+     * <p>사전이 비어 있으면 집계 결과가 null 이므로 {@code Optional.empty()} 를 반환한다.
+     * 호출자는 이 경우를 "변경 없음"이 아니라 "사전 없음"으로 구분해 다뤄야 한다.
+     */
     @Query("select max(t.updatedAt) from ModerationTerm t")
     Optional<LocalDateTime> findMaxUpdatedAt();
 

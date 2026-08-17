@@ -13,7 +13,7 @@
 - 출처: <https://github.com/VaneProject/bad-word-filtering> (`badwords.txt`)
 - 원본 라이선스 전문 (원본 `LICENSE`에서 복사):
 
-```
+```text
 MIT License
 
 Copyright (c) 2023 PersesTitan

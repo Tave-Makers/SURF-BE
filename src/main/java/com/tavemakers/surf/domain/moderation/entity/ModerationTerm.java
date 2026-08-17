@@ -43,6 +43,7 @@ public class ModerationTerm extends BaseEntity {
         this.text = text;
     }
 
+    /** 종류와 표현으로 사전 항목을 생성한다. */
     public static ModerationTerm of(ModerationTermType type, String text) {
         return ModerationTerm.builder()
                 .type(type)

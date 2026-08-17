@@ -12,6 +12,7 @@ public record ModerationTermResDTO(
         LocalDateTime createdAt
 ) {
 
+    /** 사전 항목 엔티티를 응답 DTO로 변환한다. */
     public static ModerationTermResDTO from(ModerationTerm term) {
         return new ModerationTermResDTO(
                 term.getId(),

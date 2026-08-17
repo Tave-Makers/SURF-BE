@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -37,13 +38,19 @@ public class ModerationSeedLoader implements ApplicationListener<ApplicationRead
     private final ModerationTermUsecase moderationTermUsecase;
     private final DictionaryReloader dictionaryReloader;
 
+    /** 기동 직후 사전 시드를 적재하고 엔진 스냅숏을 초기화한다 — 금칙어가 0건이면 기동을 실패시킨다. */
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        int seeded = moderationTermUsecase.seedIfEmpty(
-                readTerms(BANNED_RESOURCE), readTerms(ALLOWED_RESOURCE));
-
-        if (seeded > 0) {
-            log.info("[MODERATION] 사전 초기 시드 완료 — {}건 적재", seeded);
+        try {
+            int seeded = moderationTermUsecase.seedIfEmpty(
+                    readTerms(BANNED_RESOURCE), readTerms(ALLOWED_RESOURCE));
+            if (seeded > 0) {
+                log.info("[MODERATION] 사전 초기 시드 완료 — {}건 적재", seeded);
+            }
+        } catch (DataIntegrityViolationException e) {
+            // 다중 인스턴스가 동시에 기동하면 (type, text) unique 제약에서 한쪽만 살아남는다.
+            // 다른 인스턴스가 이미 시드했다는 뜻이므로 아래 reload() 검증에 판단을 맡기고 진행한다.
+            log.warn("[MODERATION] 사전 시드 충돌 — 다른 인스턴스가 동시에 시드한 것으로 보고 건너뜁니다.", e);
         }
 
         if (dictionaryReloader.reload() == 0) {

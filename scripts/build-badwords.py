@@ -22,6 +22,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 EXCLUDE_PATH = SCRIPT_DIR / "exclude.txt"
 OUTPUT_PATH = SCRIPT_DIR.parent / "src/main/resources/moderation/badwords.txt"
 
+# 병합 결과가 이보다 적으면 원본이 손상됐다고 보고 중단한다.
+# 현재 병합 규모는 2천 건대이므로 500은 충분히 보수적인 하한이다.
+MIN_MERGED = 500
+
 
 def fetch(url: str) -> str:
     with urllib.request.urlopen(url, timeout=30) as res:
@@ -50,6 +54,23 @@ def main() -> int:
         print(f"[경고] 원본에 없는 제외 항목 {len(stale)}개: {', '.join(stale)}")
 
     result = sorted(merged - set(excludes))
+
+    # 빈 사전을 배포하면 기동 시 ModerationDictionaryEmptyException 으로 서비스가 죽는다.
+    # 기존 산출물을 덮어쓰기 전에 검증하고, 실패하면 파일을 보존한 채 비정상 종료한다.
+    errors = []
+    if not vane:
+        errors.append(f"VaneProject 원본이 비어 있습니다 ({VANE_URL})")
+    if not ldnoobw:
+        errors.append(f"LDNOOBW 원본이 비어 있습니다 ({LDNOOBW_URL})")
+    if len(merged) < MIN_MERGED:
+        errors.append(f"병합 결과가 비정상적으로 적습니다 — {len(merged)}건 (최소 {MIN_MERGED}건)")
+    if not result:
+        errors.append("제외 적용 후 최종 사전이 비어 있습니다")
+    if errors:
+        for error in errors:
+            print(f"[오류] {error}", file=sys.stderr)
+        print(f"[오류] {OUTPUT_PATH} 를 덮어쓰지 않고 중단합니다.", file=sys.stderr)
+        return 1
 
     header = (
         "# 자동 생성 파일 — 직접 수정 금지. scripts/build-badwords.py 로 재생성한다.\n"
