@@ -7,6 +7,7 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
+import com.tavemakers.surf.domain.member.exception.TrackAlreadyExistsException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
@@ -134,6 +135,18 @@ class TrackServiceTest {
         trackService.updateTrack(5L, 16, Part.WEB_FRONTEND);
 
         assertThat(track.getGeneration()).isEqualTo(16);
+    }
+
+    @Test
+    @DisplayName("updateTrack - 같은 회원의 다른 트랙과 기수가 중복되면 예외를 던진다")
+    void updateTrack_whenGenerationAlreadyExists_throws() {
+        Member owner = member(2L, MemberStatus.APPROVED);
+        owner.addTrack(24, Part.BACKEND);
+        Track targetTrack = track(5L, owner, 25, Part.WEB_FRONTEND);
+        given(trackRepository.findById(5L)).willReturn(Optional.of(targetTrack));
+
+        assertThatThrownBy(() -> trackService.updateTrack(5L, 24, Part.DEEP_LEARNING))
+                .isInstanceOf(TrackAlreadyExistsException.class);
     }
 
     @Test

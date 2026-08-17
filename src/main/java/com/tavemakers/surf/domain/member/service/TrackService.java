@@ -32,6 +32,7 @@ public class TrackService {
     public Track updateTrack(Long trackId, Integer generation, Part part) {
         Track track = trackRepository.findById(trackId)
                 .orElseThrow(TrackNotFoundException::new);
+        track.getMember().validateTrackGenerationUpdatable(track.getId(), generation);
         track.update(generation, part);
         return track;
     }

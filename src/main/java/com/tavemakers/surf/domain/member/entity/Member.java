@@ -206,8 +206,7 @@ public class Member extends BaseEntity {
      */
     // 트랙 추가 (기수+파트로 생성)
     public void addTrack(Integer generation, Part part) {
-        boolean exists = this.tracks.stream()
-                .anyMatch(t -> t.getGeneration().equals(generation));
+        boolean exists = hasTrackGeneration(generation, null);
 
         if (exists) {
             throw new TrackAlreadyExistsException();
@@ -215,6 +214,22 @@ public class Member extends BaseEntity {
 
         Track track = new Track(generation, part);
         track.setMember(this); // 여기서만 add 수행
+    }
+
+    public void validateTrackGenerationUpdatable(Long trackId, Integer generation) {
+        if (generation == null) {
+            return;
+        }
+
+        if (hasTrackGeneration(generation, trackId)) {
+            throw new TrackAlreadyExistsException();
+        }
+    }
+
+    private boolean hasTrackGeneration(Integer generation, Long excludedTrackId) {
+        return this.tracks.stream()
+                .filter(track -> excludedTrackId == null || !track.getId().equals(excludedTrackId))
+                .anyMatch(track -> track.getGeneration().equals(generation));
     }
 
     /** 소셜 계정을 연결한다. 동일 provider 계정이 이미 있으면 거부한다 (1 provider = 1 account). */
