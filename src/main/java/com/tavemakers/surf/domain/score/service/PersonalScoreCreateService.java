@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,28 @@ public class PersonalScoreCreateService {
         if (!toSave.isEmpty()) {
             personalScoreRepository.saveAll(toSave);
         }
+    }
+
+    /** 활동 기수 변경 시 승인 회원들의 개인 활동 점수를 현재 회원 구분(YB/OB)에 맞게 초기화한다. */
+    public void resetPersonalScores(List<Member> members) {
+        if (members == null || members.isEmpty()) return;
+
+        List<Long> memberIds = members.stream().map(Member::getId).distinct().toList();
+        Map<Long, PersonalActivityScore> existingByMemberId = personalScoreRepository.findAllByMemberIdIn(memberIds).stream()
+                .collect(Collectors.toMap(s -> s.getMember().getId(), Function.identity()));
+
+        List<PersonalActivityScore> upserts = members.stream()
+                .map(member -> {
+                    PersonalActivityScore score = existingByMemberId.get(member.getId());
+                    if (score == null) {
+                        return PersonalActivityScore.from(member);
+                    }
+                    score.resetForMember(member);
+                    return score;
+                })
+                .toList();
+
+        personalScoreRepository.saveAll(upserts);
     }
 
     /** 팀 활동 점수 초기화 저장 (중복 생성 방지) */

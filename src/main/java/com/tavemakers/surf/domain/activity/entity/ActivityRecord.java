@@ -50,28 +50,28 @@ public class ActivityRecord extends BaseEntity {
     private boolean isDeleted = false;
 
     // TODO 정적 팩토리 메서드
-    public static ActivityRecord of(Long memberId, ActivityCategory category, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum) {
+    public static ActivityRecord of(Long memberId, ActivityCategory category, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum, BigDecimal appliedScore) {
         return ActivityRecord.builder()
                 .memberId(memberId)
                 .category(category)
                 .activityType(activityName)
                 .activityDate(activityDate)
                 .scoreType(activityName.getScoreType())
-                .appliedScore(BigDecimal.valueOf(activityName.getDelta()))
+                .appliedScore(appliedScore)
                 .prefixSum(prefixSum)
                 .isDeleted(false)
                 .build();
     }
 
     /** 개인 활동 점수 기록 */
-    public static ActivityRecord ofPersonal(Long memberId, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum) {
+    public static ActivityRecord ofPersonal(Long memberId, ActivityType activityName, LocalDate activityDate, BigDecimal prefixSum, BigDecimal appliedScore) {
         return ActivityRecord.builder()
                 .memberId(memberId)
                 .category(activityName.getCategory())
                 .activityType(activityName)
                 .activityDate(activityDate)
                 .scoreType(activityName.getScoreType())
-                .appliedScore(BigDecimal.valueOf(activityName.getDelta()))
+                .appliedScore(appliedScore)
                 .prefixSum(prefixSum)
                 .isDeleted(false)
                 .build();
