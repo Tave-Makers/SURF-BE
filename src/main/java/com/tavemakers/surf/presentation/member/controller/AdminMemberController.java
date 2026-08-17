@@ -2,7 +2,8 @@ package com.tavemakers.surf.presentation.member.controller;
 
 import com.tavemakers.surf.presentation.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.RoleChangeReqDTOV2;
-import com.tavemakers.surf.presentation.member.dto.request.TrackUpsertReqDTO;
+import com.tavemakers.surf.presentation.member.dto.request.CreateTrackReqDTO;
+import com.tavemakers.surf.presentation.member.dto.request.PatchTrackReqDTO;
 import com.tavemakers.surf.presentation.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberInformationResDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberRegistrationSliceResDTO;
@@ -65,7 +66,7 @@ public class AdminMemberController {
     @PostMapping("/v1/admin/members/{memberId}/tracks")
     public ApiResponse<Void> addTrack(
             @PathVariable Long memberId,
-            @RequestBody @Valid TrackUpsertReqDTO request
+            @RequestBody @Valid CreateTrackReqDTO request
     ) {
         memberAdminUsecase.addTrack(memberId, request.generation(), request.part());
         return ApiResponse.response(HttpStatus.OK, MEMBER_TRACK_CREATE_SUCCESS.getMessage(), null);
@@ -75,7 +76,7 @@ public class AdminMemberController {
     @PatchMapping("/v1/admin/tracks/{trackId}")
     public ApiResponse<Void> updateTrack(
             @PathVariable Long trackId,
-            @RequestBody @Valid TrackUpsertReqDTO request
+            @RequestBody @Valid PatchTrackReqDTO request
     ) {
         memberAdminUsecase.updateTrack(trackId, request.generation(), request.part());
         return ApiResponse.response(HttpStatus.OK, MEMBER_TRACK_UPDATE_SUCCESS.getMessage(), null);
