@@ -53,6 +53,7 @@ public class PersonalActivityScore extends BaseEntity {
         return this.score;
     }
 
+    /** 회원 유형(YB/OB)에 따른 실제 반영 점수를 계산해 누적 점수와 prefix sum에 반영한다. */
     public BigDecimal updateScore(ActivityType activityType) {
         return applyDelta(resolveAppliedScore(activityType), activityType.getScoreType());
     }

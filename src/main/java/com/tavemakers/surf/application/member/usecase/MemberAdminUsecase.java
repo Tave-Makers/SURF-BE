@@ -227,16 +227,19 @@ public class MemberAdminUsecase {
         trackService.addTrackToMember(memberId, generation, part);
     }
 
+    /** 관리자 권한으로 특정 회원의 트랙을 추가한다. */
     @Transactional
     public void updateTrack(Long trackId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
         trackService.updateTrack(trackId, generation, part);
     }
 
+    /** 관리자 권한으로 특정 트랙의 기수/파트를 수정한다. */
     @Transactional
     public void deleteTrack(Long trackId) {
         trackService.deleteTrack(trackId);
     }
 
+    /** 관리자 권한으로 특정 트랙을 삭제한다. */
     private void validateLoginMemberRole(Member member) {
         if(member.isMember()){
             throw new AdminPageRoleException();
