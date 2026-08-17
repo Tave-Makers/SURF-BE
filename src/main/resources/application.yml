@@ -91,6 +91,11 @@ management:
       exposure:
         include: health, metrics
 
+# 금칙어 마스킹
+moderation:
+  enabled: ${MODERATION_ENABLED:true}   # 킬 스위치 — 오탐 사고 시 재빌드 없이 비활성화(재시작 필요)
+  mask-char: "*"                        # 매치 길이만큼 반복 (예: 씨발 → **)
+
 logging:
   forwarding:
     enabled: ${LOG_FORWARD_ENABLED:false}
