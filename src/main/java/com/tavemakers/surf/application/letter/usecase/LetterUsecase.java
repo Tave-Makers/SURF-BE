@@ -7,6 +7,8 @@ import com.tavemakers.surf.domain.letter.entity.Letter;
 import com.tavemakers.surf.domain.letter.exception.LetterBlockedException;
 import com.tavemakers.surf.domain.letter.exception.LetterMailSendFailException;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
 import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
@@ -30,6 +32,7 @@ public class LetterUsecase {
     private final EmailSender emailSender;
     private final LetterGetService letterGetService;
     private final LogEventEmitter logEventEmitter;
+    private final ProfanityMasker profanityMasker;
 
     /** 쪽지 생성(저장·커밋) 후 트랜잭션 밖에서 이메일 발송 */
     public LetterResDTO createLetter(Long senderId, LetterCreateReqDTO req) {
@@ -76,10 +79,12 @@ public class LetterUsecase {
                 "validation_result", true
         ));
 
-        // 5) 엔티티 생성
+        // 5) 엔티티 생성 (제목·본문 금칙어 마스킹)
+        String maskedTitle = maskAndLog(req.title(), "letter.title");
+        String maskedContent = maskAndLog(req.content(), "letter.content");
         Letter letter = Letter.create(
-                req.title(),
-                req.content(),
+                maskedTitle,
+                maskedContent,
                 req.sns(),
                 req.replyEmail(),
                 sender,
@@ -100,7 +105,7 @@ public class LetterUsecase {
         """
                 .formatted(
                         sender.getName(),
-                        req.content(),
+                        maskedContent,
                         req.replyEmail(),
                         req.sns() != null ? req.sns() : "-"
                 );
@@ -108,7 +113,7 @@ public class LetterUsecase {
         // 8) 이메일 전송 (트랜잭션 밖, 실패 시 예외 — 저장된 쪽지는 유지)
         boolean emailSent = false;
         try {
-            emailSender.sendMail(receiver.getEmail(), req.title(), emailBody);
+            emailSender.sendMail(receiver.getEmail(), maskedTitle, emailBody);
             emailSent = true;
         } catch (MailException e) {
             Map<String, Object> failedProps = new HashMap<>();
@@ -130,6 +135,18 @@ public class LetterUsecase {
 
         // 9) 저장된 엔티티 기반으로 Response 생성
         return LetterResDTO.from(saved);
+    }
+
+    /** 금칙어를 마스킹하고, 실제로 가려진 경우에만 로그를 남긴다 — 원문·본문은 로그에 남기지 않는다 */
+    private String maskAndLog(String text, String target) {
+        MaskingResult result = profanityMasker.maskWithResult(text);
+        if (result.matchCount() > 0) {
+            logEventEmitter.emit("moderation.masked", Map.of(
+                    "target", target,
+                    "match_count", result.matchCount(),
+                    "matched", result.matched()));
+        }
+        return result.masked();
     }
 
     /** 발신한 쪽지 목록 조회 */
