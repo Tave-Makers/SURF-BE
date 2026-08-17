@@ -11,6 +11,7 @@ import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
+import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +41,9 @@ class TrackServiceTest {
 
     @Mock
     private MemberGenerationSyncService memberGenerationSyncService;
+
+    @Mock
+    private PersonalScoreCreateService personalScoreCreateService;
 
     @InjectMocks
     private TrackService trackService;
@@ -79,6 +83,7 @@ class TrackServiceTest {
     @DisplayName("addTrackToMember - 승인 회원이면 트랙을 추가하고 현재 활동 기수 기준으로 동기화한다")
     void addTrackToMember_whenApproved_addsTrackAndSyncs() {
         Member member = member(1L, MemberStatus.APPROVED);
+        member.syncGenerationStatus(MemberType.OB, false);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
         given(activeGenerationGetService.getActiveGeneration()).willReturn(17);
 
@@ -88,6 +93,7 @@ class TrackServiceTest {
         assertThat(member.getTracks().get(0).getGeneration()).isEqualTo(17);
         assertThat(member.getTracks().get(0).getPart()).isEqualTo(Part.BACKEND);
         then(memberGenerationSyncService).should().syncApprovedMember(member, 17);
+        then(personalScoreCreateService).should().resetPersonalScores(java.util.List.of(member));
     }
 
     @Test
@@ -101,6 +107,7 @@ class TrackServiceTest {
         assertThat(member.getTracks()).hasSize(1);
         then(activeGenerationGetService).shouldHaveNoInteractions();
         then(memberGenerationSyncService).shouldHaveNoInteractions();
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -114,6 +121,19 @@ class TrackServiceTest {
 
         assertThat(member.getTracks()).hasSize(1);
         assertThat(member.getTracks().get(0).getPart()).isEqualTo(Part.BACKEND);
+    }
+
+    @Test
+    @DisplayName("addTrackToMember - 현재 활동 기수가 아닌 트랙 추가는 점수를 초기화하지 않는다")
+    void addTrackToMember_whenNotCurrentGeneration_doesNotResetScore() {
+        Member member = member(1L, MemberStatus.APPROVED);
+        member.syncGenerationStatus(MemberType.OB, false);
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+        given(activeGenerationGetService.getActiveGeneration()).willReturn(17);
+
+        trackService.addTrackToMember(1L, 16, Part.BACKEND);
+
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -131,6 +151,7 @@ class TrackServiceTest {
     @DisplayName("updateTrack - 승인 회원의 트랙이면 값을 수정하고 소유 회원을 동기화한다")
     void updateTrack_whenOwnerApproved_updatesAndSyncs() {
         Member owner = member(2L, MemberStatus.APPROVED);
+        owner.syncGenerationStatus(MemberType.OB, false);
         Track track = track(5L, owner, 15, Part.BACKEND);
         given(trackRepository.findById(5L)).willReturn(Optional.of(track));
         given(activeGenerationGetService.getActiveGeneration()).willReturn(16);
@@ -140,6 +161,7 @@ class TrackServiceTest {
         assertThat(track.getGeneration()).isEqualTo(16);
         assertThat(track.getPart()).isEqualTo(Part.WEB_FRONTEND);
         then(memberGenerationSyncService).should().syncApprovedMember(owner, 16);
+        then(personalScoreCreateService).should().resetPersonalScores(java.util.List.of(owner));
     }
 
     @Test
@@ -154,6 +176,21 @@ class TrackServiceTest {
         assertThat(track.getGeneration()).isEqualTo(16);
         then(activeGenerationGetService).shouldHaveNoInteractions();
         then(memberGenerationSyncService).shouldHaveNoInteractions();
+        then(personalScoreCreateService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("updateTrack - 이미 활동 중인 회원의 현재 활동 기수 트랙 수정은 점수를 다시 초기화하지 않는다")
+    void updateTrack_whenAlreadyActive_doesNotResetScore() {
+        Member owner = member(2L, MemberStatus.APPROVED);
+        Track oldTrack = track(5L, owner, 16, Part.BACKEND);
+        owner.addTrack(15, Part.WEB_FRONTEND);
+        given(trackRepository.findById(5L)).willReturn(Optional.of(oldTrack));
+        given(activeGenerationGetService.getActiveGeneration()).willReturn(16);
+
+        trackService.updateTrack(5L, 16, Part.DEEP_LEARNING);
+
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -165,6 +202,7 @@ class TrackServiceTest {
                 .isInstanceOf(TrackNotFoundException.class);
 
         then(memberGenerationSyncService).shouldHaveNoInteractions();
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -179,5 +217,6 @@ class TrackServiceTest {
 
         then(trackRepository).should().delete(track);
         then(memberGenerationSyncService).should().syncApprovedMember(owner, 20);
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 }

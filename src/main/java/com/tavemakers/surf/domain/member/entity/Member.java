@@ -4,6 +4,7 @@ import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
 import com.tavemakers.surf.domain.auth.common.enums.Provider;
 import com.tavemakers.surf.domain.member.exception.MisMatchPasswordException;
 import com.tavemakers.surf.domain.member.exception.PasswordNotSettingException;
+import com.tavemakers.surf.domain.member.exception.TrackAlreadyExistsException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -208,7 +209,9 @@ public class Member extends BaseEntity {
         boolean exists = this.tracks.stream()
                 .anyMatch(t -> t.getGeneration().equals(generation));
 
-        if (exists) return; // 같은 기수 이미 있으면 추가 안 함
+        if (exists) {
+            throw new TrackAlreadyExistsException();
+        }
 
         Track track = new Track(generation, part);
         track.setMember(this); // 여기서만 add 수행

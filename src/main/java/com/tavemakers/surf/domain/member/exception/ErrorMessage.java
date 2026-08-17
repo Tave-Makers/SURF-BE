@@ -22,6 +22,7 @@ public enum ErrorMessage {
     PROVIDER_ALREADY_LINKED(HttpStatus.CONFLICT, "이미 연동된 [소셜 계정]입니다."),
     MEMBER_DISMISS_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "[승인된 회원]만 제명할 수 있습니다."),
     TRACK_NOT_FOUND(HttpStatus.NOT_FOUND, "회원의 [트랙]이 존재하지 않습니다."),
+    TRACK_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "이미 해당 [기수]에 [트랙]이 존재합니다."),
     CAREER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않은 [경력]입니다."),
     MEMBER_STATUS_CANNOT_CONVERT(HttpStatus.BAD_REQUEST, "잘못된 [MemberStatus]입니다."),
 
