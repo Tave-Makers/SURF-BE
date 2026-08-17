@@ -103,12 +103,18 @@ public class GlobalExceptionHandler {
         return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
     }
 
-    // @PreAuthorize 등 인가 거부 (AuthorizationDeniedException 포함)
+    /** 권한이 없는 요청에 대해 경로에 맞는 403 응답을 반환한다. */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException e) {
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(
+            AccessDeniedException e,
+            HttpServletRequest request
+    ) {
         ErrorCode errorCode = ACCESS_DENIED;
         logWarning(e, errorCode.getStatus().value());
-        return responseException(errorCode.getStatus(), errorCode.getMessage(), null);
+        String message = isAdminRequest(request)
+                ? "[관리자] 권한이 필요한 요청입니다."
+                : errorCode.getMessage();
+        return responseException(errorCode.getStatus(), message, null);
     }
 
     // @Valid 유효성 검증 예외
@@ -188,6 +194,11 @@ public class GlobalExceptionHandler {
     private void logError(Exception e, int errorCode) {
         log.error(e.getMessage(), e);
         log.error(LOG_FORMAT, e.getClass().getSimpleName(), errorCode, e.getMessage());
+    }
+
+    private boolean isAdminRequest(HttpServletRequest request) {
+        return request != null && request.getRequestURI() != null
+                && request.getRequestURI().startsWith("/v1/admin/");
     }
 
 }
