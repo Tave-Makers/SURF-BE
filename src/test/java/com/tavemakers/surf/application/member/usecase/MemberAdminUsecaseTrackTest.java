@@ -83,7 +83,7 @@ class MemberAdminUsecaseTrackTest {
     void updateTrack_whenAlreadyActiveAndPartOnlyChanged_doesNotResetScore() {
         Member member = member(2L, MemberStatus.APPROVED, MemberType.YB, true);
         Track track = track(10L, member, 25, Part.BACKEND);
-        given(trackGetService.getTrack(10L)).willReturn(track);
+        given(trackGetService.findTrackById(10L)).willReturn(track);
         given(activeGenerationGetService.getActiveGeneration()).willReturn(25);
         given(trackService.updateTrack(10L, null, Part.WEB_FRONTEND)).willAnswer(invocation -> {
             track.update(null, Part.WEB_FRONTEND);

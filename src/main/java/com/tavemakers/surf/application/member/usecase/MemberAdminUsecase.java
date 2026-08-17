@@ -233,7 +233,7 @@ public class MemberAdminUsecase {
     /** 관리자 권한으로 특정 회원의 트랙을 추가한다. */
     @Transactional
     public void updateTrack(Long trackId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
-        Member member = trackGetService.getTrack(trackId).getMember();
+        Member member = trackGetService.findTrackById(trackId).getMember();
         boolean wasActive = member.isActive();
         trackService.updateTrack(trackId, generation, part);
         syncApprovedMemberTrackChange(member, wasActive, generation);
