@@ -111,16 +111,18 @@ class TrackServiceTest {
     }
 
     @Test
-    @DisplayName("addTrackToMember - 이미 같은 기수 트랙이 있으면 중복 추가되지 않는다")
-    void addTrackToMember_whenGenerationAlreadyExists_doesNotAddDuplicate() {
+    @DisplayName("addTrackToMember - 이미 같은 기수 트랙이 있으면 예외를 던지고 후속 로직을 호출하지 않는다")
+    void addTrackToMember_whenGenerationAlreadyExists_throwsAndSkipsFollowUp() {
         Member member = member(1L, MemberStatus.WAITING);
         member.addTrack(17, Part.BACKEND);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
 
-        trackService.addTrackToMember(1L, 17, Part.DEEP_LEARNING);
+        assertThatThrownBy(() -> trackService.addTrackToMember(1L, 17, Part.DEEP_LEARNING))
+                .isInstanceOf(com.tavemakers.surf.domain.member.exception.TrackAlreadyExistsException.class);
 
-        assertThat(member.getTracks()).hasSize(1);
-        assertThat(member.getTracks().get(0).getPart()).isEqualTo(Part.BACKEND);
+        then(activeGenerationGetService).shouldHaveNoInteractions();
+        then(memberGenerationSyncService).shouldHaveNoInteractions();
+        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
