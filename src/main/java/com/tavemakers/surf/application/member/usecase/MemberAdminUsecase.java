@@ -224,19 +224,26 @@ public class MemberAdminUsecase {
 
     @Transactional
     public void addTrack(Long memberId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        Member member = memberGetService.getMember(memberId);
+        boolean wasActive = member.isActive();
         trackService.addTrackToMember(memberId, generation, part);
+        syncApprovedMemberTrackChange(member, wasActive, generation);
     }
 
     /** 관리자 권한으로 특정 회원의 트랙을 추가한다. */
     @Transactional
     public void updateTrack(Long trackId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        Member member = trackGetService.getTrack(trackId).getMember();
+        boolean wasActive = member.isActive();
         trackService.updateTrack(trackId, generation, part);
+        syncApprovedMemberTrackChange(member, wasActive, generation);
     }
 
     /** 관리자 권한으로 특정 트랙의 기수/파트를 수정한다. */
     @Transactional
     public void deleteTrack(Long trackId) {
-        trackService.deleteTrack(trackId);
+        Member member = trackService.deleteTrack(trackId);
+        syncApprovedMemberTrackChange(member, member.isActive(), null);
     }
 
     /** 관리자 권한으로 특정 트랙을 삭제한다. */
@@ -244,5 +251,25 @@ public class MemberAdminUsecase {
         if(member.isMember()){
             throw new AdminPageRoleException();
         }
+    }
+
+    private void syncApprovedMemberTrackChange(Member member, boolean wasActive, Integer changedGeneration) {
+        if (!member.isApproved()) {
+            return;
+        }
+
+        Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
+        memberGenerationSyncService.syncApprovedMember(member, activeGeneration);
+
+        if (shouldResetScore(wasActive, member, activeGeneration, changedGeneration)) {
+            personalScoreCreateService.resetPersonalScores(List.of(member));
+        }
+    }
+
+    private boolean shouldResetScore(boolean wasActive, Member member, Integer activeGeneration, Integer changedGeneration) {
+        return !wasActive
+                && member.isActive()
+                && changedGeneration != null
+                && activeGeneration.equals(changedGeneration);
     }
 }

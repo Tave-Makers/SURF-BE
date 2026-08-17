@@ -1,6 +1,5 @@
 package com.tavemakers.surf.domain.member.service;
 
-import com.tavemakers.surf.application.activity.query.ActiveGenerationGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
@@ -11,7 +10,6 @@ import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
-import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,15 +33,6 @@ class TrackServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
-
-    @Mock
-    private ActiveGenerationGetService activeGenerationGetService;
-
-    @Mock
-    private MemberGenerationSyncService memberGenerationSyncService;
-
-    @Mock
-    private PersonalScoreCreateService personalScoreCreateService;
 
     @InjectMocks
     private TrackService trackService;
@@ -74,40 +63,31 @@ class TrackServiceTest {
 
         assertThatThrownBy(() -> trackService.addTrackToMember(1L, 17, Part.BACKEND))
                 .isInstanceOf(MemberNotFoundException.class);
-
-        then(activeGenerationGetService).shouldHaveNoInteractions();
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("addTrackToMember - 승인 회원이면 트랙을 추가하고 현재 활동 기수 기준으로 동기화한다")
-    void addTrackToMember_whenApproved_addsTrackAndSyncs() {
+    @DisplayName("addTrackToMember - 승인 회원이면 트랙을 추가하고 회원을 반환한다")
+    void addTrackToMember_whenApproved_addsTrackAndReturnsMember() {
         Member member = member(1L, MemberStatus.APPROVED);
-        member.syncGenerationStatus(MemberType.OB, false);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(activeGenerationGetService.getActiveGeneration()).willReturn(17);
 
-        trackService.addTrackToMember(1L, 17, Part.BACKEND);
+        Member result = trackService.addTrackToMember(1L, 17, Part.BACKEND);
 
+        assertThat(result).isSameAs(member);
         assertThat(member.getTracks()).hasSize(1);
         assertThat(member.getTracks().get(0).getGeneration()).isEqualTo(17);
         assertThat(member.getTracks().get(0).getPart()).isEqualTo(Part.BACKEND);
-        then(memberGenerationSyncService).should().syncApprovedMember(member, 17);
-        then(personalScoreCreateService).should().resetPersonalScores(java.util.List.of(member));
     }
 
     @Test
-    @DisplayName("addTrackToMember - 승인되지 않은 회원이면 트랙만 추가되고 동기화는 호출되지 않는다")
-    void addTrackToMember_whenNotApproved_addsTrackButSkipsSync() {
+    @DisplayName("addTrackToMember - 승인되지 않은 회원도 트랙은 추가된다")
+    void addTrackToMember_whenNotApproved_addsTrack() {
         Member member = member(1L, MemberStatus.WAITING);
         given(memberRepository.findById(1L)).willReturn(Optional.of(member));
 
         trackService.addTrackToMember(1L, 17, Part.BACKEND);
 
         assertThat(member.getTracks()).hasSize(1);
-        then(activeGenerationGetService).shouldHaveNoInteractions();
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
-        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -119,23 +99,6 @@ class TrackServiceTest {
 
         assertThatThrownBy(() -> trackService.addTrackToMember(1L, 17, Part.DEEP_LEARNING))
                 .isInstanceOf(com.tavemakers.surf.domain.member.exception.TrackAlreadyExistsException.class);
-
-        then(activeGenerationGetService).shouldHaveNoInteractions();
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
-        then(personalScoreCreateService).shouldHaveNoInteractions();
-    }
-
-    @Test
-    @DisplayName("addTrackToMember - 현재 활동 기수가 아닌 트랙 추가는 점수를 초기화하지 않는다")
-    void addTrackToMember_whenNotCurrentGeneration_doesNotResetScore() {
-        Member member = member(1L, MemberStatus.APPROVED);
-        member.syncGenerationStatus(MemberType.OB, false);
-        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
-        given(activeGenerationGetService.getActiveGeneration()).willReturn(17);
-
-        trackService.addTrackToMember(1L, 16, Part.BACKEND);
-
-        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -145,30 +108,25 @@ class TrackServiceTest {
 
         assertThatThrownBy(() -> trackService.updateTrack(5L, 17, Part.BACKEND))
                 .isInstanceOf(TrackNotFoundException.class);
-
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("updateTrack - 승인 회원의 트랙이면 값을 수정하고 소유 회원을 동기화한다")
-    void updateTrack_whenOwnerApproved_updatesAndSyncs() {
+    @DisplayName("updateTrack - 트랙 값을 수정하고 수정된 트랙을 반환한다")
+    void updateTrack_whenOwnerApproved_updatesAndReturnsTrack() {
         Member owner = member(2L, MemberStatus.APPROVED);
-        owner.syncGenerationStatus(MemberType.OB, false);
         Track track = track(5L, owner, 15, Part.BACKEND);
         given(trackRepository.findById(5L)).willReturn(Optional.of(track));
-        given(activeGenerationGetService.getActiveGeneration()).willReturn(16);
 
-        trackService.updateTrack(5L, 16, Part.WEB_FRONTEND);
+        Track result = trackService.updateTrack(5L, 16, Part.WEB_FRONTEND);
 
+        assertThat(result).isSameAs(track);
         assertThat(track.getGeneration()).isEqualTo(16);
         assertThat(track.getPart()).isEqualTo(Part.WEB_FRONTEND);
-        then(memberGenerationSyncService).should().syncApprovedMember(owner, 16);
-        then(personalScoreCreateService).should().resetPersonalScores(java.util.List.of(owner));
     }
 
     @Test
-    @DisplayName("updateTrack - 승인되지 않은 회원의 트랙이면 값만 수정되고 동기화는 호출되지 않는다")
-    void updateTrack_whenOwnerNotApproved_updatesButSkipsSync() {
+    @DisplayName("updateTrack - 승인되지 않은 회원의 트랙도 값은 수정된다")
+    void updateTrack_whenOwnerNotApproved_updates() {
         Member owner = member(2L, MemberStatus.WAITING);
         Track track = track(5L, owner, 15, Part.BACKEND);
         given(trackRepository.findById(5L)).willReturn(Optional.of(track));
@@ -176,23 +134,6 @@ class TrackServiceTest {
         trackService.updateTrack(5L, 16, Part.WEB_FRONTEND);
 
         assertThat(track.getGeneration()).isEqualTo(16);
-        then(activeGenerationGetService).shouldHaveNoInteractions();
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
-        then(personalScoreCreateService).shouldHaveNoInteractions();
-    }
-
-    @Test
-    @DisplayName("updateTrack - 이미 활동 중인 회원의 현재 활동 기수 트랙 수정은 점수를 다시 초기화하지 않는다")
-    void updateTrack_whenAlreadyActive_doesNotResetScore() {
-        Member owner = member(2L, MemberStatus.APPROVED);
-        Track oldTrack = track(5L, owner, 16, Part.BACKEND);
-        owner.addTrack(15, Part.WEB_FRONTEND);
-        given(trackRepository.findById(5L)).willReturn(Optional.of(oldTrack));
-        given(activeGenerationGetService.getActiveGeneration()).willReturn(16);
-
-        trackService.updateTrack(5L, 16, Part.DEEP_LEARNING);
-
-        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
@@ -202,23 +143,19 @@ class TrackServiceTest {
 
         assertThatThrownBy(() -> trackService.deleteTrack(7L))
                 .isInstanceOf(TrackNotFoundException.class);
-
-        then(memberGenerationSyncService).shouldHaveNoInteractions();
-        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("deleteTrack - 승인 회원의 트랙이면 삭제 후 소유 회원을 동기화한다")
-    void deleteTrack_whenOwnerApproved_deletesAndSyncs() {
+    @DisplayName("deleteTrack - 트랙을 삭제하고 소유 회원을 반환한다")
+    void deleteTrack_whenOwnerApproved_deletesAndReturnsOwner() {
         Member owner = member(3L, MemberStatus.APPROVED);
         Track track = track(7L, owner, 15, Part.BACKEND);
         given(trackRepository.findById(7L)).willReturn(Optional.of(track));
-        given(activeGenerationGetService.getActiveGeneration()).willReturn(20);
 
-        trackService.deleteTrack(7L);
+        Member result = trackService.deleteTrack(7L);
 
+        assertThat(result).isSameAs(owner);
+        assertThat(owner.getTracks()).doesNotContain(track);
         then(trackRepository).should().delete(track);
-        then(memberGenerationSyncService).should().syncApprovedMember(owner, 20);
-        then(personalScoreCreateService).shouldHaveNoInteractions();
     }
 }
