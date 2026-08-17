@@ -202,14 +202,18 @@ public class ActivityRecordUsecase {
         // 선행 트랜잭션의 커밋을 보지 못해 점수 보정이 중복 적용될 수 있다
         ActivityRecord record = activityRecordGetService.findByIdForUpdate(activityRecordId);
         validateNotDeleted(record);
+        PersonalActivityScore score = null;
 
         if (dto.activityType() != null) {
             // 단일 델타 보정으로는 상·벌점 누적합 두 컬럼을 맞출 수 없으므로, 구(scoreType, appliedScore)를 되돌리고 신을 반영한다.
             ScoreType oldScoreType = record.getScoreType();
             BigDecimal oldAppliedScore = record.getAppliedScore();
-            activityRecordPatchService.updateActivityType(record, dto.activityType());
+            score = findScoreByRecord(record);
+            BigDecimal newAppliedScore = record.getTeamId() != null
+                    ? BigDecimal.valueOf(dto.activityType().getDelta())
+                    : score.resolveAppliedScore(dto.activityType());
+            activityRecordPatchService.updateActivityType(record, dto.activityType(), newAppliedScore);
 
-            PersonalActivityScore score = findScoreByRecord(record);
             score.applyDelta(oldAppliedScore.negate(), oldScoreType);
             score.applyDelta(record.getAppliedScore(), record.getScoreType());
         }

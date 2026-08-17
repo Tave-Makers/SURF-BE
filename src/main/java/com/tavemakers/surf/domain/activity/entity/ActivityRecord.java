@@ -96,13 +96,13 @@ public class ActivityRecord extends BaseEntity {
         this.isDeleted = true;
     }
 
-    /** 활동 유형 변경 및 점수 차이 반환 */
-    public BigDecimal updateActivityType(ActivityType newActivityType) {
+    /** 활동 유형 변경 시 실제 반영 점수(appliedScore)까지 함께 갱신한다. */
+    public BigDecimal updateActivityType(ActivityType newActivityType, BigDecimal appliedScore) {
         BigDecimal oldAppliedScore = this.appliedScore;
         this.activityType = newActivityType;
         this.category = newActivityType.getCategory();
         this.scoreType = newActivityType.getScoreType();
-        this.appliedScore = BigDecimal.valueOf(newActivityType.getDelta());
+        this.appliedScore = appliedScore;
         return this.appliedScore.subtract(oldAppliedScore);
     }
 
