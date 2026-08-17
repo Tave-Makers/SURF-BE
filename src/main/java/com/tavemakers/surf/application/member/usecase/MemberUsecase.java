@@ -1,8 +1,10 @@
 package com.tavemakers.surf.application.member.usecase;
 
-import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
-import com.tavemakers.surf.presentation.member.dto.request.ProfileUpdateReqDTO;
-import com.tavemakers.surf.presentation.member.dto.response.*;
+import com.tavemakers.surf.application.block.query.BlockGetService;
+import com.tavemakers.surf.application.member.query.CareerGetService;
+import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.application.member.query.TrackGetService;
+import com.tavemakers.surf.application.score.query.PersonalScoreGetService;
 import com.tavemakers.surf.domain.member.dto.CareerCreateCommand;
 import com.tavemakers.surf.domain.member.dto.CareerUpdateCommand;
 import com.tavemakers.surf.domain.member.entity.Member;
@@ -14,19 +16,18 @@ import com.tavemakers.surf.domain.member.exception.AccountIntegrationAvailableEx
 import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
 import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
 import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
-import com.tavemakers.surf.application.member.query.CareerGetService;
-import com.tavemakers.surf.application.member.query.MemberGetService;
-import com.tavemakers.surf.application.member.query.TrackGetService;
 import com.tavemakers.surf.domain.member.service.CareerCreateService;
-import com.tavemakers.surf.domain.member.service.CareerPatchService;
 import com.tavemakers.surf.domain.member.service.CareerDeleteService;
+import com.tavemakers.surf.domain.member.service.CareerPatchService;
 import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.service.MemberService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
-import com.tavemakers.surf.application.score.query.PersonalScoreGetService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
+import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
+import com.tavemakers.surf.presentation.member.dto.request.ProfileUpdateReqDTO;
+import com.tavemakers.surf.presentation.member.dto.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -47,6 +48,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.tavemakers.surf.domain.member.exception.ErrorMessage.ACCOUNT_INTEGRATION_AVAILABLE;
@@ -68,6 +70,7 @@ public class MemberUsecase {
     private final MemberService memberService;
     private final MemberWithdrawService memberWithdrawService;
     private final PendingIntegrationUsecase pendingIntegrationUsecase;
+    private final BlockGetService blockGetService;
     private final ApplicationContext context;
     private final LogEventEmitter logEventEmitter;
     //</editor-fold>
@@ -474,7 +477,8 @@ public class MemberUsecase {
         try {
             Pageable pageable = PageRequest.of(pageNum, pageSize);
             Part memberPart = part == null ? null : Part.valueOf(part);
-            Slice<MemberSearchDetailResDTO> slice = search(generation, memberPart, keyword, pageable);
+            Slice<MemberSearchDetailResDTO> slice =
+                    search(generation, memberPart, keyword, pageable, requesterId);
 
             Long totalCount = null;
             if (pageNum == 0) { // FRONTEND 협의 - 0번째 페이지에서만 검색조건에 따른 전체 회원수 조회.
@@ -535,9 +539,14 @@ public class MemberUsecase {
     }
 
 
-    private Slice<MemberSearchDetailResDTO> search(Integer generation, Part part, String keyword, Pageable pageable) {
+    /** 회원 검색 결과에 단방향 차단 여부를 표기한다 */
+    private Slice<MemberSearchDetailResDTO> search(
+            Integer generation, Part part, String keyword, Pageable pageable, Long requesterId) {
+        Set<Long> blockedIds = blockGetService.getMyBlockedIdsRaw(requesterId);
+
         return memberGetService.searchMembers(generation, part, keyword, pageable)
-                .map(MemberSearchDetailResDTO::from);
+                .map(member -> MemberSearchDetailResDTO.from(
+                        member, blockedIds.contains(member.getId())));
     }
 
 }
