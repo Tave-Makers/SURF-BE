@@ -159,3 +159,52 @@ MemberBadge    ← 회원-배지 매핑 (다대다)
 | `reservation` | 예약 게시글 관리 | `/v1/user/reservations` |
 | `team` | 팀/그룹 관리 | `/v1/user/teams` |
 | `login` | 카카오 OAuth2 로그인 | `/login/` |
+| `block` | 회원 간 차단 등록/해제/목록 (관리자 강제 해제 포함) | `/v1/user/blocks`, `/v1/admin/blocks` |
+
+---
+
+### block
+
+**역할**: 폭언·괴롭힘 사용자로부터 사용자를 보호하는 안전 기능. 차단하면 상대의 게시글·댓글이 조회에서 사라지고 쪽지·개인 알림이 차단된다.
+
+**구조**
+
+```
+Block   ← 단방향 관계 (blocker_id → blocked_id)
+```
+
+A→B와 B→A는 서로 다른 레코드다. 한쪽을 지워도 반대 방향은 남는다. 변경되는 속성이 없어 `BaseEntity`를 상속하지 않고 `createdAt`만 둔다.
+
+**두 정책의 방향이 다르다 — 바꿔 쓰면 동작이 조용히 바뀐다**
+
+| 용도 | 방향 | 조회 메서드 |
+|------|------|------------|
+| 콘텐츠 숨김 (게시글·댓글·스크랩) | **단방향** — 내가 차단한 사람만 안 보인다. 상대 시점에서는 내 글이 그대로 보인다 | `BlockGetService.getMyBlockedMemberIds` |
+| 상호작용 차단 (쪽지·개인 알림) | **양방향** — 어느 한쪽이라도 차단했으면 막는다 | `BlockGetService.existsBetween` |
+| 회원 검색 표기 | 단방향, **제외하지 않고 표기만** | `BlockGetService.getMyBlockedIdsRaw` |
+
+**sentinel 계약**: `getMyBlockedMemberIds`는 절대 빈 컬렉션을 반환하지 않는다. 차단이 0건이면 `-1L`을 넣는다 — 빈 컬렉션을 JPQL `not in`에 넘기면 공급자·DB별로 목록이 통째로 비거나 문법 오류가 난다. Java `contains` 판정에는 sentinel이 없는 `getMyBlockedIdsRaw`를 쓴다.
+
+**적용 지점**
+
+| 화면 | 동작 |
+|------|------|
+| 게시판 목록·카테고리·검색 | 쿼리 `not in`으로 제외 (조회 후 Java 필터링 금지 — 페이지 크기가 깨진다) |
+| 게시글 상세 | 404. 403이면 차단 대상의 글이 존재한다는 사실이 드러난다. **조회수 증가보다 앞**에 둔다 |
+| 댓글 목록·count | 같은 제외 집합을 둘 다에 넘긴다. 다르면 "댓글 3개"인데 목록이 비는 불일치가 생긴다 |
+| 댓글 API 직접 호출 | `PostGetService.validateVisiblePost`로 상세 가드 우회를 막는다 |
+| 스크랩 목록 | 차단 **이전**에 스크랩한 글도 사라진다. 단 스크랩 레코드는 지우지 않아 해제하면 복구된다 |
+| 쪽지 | 저장·이벤트·메일 발송 **이전**에 403 |
+| 개인 알림 | `Notification` 저장 이전에 차단 (FCM만 막으면 알림함에 이름이 쌓인다). 공지 알림은 제외 |
+| 회원 검색 | **제외하지 않는다.** `blockedByMe` 플래그만 내려주고 `totalCount`는 유지 — 검색에서 지우면 차단을 해제할 방법이 없어진다 |
+
+**제명(hard delete) 연동**: `BlockMemberDismissListener`가 같은 트랜잭션에서 양방향 차단 관계를 정리한다. 운영 FK가 RESTRICT라 이 정리가 빠지면 회원 삭제 자체가 실패한다 — 부수효과가 아니라 선행 조건이므로 `@Async`·AFTER_COMMIT을 쓰지 않는다.
+
+**운영 스키마**: `block` 테이블은 `ddl-auto`가 FK를 만들지 못한다(회원을 scalar ID로 보유). 운영 DDL을 수동 적용하며 절차는 `docs/block-feature-plan.md` §13.2 참고.
+
+**관련 코드**
+- `presentation/block/controller/` — `BlockCreateController`, `BlockDeleteController`, `BlockGetController`, `BlockAdminGetController`, `BlockAdminDeleteController`
+- `application/block/usecase/` — `BlockUsecase`, `BlockAdminUsecase`
+- `application/block/query/` — `BlockGetService`(사용자), `BlockAdminGetService`(관리자, 방향 무관)
+- `application/block/event/` — `BlockMemberDismissListener`, `BlockForceReleasedLogListener`
+- `domain/block/` — `Block`, `BlockRepository`, `BlockCreateService`, `BlockDeleteService`

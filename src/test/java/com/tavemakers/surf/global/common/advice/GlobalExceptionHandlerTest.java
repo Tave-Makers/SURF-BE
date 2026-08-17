@@ -13,10 +13,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import static com.tavemakers.surf.global.common.exception.ErrorCode.ACCESS_DENIED;
 import static com.tavemakers.surf.global.common.exception.ErrorCode.INTERNAL_SERVER_ERROR;
 import static com.tavemakers.surf.global.common.exception.ErrorCode.MESSAGE_NOT_READABLE;
+import static com.tavemakers.surf.global.common.exception.ErrorCode.METHOD_ARGUMENT_NOT_VALID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -91,5 +93,17 @@ class GlobalExceptionHandlerTest {
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(res.getBody().message()).isEqualTo(MESSAGE_NOT_READABLE.getMessage());
         assertThat(res.getBody().message()).doesNotContain("JSON parse error");
+    }
+
+    @Test
+    @DisplayName("요청 파라미터 타입 변환 실패는 400으로 응답한다")
+    void methodArgumentTypeMismatch_returns400() {
+        MethodArgumentTypeMismatchException e = new MethodArgumentTypeMismatchException(
+                "INVALID", String.class, "direction", null, new IllegalArgumentException());
+
+        ResponseEntity<ApiResponse<Void>> res = handler.handleMethodArgumentTypeMismatchException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().message()).isEqualTo(METHOD_ARGUMENT_NOT_VALID.getMessage());
     }
 }
