@@ -95,6 +95,18 @@ class BlockGetServiceTest {
     }
 
     @Test
+    @DisplayName("나를 차단한 상대는 표기용 집합에 담기지 않는다 — 회원 검색에서 상대의 차단 사실이 새면 안 된다")
+    void 표기용_집합에_나를_차단한_회원은_없다() {
+        // 반대 방향: target → viewer. viewer 는 아무도 차단하지 않았다.
+        blockRepository.save(Block.of(target.getId(), viewer.getId()));
+        em.flush();
+
+        assertThat(blockGetService.getMyBlockedIdsRaw(viewer.getId()))
+                .as("양방향으로 구현하면 회원 검색에서 blockedByMe=true 가 되어 상대의 차단이 노출된다")
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("existsBetween은 양방향, isBlockedByMe는 단방향 — 두 정책이 섞이지 않는다")
     void 상호작용은_양방향_콘텐츠는_단방향이다() {
         blockRepository.save(Block.of(viewer.getId(), target.getId()));

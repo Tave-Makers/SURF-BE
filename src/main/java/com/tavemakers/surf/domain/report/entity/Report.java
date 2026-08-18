@@ -1,6 +1,7 @@
 package com.tavemakers.surf.domain.report.entity;
 
 import com.tavemakers.surf.global.common.entity.BaseEntity;
+import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -49,6 +51,13 @@ public class Report extends BaseEntity {
     @Column(nullable = false)
     private String snapshotJson;
 
+    private Long resolvedBy;
+
+    private LocalDateTime resolvedAt;
+
+    @Column(length = 1000)
+    private String adminMemo;
+
     @Builder
     private Report(
             Long reporterMemberId,
@@ -57,7 +66,10 @@ public class Report extends BaseEntity {
             Long targetId,
             ReportReasonType reasonType,
             ReportStatus status,
-            String snapshotJson
+            String snapshotJson,
+            Long resolvedBy,
+            LocalDateTime resolvedAt,
+            String adminMemo
     ) {
         this.reporterMemberId = reporterMemberId;
         this.reportedMemberId = reportedMemberId;
@@ -66,6 +78,9 @@ public class Report extends BaseEntity {
         this.reasonType = reasonType;
         this.status = status;
         this.snapshotJson = snapshotJson;
+        this.resolvedBy = resolvedBy;
+        this.resolvedAt = resolvedAt;
+        this.adminMemo = adminMemo;
     }
 
     /** 신고 엔티티 생성 */
@@ -86,5 +101,29 @@ public class Report extends BaseEntity {
                 .status(ReportStatus.PENDING)
                 .snapshotJson(snapshotJson)
                 .build();
+    }
+
+    /** 신고를 처리 완료 상태로 변경한다. */
+    public void resolve(Long adminMemberId, String adminMemo) {
+        validatePendingStatus();
+        this.status = ReportStatus.RESOLVED;
+        this.resolvedBy = adminMemberId;
+        this.resolvedAt = LocalDateTime.now();
+        this.adminMemo = adminMemo;
+    }
+
+    /** 신고를 반려 상태로 변경한다. */
+    public void reject(Long adminMemberId, String adminMemo) {
+        validatePendingStatus();
+        this.status = ReportStatus.REJECTED;
+        this.resolvedBy = adminMemberId;
+        this.resolvedAt = LocalDateTime.now();
+        this.adminMemo = adminMemo;
+    }
+
+    private void validatePendingStatus() {
+        if (status != ReportStatus.PENDING) {
+            throw new InvalidReportStatusChangeException();
+        }
     }
 }
