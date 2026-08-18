@@ -85,6 +85,9 @@ dependencies {
 
     // Apple identityToken 검증 (RS256 JWKS) + client_secret 생성 (ES256)
     implementation("com.nimbusds:nimbus-jose-jwt:9.41.1")
+
+    // 금칙어 마스킹 — Aho-Corasick 다중 패턴 매칭 (Apache-2.0)
+    implementation("org.ahocorasick:ahocorasick:0.6.3")
 }
 
 // log4j2 사용을 위해 추가

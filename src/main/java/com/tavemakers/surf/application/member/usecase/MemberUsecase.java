@@ -22,6 +22,8 @@ import com.tavemakers.surf.domain.member.service.CareerPatchService;
 import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.service.MemberService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -73,6 +75,7 @@ public class MemberUsecase {
     private final BlockGetService blockGetService;
     private final ApplicationContext context;
     private final LogEventEmitter logEventEmitter;
+    private final ProfanityMasker profanityMasker;
     //</editor-fold>
 
     /** pending 발급 재시도 상한 — 부재 행 락 실패(데드락/타임아웃)의 transient 재시도 횟수. */
@@ -261,7 +264,7 @@ public class MemberUsecase {
                     dto.email(),
                     dto.university(),
                     dto.graduateSchool(),
-                    dto.selfIntroduction(),
+                    maskAndLog(dto.selfIntroduction(), "member.selfIntroduction"),
                     dto.link(),
                     dto.phoneNumber(),
                     dto.phoneNumberPublic(),
@@ -381,7 +384,7 @@ public class MemberUsecase {
         try {
             return proxy.signupCreate(member, request);
         } catch (AccountIntegrationAvailableException e) {
-            // case B: 온보딩 tx는 롤백됨 → pending을 REQUIRES_NEW로 독립 커밋하고 토큰을 실어 재전파 (§3.6)
+            // case B: 온보딩 tx는 롤백됨 → pending을 REQUIRES_NEW로 독립 커밋하고 토큰을 실어 재전파
             IssuedIntegrationToken issued = issueIntegrationToken(e);
             throw AccountIntegrationAvailableException.issued(
                     issued.token(), remainingSeconds(issued.expiresAt()),
@@ -538,6 +541,18 @@ public class MemberUsecase {
         return GenerationInfoListResDTO.from(existsAllGenerations);
     }
 
+
+    /** 금칙어를 마스킹하고, 실제로 가려진 경우에만 로그를 남긴다 — 원문·본문은 로그에 남기지 않는다 */
+    private String maskAndLog(String text, String target) {
+        MaskingResult result = profanityMasker.maskWithResult(text);
+        if (result.matchCount() > 0) {
+            logEventEmitter.emit("moderation.masked", Map.of(
+                    "target", target,
+                    "match_count", result.matchCount(),
+                    "matched", result.matched()));
+        }
+        return result.masked();
+    }
 
     /** 회원 검색 결과에 단방향 차단 여부를 표기한다 */
     private Slice<MemberSearchDetailResDTO> search(

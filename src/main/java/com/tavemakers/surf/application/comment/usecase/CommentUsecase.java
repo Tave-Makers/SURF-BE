@@ -9,6 +9,8 @@ import com.tavemakers.surf.application.comment.query.CommentMentionGetService;
 import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.comment.entity.Comment;
 import com.tavemakers.surf.domain.comment.service.CommentService;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
@@ -33,13 +35,15 @@ public class CommentUsecase {
     private final CommentMentionGetService commentMentionGetService;
     private final PostGetService postGetService;
     private final LogEventEmitter logEventEmitter;
+    private final ProfanityMasker profanityMasker;
 
     /** 댓글 생성 */
     @Transactional
     public CommentResDTO createComment(Long postId, Long memberId, CommentCreateReqDTO req) {
 
         Comment saved = commentService.createComment(
-                postId, memberId, req.parentId(), req.content(), req.mentionMemberIds());
+                postId, memberId, req.parentId(),
+                maskAndLog(req.content(), "comment.content"), req.mentionMemberIds());
 
         // 응답 DTO (멘션 포함, 새 댓글은 기본적으로 좋아요 없음)
         List<MentionResDTO> mentions = commentMentionGetService.getMentions(saved.getId());
@@ -51,6 +55,18 @@ public class CommentUsecase {
         ));
 
         return result;
+    }
+
+    /** 금칙어를 마스킹하고, 실제로 가려진 경우에만 로그를 남긴다 — 원문·본문은 로그에 남기지 않는다 */
+    private String maskAndLog(String text, String target) {
+        MaskingResult result = profanityMasker.maskWithResult(text);
+        if (result.matchCount() > 0) {
+            logEventEmitter.emit("moderation.masked", Map.of(
+                    "target", target,
+                    "match_count", result.matchCount(),
+                    "matched", result.matched()));
+        }
+        return result.masked();
     }
 
     /** 댓글 삭제 */
