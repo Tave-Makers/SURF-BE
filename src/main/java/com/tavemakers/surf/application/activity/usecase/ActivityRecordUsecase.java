@@ -14,6 +14,7 @@ import com.tavemakers.surf.domain.activity.entity.enums.ActivityCategory;
 import com.tavemakers.surf.domain.activity.entity.enums.ActivityType;
 import com.tavemakers.surf.domain.activity.entity.enums.ScoreType;
 import com.tavemakers.surf.domain.activity.exception.ActivityRecordAlreadyDeletedException;
+import com.tavemakers.surf.domain.activity.exception.InactiveMemberIncludedException;
 import com.tavemakers.surf.domain.activity.service.activityRecord.ActivityRecordDeleteService;
 import com.tavemakers.surf.application.activity.mapper.ActivityRecordMapper;
 import com.tavemakers.surf.application.activity.query.ActivityRecordGetService;
@@ -55,10 +56,19 @@ public class ActivityRecordUsecase {
     public void createActivityRecordList(ActivityRecordReqDTO dto) {
         // 다수의 활동 점수 -> 감점 + 가점 -> 누적합과 함께 활동기록 생성 (행 잠금으로 동시 갱신 직렬화)
         List<PersonalActivityScore> scoreList = personalScoreGetService.getPersonalScoreListByIdsForUpdate(dto.memberIdList());
+        validateAllMembersActive(scoreList);
         List<ActivityRecord> recordList = scoreList.stream()
                 .map(personalScore -> {
+                    BigDecimal appliedScore = personalScore.resolveAppliedScore(dto.activityName());
                     BigDecimal prefixSum = personalScore.updateScore(dto.activityName());
-                    return ActivityRecord.of(personalScore.getMember().getId(), dto.category(), dto.activityName(), dto.activityDate(), prefixSum);
+                    return ActivityRecord.of(
+                            personalScore.getMember().getId(),
+                            dto.category(),
+                            dto.activityName(),
+                            dto.activityDate(),
+                            prefixSum,
+                            appliedScore
+                    );
                         }
                 ).toList();
 
@@ -105,9 +115,12 @@ public class ActivityRecordUsecase {
 
             List<PersonalActivityScore> scoreList =
                     personalScoreGetService.getPersonalScoreListByIdsForUpdate(dto.memberIdList());
+            validateAllMembersActive(scoreList);
 
             List<ActivityRecord> recordList = scoreList.stream()
                     .map(personalScore -> {
+                                BigDecimal appliedScore =
+                                        personalScore.resolveAppliedScore(activityType);
                                 BigDecimal prefixSum =
                                         personalScore.updateScore(activityType);
 
@@ -115,7 +128,8 @@ public class ActivityRecordUsecase {
                                         personalScore.getMember().getId(),
                                         activityType,
                                         dto.activityDate(),
-                                        prefixSum
+                                        prefixSum,
+                                        appliedScore
                                 );
                             }
                     ).toList();
@@ -188,14 +202,18 @@ public class ActivityRecordUsecase {
         // 선행 트랜잭션의 커밋을 보지 못해 점수 보정이 중복 적용될 수 있다
         ActivityRecord record = activityRecordGetService.findByIdForUpdate(activityRecordId);
         validateNotDeleted(record);
+        PersonalActivityScore score = null;
 
         if (dto.activityType() != null) {
             // 단일 델타 보정으로는 상·벌점 누적합 두 컬럼을 맞출 수 없으므로, 구(scoreType, appliedScore)를 되돌리고 신을 반영한다.
             ScoreType oldScoreType = record.getScoreType();
             BigDecimal oldAppliedScore = record.getAppliedScore();
-            activityRecordPatchService.updateActivityType(record, dto.activityType());
+            score = findScoreByRecord(record);
+            BigDecimal newAppliedScore = record.getTeamId() != null
+                    ? BigDecimal.valueOf(dto.activityType().getDelta())
+                    : score.resolveAppliedScore(dto.activityType());
+            activityRecordPatchService.updateActivityType(record, dto.activityType(), newAppliedScore);
 
-            PersonalActivityScore score = findScoreByRecord(record);
             score.applyDelta(oldAppliedScore.negate(), oldScoreType);
             score.applyDelta(record.getAppliedScore(), record.getScoreType());
         }
@@ -247,6 +265,17 @@ public class ActivityRecordUsecase {
     private void validateNotDeleted(ActivityRecord record) {
         if (record.isDeleted()) {
             throw new ActivityRecordAlreadyDeletedException();
+        }
+    }
+
+    private void validateAllMembersActive(List<PersonalActivityScore> scoreList) {
+        List<Long> inactiveMemberIds = scoreList.stream()
+                .filter(personalScore -> !personalScore.getMember().isActive())
+                .map(personalScore -> personalScore.getMember().getId())
+                .toList();
+
+        if (!inactiveMemberIds.isEmpty()) {
+            throw new InactiveMemberIncludedException(inactiveMemberIds);
         }
     }
 

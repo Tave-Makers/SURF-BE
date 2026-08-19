@@ -18,7 +18,7 @@ public class MemberGenerationSyncService {
     private final MemberRepository memberRepository;
 
     /** 현재 활동 기수 기준으로 승인 회원들의 활동 상태를 일괄 동기화합니다. */
-    public void syncApprovedMembersByGeneration(Integer activeGeneration) {
+    public List<Member> syncApprovedMembersByGeneration(Integer activeGeneration) {
         List<Member> approvedMembers = memberRepository.findAllApprovedWithTracks();
 
         int ybCount = 0;
@@ -53,6 +53,8 @@ public class MemberGenerationSyncService {
                 activeCount,
                 inactiveCount
         );
+
+        return approvedMembers;
     }
 
     /** 단일 승인 회원을 현재 활동 기수 기준으로 동기화합니다. */

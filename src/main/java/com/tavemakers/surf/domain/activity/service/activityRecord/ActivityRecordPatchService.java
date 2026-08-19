@@ -12,9 +12,9 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class ActivityRecordPatchService {
 
-    /** 활동 유형 변경 및 점수 차이 반환 */
-    public BigDecimal updateActivityType(ActivityRecord record, ActivityType newActivityType) {
-        return record.updateActivityType(newActivityType);
+    /** 활동 유형 변경 시 실제 반영 점수(appliedScore)까지 함께 갱신한다. */
+    public BigDecimal updateActivityType(ActivityRecord record, ActivityType newActivityType, BigDecimal appliedScore) {
+        return record.updateActivityType(newActivityType, appliedScore);
     }
 
     /** 활동 날짜 변경 */

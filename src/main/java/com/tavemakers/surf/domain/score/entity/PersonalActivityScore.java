@@ -53,16 +53,26 @@ public class PersonalActivityScore extends BaseEntity {
         return this.score;
     }
 
+    /** 회원 유형(YB/OB)에 따른 실제 반영 점수를 계산해 누적 점수와 prefix sum에 반영한다. */
     public BigDecimal updateScore(ActivityType activityType) {
-        return applyDelta(BigDecimal.valueOf(activityType.getDelta()), activityType.getScoreType());
+        return applyDelta(resolveAppliedScore(activityType), activityType.getScoreType());
+    }
+
+    /** 현재 회원 구분(YB/OB)을 기준으로 개인 활동점수를 초기 상태로 되돌린다. */
+    public void resetForMember(Member member) {
+        this.member = member;
+        this.team = null;
+        this.score = defaultScoreFor(member);
+        this.rewardPrefixSum = BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
+        this.penaltyPrefixSum = BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP);
     }
 
     public static PersonalActivityScore from(Member member) {
         return PersonalActivityScore.builder()
                 .member(member)
-                .score(member.isYB() ? BigDecimal.valueOf(100) : BigDecimal.valueOf(50)) // 기본 점수 100
-                .rewardPrefixSum(BigDecimal.valueOf(0))
-                .penaltyPrefixSum(BigDecimal.valueOf(0))
+                .score(defaultScoreFor(member))
+                .rewardPrefixSum(BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP))
+                .penaltyPrefixSum(BigDecimal.ZERO.setScale(1, RoundingMode.HALF_UP))
                 .build();
     }
 
@@ -77,6 +87,18 @@ public class PersonalActivityScore extends BaseEntity {
 
     public boolean isTeam() {
         return team != null;
+    }
+
+    public BigDecimal resolveAppliedScore(ActivityType activityType) {
+        BigDecimal delta = BigDecimal.valueOf(activityType.getDelta()).setScale(1, RoundingMode.HALF_UP);
+        if (member == null || member.isYB()) {
+            return delta;
+        }
+        return delta.divide(BigDecimal.valueOf(2), 1, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal defaultScoreFor(Member member) {
+        return BigDecimal.valueOf(member.isYB() ? 100 : 50).setScale(1, RoundingMode.HALF_UP);
     }
 
 }

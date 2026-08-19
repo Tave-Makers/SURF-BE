@@ -2,6 +2,8 @@ package com.tavemakers.surf.presentation.member.controller;
 
 import com.tavemakers.surf.presentation.member.dto.request.RoleChangeReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.RoleChangeReqDTOV2;
+import com.tavemakers.surf.presentation.member.dto.request.CreateTrackReqDTO;
+import com.tavemakers.surf.presentation.member.dto.request.PatchTrackReqDTO;
 import com.tavemakers.surf.presentation.member.dto.response.ApprovedMemberSliceResDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberInformationResDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberRegistrationSliceResDTO;
@@ -58,6 +60,33 @@ public class AdminMemberController {
         Long actorId = SecurityUtils.getCurrentMemberId();
         memberAdminUsecase.expelMember(memberId, actorId);
         return ApiResponse.response(HttpStatus.OK, MEMBER_EXPEL_SUCCESS.getMessage(), null);
+    }
+
+    @Operation(summary = "회원 트랙 추가", description = "특정 회원에게 기수/파트 트랙을 추가합니다.")
+    @PostMapping("/v1/admin/members/{memberId}/tracks")
+    public ApiResponse<Void> addTrack(
+            @PathVariable Long memberId,
+            @RequestBody @Valid CreateTrackReqDTO request
+    ) {
+        memberAdminUsecase.addTrack(memberId, request.generation(), request.part());
+        return ApiResponse.response(HttpStatus.OK, MEMBER_TRACK_CREATE_SUCCESS.getMessage(), null);
+    }
+
+    @Operation(summary = "회원 트랙 수정", description = "특정 트랙의 기수/파트 정보를 수정합니다.")
+    @PatchMapping("/v1/admin/tracks/{trackId}")
+    public ApiResponse<Void> updateTrack(
+            @PathVariable Long trackId,
+            @RequestBody @Valid PatchTrackReqDTO request
+    ) {
+        memberAdminUsecase.updateTrack(trackId, request.generation(), request.part());
+        return ApiResponse.response(HttpStatus.OK, MEMBER_TRACK_UPDATE_SUCCESS.getMessage(), null);
+    }
+
+    @Operation(summary = "회원 트랙 삭제", description = "특정 트랙을 삭제합니다.")
+    @DeleteMapping("/v1/admin/tracks/{trackId}")
+    public ApiResponse<Void> deleteTrack(@PathVariable Long trackId) {
+        memberAdminUsecase.deleteTrack(trackId);
+        return ApiResponse.response(HttpStatus.OK, MEMBER_TRACK_DELETE_SUCCESS.getMessage(), null);
     }
 
     @Operation(summary = "가입신청 목록", description = "가입신청 목록을 조회합니다.")

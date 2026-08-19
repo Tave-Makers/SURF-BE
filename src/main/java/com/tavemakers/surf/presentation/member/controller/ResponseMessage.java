@@ -14,6 +14,9 @@ public enum ResponseMessage {
     MEMBER_INFORMATION_READ("[관리자 페이지]에서 유저 정보를 조회합니다."),
     APPROVED_ALL_GENERATION("[전체 회원수]와 회원들의 모든 [기수]를 조회합니다."),
     APPROVED_MEMBER_LIST("승인된 [전체 회원 목록]을 조회합니다."),
+    MEMBER_TRACK_CREATE_SUCCESS("[회원 트랙]을 추가했습니다."),
+    MEMBER_TRACK_UPDATE_SUCCESS("[회원 트랙]을 수정했습니다."),
+    MEMBER_TRACK_DELETE_SUCCESS("[회원 트랙]을 삭제했습니다."),
 
     //회원가입 온보딩 확인 여부 체크
     MEMBER_ONBOARDING_STATUS_CHECK_SUCCESS("[회원]의 추가 회원가입 정보 입력 필요 여부를 확인했습니다."),

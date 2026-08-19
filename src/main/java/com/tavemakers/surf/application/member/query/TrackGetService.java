@@ -1,6 +1,7 @@
 package com.tavemakers.surf.application.member.query;
 
 import com.tavemakers.surf.domain.member.entity.Track;
+import com.tavemakers.surf.domain.member.exception.TrackNotFoundException;
 import com.tavemakers.surf.domain.member.repository.TrackRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,12 @@ public class TrackGetService {
     /** 회원 ID로 트랙 목록 조회 */
     public List<Track> getTrack(Long memberId) {
         return trackRepository.findByMemberId(memberId);
+    }
+
+    /** 트랙 ID로 단건 조회 */
+    public Track findTrackById(Long trackId) {
+        return trackRepository.findById(trackId)
+                .orElseThrow(TrackNotFoundException::new);
     }
 
     /** 회원 ID로 기수순 정렬된 트랙 목록 조회 */

@@ -18,6 +18,7 @@ import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.service.MemberGenerationSyncService;
 import com.tavemakers.surf.domain.member.service.MemberBlacklistCreateService;
 import com.tavemakers.surf.domain.member.service.MemberDismissService;
+import com.tavemakers.surf.domain.member.service.TrackService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.member.validator.RoleChangeValidator;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
@@ -61,6 +62,7 @@ public class MemberAdminUsecase {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
+    private final TrackService trackService;
     private final MemberWithdrawService memberWithdrawService;
     private final LogEventEmitter logEventEmitter;
     private final RoleChangeValidator roleChangeValidator;
@@ -220,9 +222,54 @@ public class MemberAdminUsecase {
         return ApprovedMemberSliceResDTO.from(approvedMemberSlice);
     }
 
+    @Transactional
+    public void addTrack(Long memberId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        Member member = memberGetService.getMember(memberId);
+        boolean wasActive = member.isActive();
+        trackService.addTrackToMember(memberId, generation, part);
+        syncApprovedMemberTrackChange(member, wasActive, generation);
+    }
+
+    /** 관리자 권한으로 특정 회원의 트랙을 추가한다. */
+    @Transactional
+    public void updateTrack(Long trackId, Integer generation, com.tavemakers.surf.domain.member.entity.enums.Part part) {
+        Member member = trackGetService.findTrackById(trackId).getMember();
+        boolean wasActive = member.isActive();
+        trackService.updateTrack(trackId, generation, part);
+        syncApprovedMemberTrackChange(member, wasActive, generation);
+    }
+
+    /** 관리자 권한으로 특정 트랙의 기수/파트를 수정한다. */
+    @Transactional
+    public void deleteTrack(Long trackId) {
+        Member member = trackService.deleteTrack(trackId);
+        syncApprovedMemberTrackChange(member, member.isActive(), null);
+    }
+
+    /** 관리자 권한으로 특정 트랙을 삭제한다. */
     private void validateLoginMemberRole(Member member) {
         if(member.isMember()){
             throw new AdminPageRoleException();
         }
+    }
+
+    private void syncApprovedMemberTrackChange(Member member, boolean wasActive, Integer changedGeneration) {
+        if (!member.isApproved()) {
+            return;
+        }
+
+        Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
+        memberGenerationSyncService.syncApprovedMember(member, activeGeneration);
+
+        if (shouldResetScore(wasActive, member, activeGeneration, changedGeneration)) {
+            personalScoreCreateService.resetPersonalScores(List.of(member));
+        }
+    }
+
+    private boolean shouldResetScore(boolean wasActive, Member member, Integer activeGeneration, Integer changedGeneration) {
+        return !wasActive
+                && member.isActive()
+                && changedGeneration != null
+                && activeGeneration.equals(changedGeneration);
     }
 }
