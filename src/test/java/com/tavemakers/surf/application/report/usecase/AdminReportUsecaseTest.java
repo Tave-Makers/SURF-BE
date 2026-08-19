@@ -1,17 +1,21 @@
 package com.tavemakers.surf.application.report.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tavemakers.surf.application.comment.query.CommentGetService;
 import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.application.report.query.ReportGetService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
+import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.report.entity.Report;
 import com.tavemakers.surf.domain.report.entity.ReportReasonType;
 import com.tavemakers.surf.domain.report.entity.ReportStatus;
 import com.tavemakers.surf.domain.report.entity.ReportTargetType;
 import com.tavemakers.surf.domain.report.exception.InvalidReportStatusChangeException;
+import com.tavemakers.surf.domain.report.repository.ReportRepository;
 import com.tavemakers.surf.presentation.report.dto.request.ReportStatusPatchReqDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportDetailResDTO;
 import com.tavemakers.surf.presentation.report.dto.response.AdminReportSliceResDTO;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -41,12 +46,19 @@ class AdminReportUsecaseTest {
     @Mock
     private ReportGetService reportGetService;
     @Mock
+    private ReportRepository reportRepository;
+    @Mock
     private MemberGetService memberGetService;
+    @Mock
+    private PostGetService postGetService;
+    @Mock
+    private CommentGetService commentGetService;
 
     @InjectMocks
     private AdminReportUsecase adminReportUsecase;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     private Member member(Long id, String name) {
         Member member = Member.builder()
@@ -76,6 +88,16 @@ class AdminReportUsecaseTest {
         return report;
     }
 
+    private Post post(Long id, Long memberId) {
+        Post post = Post.builder()
+                .title("게시글 제목")
+                .content("게시글 내용")
+                .member(member(memberId, "피신고자"))
+                .build();
+        ReflectionTestUtils.setField(post, "id", id);
+        return post;
+    }
+
     @Test
     @DisplayName("신고 목록 조회는 엔티티 Slice를 관리자 목록 DTO Slice로 매핑한다")
     void getReports_mapsSliceToAdminDto() throws Exception {
@@ -95,11 +117,24 @@ class AdminReportUsecaseTest {
     @Test
     @DisplayName("신고 상태 변경은 처리자와 처리 시각, 관리자 메모를 함께 저장한다")
     void updateStatus_updatesResolvedMetadata() throws Exception {
-        Report report = report(1L, ReportStatus.PENDING);
-        given(reportGetService.getReport(1L)).willReturn(report);
+        Report resolvedReport = report(1L, ReportStatus.RESOLVED);
+        ReflectionTestUtils.setField(resolvedReport, "resolvedBy", 1L);
+        ReflectionTestUtils.setField(resolvedReport, "resolvedAt", LocalDateTime.of(2026, 8, 16, 13, 0));
+        ReflectionTestUtils.setField(resolvedReport, "adminMemo", "스팸 확인 후 처리");
+
+        given(reportRepository.updateStatusIfCurrentStatusMatches(
+                1L,
+                ReportStatus.PENDING,
+                ReportStatus.RESOLVED,
+                1L,
+                any(LocalDateTime.class),
+                any(String.class)
+        )).willReturn(1);
+        given(reportGetService.getReport(1L)).willReturn(resolvedReport);
         given(memberGetService.getMember(10L)).willReturn(member(10L, "신고자"));
         given(memberGetService.getMember(20L)).willReturn(member(20L, "피신고자"));
         given(memberGetService.getMember(1L)).willReturn(member(1L, "관리자"));
+        given(postGetService.getPost(99L)).willReturn(post(99L, 20L));
 
         AdminReportDetailResDTO result = adminReportUsecase.patchReportStatus(
                 1L,
