@@ -49,6 +49,17 @@ public record PostUpdateReqDTO(
 
 ) implements LogPropsProvider {
 
+        /**
+         * title·content만 마스킹된 값으로 교체한 사본.
+         * 나머지 필드는 그대로 복사하며, 부분 수정 계약상 null은 null로 보존된다.
+         */
+        public PostUpdateReqDTO withMaskedText(String maskedTitle, String maskedContent) {
+                return new PostUpdateReqDTO(
+                        maskedTitle, maskedContent, categoryId, pinned,
+                        isReservationChanged, reservedAt,
+                        isImageChanged, imageUrlList, isFileChanged, fileList, hasSchedule);
+        }
+
         @Override
         public Map<String, Object> buildProps() {
                 boolean contentChanged = content != null && !content.isBlank();

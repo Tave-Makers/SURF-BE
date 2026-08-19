@@ -14,6 +14,8 @@ import com.tavemakers.surf.presentation.post.dto.response.PostDetailResDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostFileResDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostImageResDTO;
 import com.tavemakers.surf.application.reservation.usecase.ReservationUsecase;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,12 +37,14 @@ public class PostCreateUsecase {
     private final PostCreateService postCreateService;
     private final ReservationUsecase reservationUsecase;
     private final LogEventEmitter logEventEmitter;
+    private final ProfanityMasker profanityMasker;
 
     /** 게시글 생성 (예약 포함) */
     @Transactional
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         PostCreateService.PostCreateResult result = postCreateService.createPost(
-                req.title(), req.content(), req.pinned(), req.isReserved(), req.hasSchedule(),
+                maskAndLog(req.title(), "post.title"), maskAndLog(req.content(), "post.content"),
+                req.pinned(), req.isReserved(), req.hasSchedule(),
                 req.boardId(), req.categoryId(),
                 toImageData(req.imageUrlList()), toFileData(req.fileList()), memberId);
 
@@ -60,6 +64,18 @@ public class PostCreateUsecase {
         LocalDateTime reservedAt = req.isReserved() ? req.reservedAt() : null;
         return PostDetailResDTO.of(saved, false, false, true,
                 toImageResponse(result.images()), toFileResponse(result.files()), reservedAt, 0);
+    }
+
+    /** 금칙어를 마스킹하고, 실제로 가려진 경우에만 로그를 남긴다 — 원문·본문은 로그에 남기지 않는다 */
+    private String maskAndLog(String text, String target) {
+        MaskingResult result = profanityMasker.maskWithResult(text);
+        if (result.matchCount() > 0) {
+            logEventEmitter.emit("moderation.masked", Map.of(
+                    "target", target,
+                    "match_count", result.matchCount(),
+                    "matched", result.matched()));
+        }
+        return result.masked();
     }
 
     private List<PostImageCreateService.ImageData> toImageData(List<PostImageCreateReqDTO> list) {

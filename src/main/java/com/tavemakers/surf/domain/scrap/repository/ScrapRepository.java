@@ -24,6 +24,7 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
            """)
     List<Long> findPostIdsByMemberId(Long memberId);
 
+    /** 차단 작성자를 제외하고 스크랩한 순서로 게시글을 조회한다 */
     @Query(
             value = """
             select p
@@ -33,10 +34,13 @@ public interface ScrapRepository extends JpaRepository<Scrap, Long> {
             join fetch p.board
             left join fetch p.category
             where s.member.id = :memberId
+              and p.member.id not in :excludedAuthorIds
             order by s.createdAt desc
             """
     )
-    Slice<Post> findPostsByMemberId(Long memberId, Pageable pageable);
+    Slice<Post> findPostsByMemberIdExcludingAuthors(Long memberId,
+                                                    Set<Long> excludedAuthorIds,
+                                                    Pageable pageable);
 
     @Query("""
            select s.post.id

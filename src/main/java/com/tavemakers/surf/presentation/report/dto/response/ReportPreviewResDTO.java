@@ -8,13 +8,13 @@ public record ReportPreviewResDTO(
         @Schema(description = "작성자 이름", example = "홍길동")
         String writerName,
 
-        @Schema(description = "게시글 제목", example = "전반기 시상식 안내")
+        @Schema(description = "게시글 제목", example = "선착순 무료 쿠폰 드려요!!!")
         String title,
 
-        @Schema(description = "댓글 내용", example = "안녕하세요. 회차 최쿠루입니다.")
+        @Schema(description = "댓글 내용", example = "부업 관심 있으시면 카톡 주세요. 당일 정산 가능하고 링크 타고 오시면 됩니다!")
         String content,
 
-        @Schema(description = "프로필 대상 멤버명", example = "홍길동")
+        @Schema(description = "프로필 대상 멤버명", example = "김철수")
         String memberName
 ) {
     public static ReportPreviewResDTO forPost(String writerName, String title) {

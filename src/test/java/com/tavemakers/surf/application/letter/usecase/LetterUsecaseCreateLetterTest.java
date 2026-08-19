@@ -12,6 +12,8 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.EmailSender;
 import com.tavemakers.surf.presentation.letter.dto.request.LetterCreateReqDTO;
@@ -33,6 +35,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,6 +109,8 @@ class LetterUsecaseCreateLetterTest {
     private EmailSender emailSender;
     @MockBean
     private LogEventEmitter logEventEmitter;
+    @MockBean
+    private ProfanityMasker profanityMasker;
 
     private Member sender;
     private Member receiver;
@@ -120,6 +125,9 @@ class LetterUsecaseCreateLetterTest {
         });
         given(memberGetService.getMember(sender.getId())).willReturn(sender);
         given(memberGetService.getMember(receiver.getId())).willReturn(receiver);
+        // 마스킹 엔진은 이 테스트의 관심사가 아니다 — 원문을 그대로 통과시킨다(매치 0건)
+        given(profanityMasker.maskWithResult(anyString()))
+                .willAnswer(invocation -> new MaskingResult(invocation.getArgument(0), 0, List.of()));
     }
 
     @Test

@@ -13,6 +13,8 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.global.common.moderation.MaskingResult;
+import com.tavemakers.surf.global.common.moderation.ProfanityMasker;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.presentation.comment.dto.request.CommentCreateReqDTO;
 import com.tavemakers.surf.presentation.comment.dto.response.CommentListResDTO;
@@ -33,6 +35,8 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
@@ -54,6 +58,8 @@ class CommentUsecaseTest {
     private PostGetService postGetService;
     @Mock
     private LogEventEmitter logEventEmitter;
+    @Mock
+    private ProfanityMasker profanityMasker;
 
     @InjectMocks
     private CommentUsecase commentUsecase;
@@ -96,6 +102,8 @@ class CommentUsecaseTest {
         CommentCreateReqDTO req = new CommentCreateReqDTO(null, "좋은 글이네요", List.of(5L));
         List<MentionResDTO> mentions = List.of(new MentionResDTO(5L, "멘션된회원"));
 
+        given(profanityMasker.maskWithResult("좋은 글이네요"))
+                .willReturn(new MaskingResult("좋은 글이네요", 0, List.of()));
         given(commentService.createComment(10L, 2L, null, "좋은 글이네요", List.of(5L)))
                 .willReturn(saved);
         given(commentMentionGetService.getMentions(100L)).willReturn(mentions);
@@ -113,6 +121,46 @@ class CommentUsecaseTest {
         assertThat(result.mentions()).isEqualTo(mentions);
 
         then(logEventEmitter).should().emit("comment.create", Map.of("post_id", 10L, "comment_id", 100L));
+    }
+
+    @Test
+    @DisplayName("댓글 본문은 마스킹된 값으로 도메인 서비스에 전달되고, 마스킹 사실이 로깅된다")
+    void createComment_passesMaskedContentToService() {
+        Member writer = member(2L, "댓글러");
+        Comment saved = comment(100L, writer);
+        CommentCreateReqDTO req = new CommentCreateReqDTO(null, "씨발 좋은 글이네요", List.of(5L));
+
+        given(profanityMasker.maskWithResult("씨발 좋은 글이네요"))
+                .willReturn(new MaskingResult("** 좋은 글이네요", 1, List.of("씨발")));
+        given(commentService.createComment(10L, 2L, null, "** 좋은 글이네요", List.of(5L)))
+                .willReturn(saved);
+        given(commentMentionGetService.getMentions(100L)).willReturn(List.of());
+
+        commentUsecase.createComment(10L, 2L, req);
+
+        then(commentService).should().createComment(10L, 2L, null, "** 좋은 글이네요", List.of(5L));
+        then(logEventEmitter).should().emit("moderation.masked", Map.of(
+                "target", "comment.content",
+                "match_count", 1,
+                "matched", List.of("씨발")));
+    }
+
+    @Test
+    @DisplayName("마스킹된 구간이 없으면 moderation.masked 로그를 남기지 않는다")
+    void createComment_doesNotLogWhenNothingMasked() {
+        Member writer = member(2L, "댓글러");
+        Comment saved = comment(100L, writer);
+        CommentCreateReqDTO req = new CommentCreateReqDTO(null, "좋은 글이네요", List.of());
+
+        given(profanityMasker.maskWithResult("좋은 글이네요"))
+                .willReturn(new MaskingResult("좋은 글이네요", 0, List.of()));
+        given(commentService.createComment(10L, 2L, null, "좋은 글이네요", List.of()))
+                .willReturn(saved);
+        given(commentMentionGetService.getMentions(100L)).willReturn(List.of());
+
+        commentUsecase.createComment(10L, 2L, req);
+
+        then(logEventEmitter).should(never()).emit(eq("moderation.masked"), anyMap());
     }
 
     @Test
