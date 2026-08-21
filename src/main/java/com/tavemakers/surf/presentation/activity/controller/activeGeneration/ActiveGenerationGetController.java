@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +26,7 @@ public class ActiveGenerationGetController {
 
     /** 현재 활동 기수 조회 */
     @Operation(summary = "현재 활동 기수 조회")
+    @PreAuthorize("hasRole('PRESIDENT')")
     @GetMapping("/v1/manager/active-generation")
     public ApiResponse<ActiveGenerationResDTO> getActiveGeneration() {
         Integer generation = activeGenerationUsecase.getActiveGeneration();
@@ -34,6 +36,7 @@ public class ActiveGenerationGetController {
 
     /** 현재 활동 기수에 속한 회원 목록 조회 */
     @Operation(summary = "현재 활동 기수에 속한 회원 조회")
+    @PreAuthorize("hasRole('PRESIDENT')")
     @GetMapping("/v1/manager/active-generation/members")
     public ApiResponse<List<ActiveGenerationMemberResDTO>> getActiveGenerationMembers() {
         List<ActiveGenerationMemberResDTO> response = activeGenerationUsecase.getActiveGenerationMembers();
