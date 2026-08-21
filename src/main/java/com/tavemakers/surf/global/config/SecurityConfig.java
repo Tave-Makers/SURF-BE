@@ -82,7 +82,10 @@ public class SecurityConfig {
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.setCharacterEncoding("UTF-8");
 
-                            String message = request.getRequestURI().startsWith("/v1/admin/")
+                            String requestUri = request.getRequestURI();
+                            String message = requestUri.equals("/v1/admin/active-generation")
+                                    ? "[활동기수] 변경은 [President]만 가능합니다."
+                                    : requestUri.startsWith("/v1/admin/")
                                     ? "[관리자] 권한이 필요한 요청입니다."
                                     : "[접근 권한]이 없습니다.";
 
