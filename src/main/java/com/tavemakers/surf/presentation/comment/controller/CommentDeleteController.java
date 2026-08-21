@@ -19,7 +19,7 @@ public class CommentDeleteController {
 
     private final CommentUsecase commentUsecase;
 
-    @Operation(summary = "댓글 삭제 (내 댓글만)", description = "본인이 작성한 댓글만 삭제 가능, 댓글 및 대댓글 구분없이 hard 삭제 처리")
+    @Operation(summary = "댓글 삭제", description = "본인이 작성한 댓글만 삭제 가능 & 관리자는 임의의 댓글 삭제 가능, 댓글 및 대댓글 구분없이 hard 삭제 처리")
     @DeleteMapping("/v1/user/posts/{postId}/comments/{commentId}")
     public ApiResponse<Void> deleteComment(@PathVariable Long postId,
                                            @PathVariable Long commentId) {
