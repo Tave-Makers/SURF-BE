@@ -134,9 +134,12 @@ public class CommentService {
     ) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
+        Member member = memberGetService.getMember(memberId);
 
-        // 본인이 쓴 댓글인지 확인
-        if (!comment.getPost().getId().equals(postId) || !comment.getMember().getId().equals(memberId))
+        // 같은 게시글의 댓글이면서 작성자 본인 또는 삭제 권한이 있는 운영진만 삭제할 수 있다.
+        boolean samePost = comment.getPost().getId().equals(postId);
+        boolean isOwner = comment.getMember().getId().equals(memberId);
+        if (!samePost || (!isOwner && !member.hasDeleteRole()))
             throw new NotMyCommentException();
 
         // 자식 댓글 parent 끊기

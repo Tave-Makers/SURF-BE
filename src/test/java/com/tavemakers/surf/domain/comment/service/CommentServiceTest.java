@@ -381,9 +381,41 @@ class CommentServiceTest {
         ReflectionTestUtils.setField(comment, "id", 1L);
 
         given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(memberGetService.getMember(2L)).willReturn(member(2L, "다른회원"));
 
         assertThatThrownBy(() -> commentService.deleteComment(10L, 1L, 2L))
                 .isInstanceOf(NotMyCommentException.class);
+    }
+
+    @Test
+    @DisplayName("Manager는 본인 댓글이 아니어도 댓글을 삭제할 수 있다")
+    void deleteComment_managerCanDeleteOthersComment() {
+        Board board = board();
+        BoardCategory category = category(board);
+        Member writer = member(1L, "작성자");
+        Member manager = Member.builder()
+                .name("매니저")
+                .status(MemberStatus.APPROVED)
+                .role(MemberRole.MANAGER)
+                .memberType(MemberType.YB)
+                .activityStatus(true)
+                .build();
+        ReflectionTestUtils.setField(manager, "id", 2L);
+
+        Post post = post(10L, writer, board, category);
+        Comment comment = Comment.root(post, writer, "댓글");
+        ReflectionTestUtils.setField(comment, "id", 1L);
+
+        given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(memberGetService.getMember(2L)).willReturn(manager);
+
+        commentService.deleteComment(10L, 1L, 2L);
+
+        then(commentRepository).should().detachChildren(1L);
+        then(commentLikeRepository).should().deleteAllByComment(comment);
+        then(commentMentionService).should().deleteAllByComment(comment);
+        then(commentRepository).should().delete(comment);
+        then(postCommentCountService).should().decrease(10L);
     }
 
     @Test
@@ -397,6 +429,7 @@ class CommentServiceTest {
         ReflectionTestUtils.setField(comment, "id", 1L);
 
         given(commentRepository.findById(1L)).willReturn(Optional.of(comment));
+        given(memberGetService.getMember(1L)).willReturn(writer);
 
         commentService.deleteComment(10L, 1L, 1L);
 
