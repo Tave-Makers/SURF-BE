@@ -58,13 +58,18 @@ class SecurityE2ETest extends E2ESupport {
     }
 
     @Test
-    @DisplayName("ADMIN 권한은 활동기수 조회 엔드포인트에 접근할 수 없다")
-    void adminRole_onActiveGenerationEndpoint_returns403() throws Exception {
+    @DisplayName("ADMIN 권한은 활동기수 조회 엔드포인트 인가를 통과한다")
+    void adminRole_passesActiveGenerationGetAuthorization() throws Exception {
         Member admin = persistMember(MemberRole.ADMIN);
 
         mockMvc.perform(get("/v1/manager/active-generation")
                         .header("Authorization", bearer(admin)))
-                .andExpect(status().isForbidden());
+                .andExpect(result -> {
+                    int s = result.getResponse().getStatus();
+                    if (s == 403) {
+                        throw new AssertionError("ADMIN 인데 403 이 발생했다 — 활동기수 조회 인가 배선 오류");
+                    }
+                });
     }
 
     @Test
@@ -90,6 +95,21 @@ class SecurityE2ETest extends E2ESupport {
                     int s = result.getResponse().getStatus();
                     if (s == 403) {
                         throw new AssertionError("PRESIDENT 인데 403 이 발생했다 — 활동기수 인가 배선 오류");
+                    }
+                });
+    }
+
+    @Test
+    @DisplayName("MANAGER 권한은 활동기수 회원조회 엔드포인트 인가를 통과한다")
+    void managerRole_passesActiveGenerationMembersAuthorization() throws Exception {
+        Member manager = persistMember(MemberRole.MANAGER);
+
+        mockMvc.perform(get("/v1/manager/active-generation/members")
+                        .header("Authorization", bearer(manager)))
+                .andExpect(result -> {
+                    int s = result.getResponse().getStatus();
+                    if (s == 403) {
+                        throw new AssertionError("MANAGER 인데 403 이 발생했다 — 활동기수 회원조회 인가 배선 오류");
                     }
                 });
     }
