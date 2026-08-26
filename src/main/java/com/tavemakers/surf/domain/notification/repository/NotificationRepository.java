@@ -35,6 +35,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     boolean existsByIdAndMemberId(Long id, Long memberId);
 
+    /** 안 읽은 알림 존재 여부 — 홈 화면 빨간 점 표시용 */
+    boolean existsByMemberIdAndIsReadFalse(Long memberId);
+
     Optional<Notification> findByIdAndMemberId(Long id, Long memberId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
