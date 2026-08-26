@@ -105,6 +105,10 @@ public class MemberUsecase {
             List<TrackResDTO> myTracks = getMyTracks(targetId);
             List<CareerResDTO> myCareers = getMyCareers(targetId);
 
+            // 타인 프로필일 때만 차단 여부를 조회한다 — 본인 프로필은 항상 false
+            boolean blockedByMe = member.isNotOwner()
+                    && blockGetService.isBlockedByMe(requesterId, targetId);
+
             MyPageProfileResDTO result;
 
             if (member.isNotOwner()) { // SURF Rule - 타인의 활동점수는 조회 불가
@@ -113,7 +117,8 @@ public class MemberUsecase {
                         member,
                         myTracks,
                         null,
-                        myCareers
+                        myCareers,
+                        blockedByMe
                 );
 
             } else {
@@ -130,7 +135,8 @@ public class MemberUsecase {
                         member,
                         myTracks,
                         score,
-                        myCareers
+                        myCareers,
+                        blockedByMe
                 );
             }
 
