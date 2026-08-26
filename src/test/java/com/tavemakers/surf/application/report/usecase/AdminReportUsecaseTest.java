@@ -38,6 +38,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -123,12 +124,12 @@ class AdminReportUsecaseTest {
         ReflectionTestUtils.setField(resolvedReport, "adminMemo", "스팸 확인 후 처리");
 
         given(reportRepository.updateStatusIfCurrentStatusMatches(
-                1L,
-                ReportStatus.PENDING,
-                ReportStatus.RESOLVED,
-                1L,
+                eq(1L),
+                eq(ReportStatus.PENDING),
+                eq(ReportStatus.RESOLVED),
+                eq(1L),
                 any(LocalDateTime.class),
-                any(String.class)
+                eq("스팸 확인 후 처리")
         )).willReturn(1);
         given(reportGetService.getReport(1L)).willReturn(resolvedReport);
         given(memberGetService.getMember(10L)).willReturn(member(10L, "신고자"));
@@ -151,8 +152,16 @@ class AdminReportUsecaseTest {
 
     @Test
     @DisplayName("이미 처리된 신고는 다시 상태 변경할 수 없다")
-    void updateStatus_throwsWhenReportAlreadyProcessed() throws Exception {
-        given(reportGetService.getReport(1L)).willReturn(report(1L, ReportStatus.RESOLVED));
+    void updateStatus_throwsWhenReportAlreadyProcessed() {
+        // 이미 처리된 신고는 PENDING 조건의 CAS 업데이트가 0건으로 끝난다
+        given(reportRepository.updateStatusIfCurrentStatusMatches(
+                eq(1L),
+                eq(ReportStatus.PENDING),
+                eq(ReportStatus.REJECTED),
+                eq(1L),
+                any(LocalDateTime.class),
+                eq("재처리 시도")
+        )).willReturn(0);
 
         assertThatThrownBy(() -> adminReportUsecase.patchReportStatus(
                 1L,
