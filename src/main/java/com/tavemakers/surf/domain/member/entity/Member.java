@@ -227,8 +227,9 @@ public class Member extends BaseEntity {
     }
 
     private boolean hasTrackGeneration(Integer generation, Long excludedTrackId) {
+        // track.getId()는 아직 영속화되지 않은 트랙에서 null일 수 있으므로 excludedTrackId 쪽에서 비교한다
         return this.tracks.stream()
-                .filter(track -> excludedTrackId == null || !track.getId().equals(excludedTrackId))
+                .filter(track -> excludedTrackId == null || !excludedTrackId.equals(track.getId()))
                 .anyMatch(track -> track.getGeneration().equals(generation));
     }
 
