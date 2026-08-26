@@ -1,8 +1,6 @@
 package com.tavemakers.surf.application.member.usecase;
 
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.application.activity.query.ActiveGenerationGetService;
-import com.tavemakers.surf.presentation.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.PasswordReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.RoleChangeReqDTOV2;
 import com.tavemakers.surf.presentation.member.dto.response.*;
@@ -10,7 +8,8 @@ import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.enums.MemberBlacklistActionType;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
-import com.tavemakers.surf.domain.member.exception.AdminPageRoleException;
+import com.tavemakers.surf.domain.member.event.ActiveMembersResyncedEvent;
+import com.tavemakers.surf.domain.member.event.MembersApprovedEvent;
 import com.tavemakers.surf.application.member.query.CareerGetService;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.application.member.query.TrackGetService;
@@ -23,15 +22,13 @@ import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.member.validator.RoleChangeValidator;
 import com.tavemakers.surf.domain.score.entity.PersonalActivityScore;
 import com.tavemakers.surf.application.score.query.PersonalScoreGetService;
-import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
-import com.tavemakers.surf.global.jwt.JwtService;
 import com.tavemakers.surf.global.logging.LogEvent;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.logging.LogParam;
 import com.tavemakers.surf.global.util.SecurityUtils;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -41,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,15 +53,13 @@ public class MemberAdminUsecase {
     private final MemberDismissService memberDismissService;
     private final MemberDismissUsecase memberDismissUsecase;
     private final CareerGetService careerGetService;
-    private final PersonalScoreCreateService personalScoreCreateService;
     private final PersonalScoreGetService scoreGetService;
-    private final JwtService jwtService;
-    private final RefreshTokenService refreshTokenService;
     private final TrackGetService trackGetService;
     private final TrackService trackService;
     private final MemberWithdrawService memberWithdrawService;
     private final LogEventEmitter logEventEmitter;
     private final RoleChangeValidator roleChangeValidator;
+    private final ApplicationEventPublisher eventPublisher;
     //</editor-fold>
 
     /** 회원 권한 변경 */
@@ -105,7 +99,8 @@ public class MemberAdminUsecase {
         members.forEach(Member::approve);
         Integer activeGeneration = activeGenerationGetService.getActiveGeneration();
         members.forEach(member -> memberGenerationSyncService.syncApprovedMember(member, activeGeneration));
-        personalScoreCreateService.savePersonalScores(members);
+        // 점수 초기 생성은 score 도메인이 동기 리스너로 수행한다 (같은 트랜잭션, R2)
+        eventPublisher.publishEvent(new MembersApprovedEvent(members));
 
         for (Member member : members) {
             logEventEmitter.emit(
@@ -171,21 +166,6 @@ public class MemberAdminUsecase {
         member.updatePassword(dto.password());
     }
 
-    /** 관리자 페이지 로그인 처리 */
-    public AdminPageLoginResDTO loginAdminHomePage(AdminPageLoginReqDTO dto, HttpServletResponse response) {
-        // 관리자 페이지는 MANAGER 이상만 접근 가능하므로, 이메일로 회원 조회 후 권한 검증
-        // 회원 조회 후, 권한 검증, 비밀번호 검증 순으로 진행하여 불필요한 DB 조회 방지
-        Member manager = memberGetService.getMemberByEmail(dto.email());
-        validateLoginMemberRole(manager);
-        manager.checkPassword(dto.password());
-
-        String accessToken = jwtService.createAccessToken(manager.getId(), manager.getRole().name());
-        String deviceId = UUID.randomUUID().toString();
-        response.addHeader("Set-Cookie", refreshTokenService.issue(manager.getId(), deviceId).toString());
-
-        return AdminPageLoginResDTO.of(accessToken, manager);
-    }
-
     /** 가입 대기 회원 목록 조회 */
     public MemberRegistrationSliceResDTO readRegistrationList(String keyword, int pageSize, int pageNum) {
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending());
@@ -246,13 +226,6 @@ public class MemberAdminUsecase {
         syncApprovedMemberTrackChange(member, member.isActive(), null);
     }
 
-    /** 관리자 권한으로 특정 트랙을 삭제한다. */
-    private void validateLoginMemberRole(Member member) {
-        if(member.isMember()){
-            throw new AdminPageRoleException();
-        }
-    }
-
     private void syncApprovedMemberTrackChange(Member member, boolean wasActive, Integer changedGeneration) {
         if (!member.isApproved()) {
             return;
@@ -262,7 +235,8 @@ public class MemberAdminUsecase {
         memberGenerationSyncService.syncApprovedMember(member, activeGeneration);
 
         if (shouldResetScore(wasActive, member, activeGeneration, changedGeneration)) {
-            personalScoreCreateService.resetPersonalScores(List.of(member));
+            // 점수 초기화는 score 도메인이 동기 리스너로 수행한다 (같은 트랜잭션, R2)
+            eventPublisher.publishEvent(new ActiveMembersResyncedEvent(List.of(member)));
         }
     }
 

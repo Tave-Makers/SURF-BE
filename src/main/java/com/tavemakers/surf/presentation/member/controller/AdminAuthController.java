@@ -1,13 +1,10 @@
 package com.tavemakers.surf.presentation.member.controller;
 
-import com.tavemakers.surf.presentation.member.dto.request.AdminPageLoginReqDTO;
 import com.tavemakers.surf.presentation.member.dto.request.PasswordReqDTO;
-import com.tavemakers.surf.presentation.member.dto.response.AdminPageLoginResDTO;
 import com.tavemakers.surf.application.member.usecase.MemberAdminUsecase;
 import io.swagger.v3.oas.annotations.Operation;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +25,6 @@ public class AdminAuthController {
     public ApiResponse<Void> setUpPassword(@RequestBody PasswordReqDTO dto) {
         memberAdminUsecase.setUpPassword(dto);
         return ApiResponse.response(HttpStatus.OK, MANAGER_PASSWORD_SET_UP_SUCCESS.getMessage(),null);
-    }
-
-    /** 관리자 페이지에 로그인한다. */
-    @Operation(summary = "관리자 페이지 로그인", description = "관리자 페이지에 로그인합니다.")
-    @PostMapping("/v1/manager/sign-in")
-    public ApiResponse<AdminPageLoginResDTO> loginAdminPage(
-            @RequestBody AdminPageLoginReqDTO dto,
-            HttpServletResponse response
-    ) {
-        AdminPageLoginResDTO data = memberAdminUsecase.loginAdminHomePage(dto, response);
-        return ApiResponse.response(HttpStatus.OK, ADMIN_PAGE_LOGIN_SUCCESS.getMessage(),data);
     }
 
 }
