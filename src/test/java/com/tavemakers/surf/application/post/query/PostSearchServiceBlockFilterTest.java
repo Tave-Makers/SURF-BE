@@ -58,7 +58,7 @@ class PostSearchServiceBlockFilterTest {
         given(postRepository.searchExcludingAuthors(KEYWORD, EXCLUDED, PAGEABLE))
                 .willReturn(new SliceImpl<>(List.<Post>of(), PAGEABLE, false));
 
-        postSearchService.search(VIEWER, KEYWORD, null, PAGEABLE);
+        postSearchService.search(VIEWER, KEYWORD, null, null, PAGEABLE);
 
         then(postRepository).should().searchExcludingAuthors(KEYWORD, EXCLUDED, PAGEABLE);
         then(postRepository).should(never())
@@ -72,9 +72,23 @@ class PostSearchServiceBlockFilterTest {
         given(postRepository.searchInBoardExcludingAuthors(BOARD_ID, KEYWORD, EXCLUDED, PAGEABLE))
                 .willReturn(new SliceImpl<>(List.<Post>of(), PAGEABLE, false));
 
-        postSearchService.search(VIEWER, KEYWORD, BOARD_ID, PAGEABLE);
+        postSearchService.search(VIEWER, KEYWORD, BOARD_ID, null, PAGEABLE);
 
         then(postRepository).should().searchInBoardExcludingAuthors(BOARD_ID, KEYWORD, EXCLUDED, PAGEABLE);
         then(postRepository).should(never()).searchInBoard(anyLong(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("카테고리 지정 검색은 카테고리 필터 쿼리를 타고, 차단 작성자도 제외한다")
+    void 카테고리_내_검색도_제외한다() {
+        Long categoryId = 100L;
+        given(blockGetService.getMyBlockedMemberIds(VIEWER)).willReturn(EXCLUDED);
+        given(postRepository.searchInCategoryExcludingAuthors(categoryId, KEYWORD, EXCLUDED, PAGEABLE))
+                .willReturn(new SliceImpl<>(List.<Post>of(), PAGEABLE, false));
+
+        postSearchService.search(VIEWER, KEYWORD, BOARD_ID, categoryId, PAGEABLE);
+
+        then(postRepository).should().searchInCategoryExcludingAuthors(categoryId, KEYWORD, EXCLUDED, PAGEABLE);
+        then(postRepository).should(never()).searchInBoardExcludingAuthors(anyLong(), anyString(), any(), any());
     }
 }

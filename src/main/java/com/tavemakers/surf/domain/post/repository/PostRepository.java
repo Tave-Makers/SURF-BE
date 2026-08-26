@@ -151,6 +151,19 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                               @Param("excludedAuthorIds") Set<Long> excludedAuthorIds,
                                               Pageable pageable);
 
+    /** 카테고리 내 제목/내용 검색 — 차단 작성자 제외 (카테고리는 게시판에 속하므로 boardId 조건은 불필요) */
+    @Query("""
+        select p from Post p
+        where p.category.id = :categoryId
+          and (lower(p.title) like lower(concat('%', :param, '%'))
+            or lower(p.content) like lower(concat('%', :param, '%')))
+          and p.member.id not in :excludedAuthorIds
+    """)
+    Slice<Post> searchInCategoryExcludingAuthors(@Param("categoryId") Long categoryId,
+                                                 @Param("param") String param,
+                                                 @Param("excludedAuthorIds") Set<Long> excludedAuthorIds,
+                                                 Pageable pageable);
+
     @Query("""
         select p.member.id
         from Post p
