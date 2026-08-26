@@ -38,6 +38,17 @@ public class CommentGetService {
                 .orElseThrow(CommentNotFoundException::new);
     }
 
+    /** 댓글 단건 상세 조회 — 목록과 동일하게 차단한 작성자의 댓글은 존재 자체를 숨긴다(404) */
+    public CommentResDTO getCommentDetail(Comment comment, Long viewerId) {
+        if (blockGetService.getMyBlockedIdsRaw(viewerId).contains(comment.getMember().getId())) {
+            throw new CommentNotFoundException();
+        }
+
+        List<MentionResDTO> mentions = commentMentionGetService.getMentions(comment.getId());
+        boolean liked = viewerId != null && commentLikeService.isLikedByMe(comment.getId(), viewerId);
+        return CommentResDTO.from(comment, comment.getPost().getId(), mentions, liked);
+    }
+
     /** 댓글 목록 조회 — 차단한 작성자의 댓글·대댓글은 제외한다 */
     public CommentListResDTO getComments(Long postId, Pageable pageable, Long memberId) {
 
