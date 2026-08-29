@@ -7,6 +7,7 @@ public record NotificationUnreadResDTO(
         @Schema(description = "안 읽은 알림 존재 여부", example = "true")
         boolean hasUnread
 ) {
+    /** 안 읽은 알림 존재 여부를 응답 DTO로 변환 */
     public static NotificationUnreadResDTO from(boolean hasUnread) {
         return new NotificationUnreadResDTO(hasUnread);
     }

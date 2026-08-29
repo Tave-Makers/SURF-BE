@@ -22,6 +22,7 @@ public class DeviceTokenDeleteController {
 
     private final DeviceTokenUsecase deviceTokenUsecase;
 
+    /** 디바이스 FCM 토큰 삭제 */
     @Operation(
             summary = "디바이스 FCM 토큰 삭제",
             description = """

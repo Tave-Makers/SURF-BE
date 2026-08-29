@@ -82,6 +82,7 @@ public class MemberUsecase {
     private static final int ISSUE_MAX_ATTEMPTS = 3;
 
     /** 마이페이지 + 프로필 조회 */
+    @Transactional(readOnly = true)
     public MyPageProfileResDTO getMyPageAndProfile(Long targetId) {
 
         Long requesterId = SecurityUtils.getCurrentMemberId();

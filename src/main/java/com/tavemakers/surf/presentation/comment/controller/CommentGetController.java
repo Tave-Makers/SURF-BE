@@ -38,6 +38,7 @@ public class CommentGetController {
         return ApiResponse.response(HttpStatus.OK, COMMENT_READ.getMessage(), data);
     }
 
+    /** 댓글 단건 조회 */
     @Operation(summary = "댓글 단건 조회", description = "댓글 ID로 특정 댓글 하나를 조회합니다. 신고 화면처럼 대상 댓글만 필요할 때 사용합니다.")
     @GetMapping("/v1/user/comments/{commentId}")
     public ApiResponse<CommentResDTO> getComment(@PathVariable Long commentId) {
