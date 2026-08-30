@@ -4,6 +4,7 @@ import com.tavemakers.surf.presentation.auth.apple.dto.AppleAppLoginReqDTO;
 import com.tavemakers.surf.domain.auth.apple.dto.AppleTokenResDTO;
 import com.tavemakers.surf.application.auth.apple.service.AppleAuthService;
 import com.tavemakers.surf.application.auth.apple.service.AppleIdentityTokenVerifier;
+import com.tavemakers.surf.application.auth.apple.service.AppleUserNameParser;
 import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.LoginPayloadResDTO;
 import com.tavemakers.surf.domain.auth.common.dto.OAuthUserInfoDTO;
@@ -25,6 +26,7 @@ public class AppleLoginUsecase {
 
     private final AppleAuthService appleAuthService;
     private final AppleIdentityTokenVerifier identityTokenVerifier;
+    private final AppleUserNameParser appleUserNameParser;
     private final MemberUpsertService memberUpsertService;
     private final LoginTokenIssuer loginTokenIssuer;
 
@@ -32,9 +34,10 @@ public class AppleLoginUsecase {
      * Apple Web 콜백 처리 (Authorization Code Flow + form_post).
      * @param code        Apple 발급 인가 코드
      * @param cookieNonce 쿠키에서 복원한 nonce 원문 (D9)
+     * @param userPayload Apple {@code user} 폼 필드 원문 — 이름은 최초 인가 1회만 전달되므로 반드시 이 시점에 저장한다 (이슈 #392)
      */
     @Transactional
-    public LoginPayloadResDTO executeWebCallback(String code, String cookieNonce, HttpServletRequest request) {
+    public LoginPayloadResDTO executeWebCallback(String code, String cookieNonce, String userPayload, HttpServletRequest request) {
         appleAuthService.logCallback("apple");
         log.info("[LOGIN][APPLE][WEB] callback start");
 
@@ -46,6 +49,9 @@ public class AppleLoginUsecase {
         OAuthUserInfoDTO userInfo = identityTokenVerifier.verifyAndExtract(
                 idToken, ClientType.WEB, cookieNonce
         );
+
+        // id_token에는 name 클레임이 없다 — user 폼 필드에서 추출해 채운다
+        userInfo = withName(userInfo, appleUserNameParser.extractName(userPayload));
 
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.APPLE, userInfo);
 
@@ -77,6 +83,9 @@ public class AppleLoginUsecase {
                 req.identityToken(), clientType, req.nonce()
         );
 
+        // Apple SDK는 이름을 최초 로그인 1회만 전달한다 — 이 시점에 저장하지 못하면 영구 유실 (이슈 #392)
+        userInfo = withName(userInfo, req.name());
+
         Member member = memberUpsertService.upsertRegisteringFromOAuth(Provider.APPLE, userInfo);
 
         // authorizationCode로 Apple refresh_token 교환 후 저장 — 탈퇴 시 /auth/revoke 호출에 사용
@@ -107,5 +116,13 @@ public class AppleLoginUsecase {
     private void updateAppleRefreshToken(Member member, String refreshToken) {
         member.findSocialAccount(Provider.APPLE)
                 .ifPresent(sa -> sa.updateAppleRefreshToken(refreshToken));
+    }
+
+    /** 이름이 있으면 nickname에 채워 반환 — 없으면(2회차 이후 로그인) 원본 유지 */
+    private OAuthUserInfoDTO withName(OAuthUserInfoDTO userInfo, String name) {
+        if (name == null || name.isBlank()) {
+            return userInfo;
+        }
+        return new OAuthUserInfoDTO(userInfo.oauthId(), userInfo.email(), name.trim(), userInfo.profileImageUrl());
     }
 }

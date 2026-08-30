@@ -53,6 +53,9 @@ public class MemberUpsertService {
                     }
                     memberBlacklistGetService.validateNotBlacklisted(member.getEmail(), member.getPhoneNumber());
                     refreshProviderEmail(socialAccount, info.email());
+                    // 이름이 유실된 기존 회원 복구 — Apple은 인가 취소 후 재로그인 시에만 이름을 다시 준다 (이슈 #392).
+                    // 이미 저장된 이름은 덮어쓰지 않는다.
+                    member.assignNameIfAbsent(info.nickname());
                     return Optional.of(member);
                 });
     }

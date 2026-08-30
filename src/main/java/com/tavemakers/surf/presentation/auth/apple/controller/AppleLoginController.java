@@ -95,7 +95,7 @@ public class AppleLoginController {
         // state로 nonce를 원자적 조회·삭제 (1회용). state 없거나 만료 시 INVALID_STATE 예외 발생
         String nonce = appleOAuthStateService.popNonce(state);
 
-        LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce, request);
+        LoginPayloadResDTO payload = appleLoginUsecase.executeWebCallback(code, nonce, user, request);
 
         log.info("[LOGIN][APPLE][WEB][CALLBACK] success");
         return payload.toWebResponseBuilder()
