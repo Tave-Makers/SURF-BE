@@ -97,4 +97,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // ArchUnit이 전체 클래스를 임포트하며 기본 워커 힙(512m)으로는 OOM이 나 executor가 죽는다
+    maxHeapSize = "2g"
 }

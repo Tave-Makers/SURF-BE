@@ -1,6 +1,7 @@
 package com.tavemakers.surf.presentation.notification.controller;
 
 import com.tavemakers.surf.presentation.notification.dto.response.NotificationSliceResDTO;
+import com.tavemakers.surf.presentation.notification.dto.response.NotificationUnreadResDTO;
 import com.tavemakers.surf.domain.notification.entity.NotificationCategory;
 import com.tavemakers.surf.application.notification.usecase.NotificationUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -42,5 +43,14 @@ public class NotificationGetController {
         NotificationSliceResDTO response =
                 notificationUsecase.getNotifications(memberId, category, PageRequest.of(page, size));
         return ApiResponse.response(HttpStatus.OK, NOTIFICATION_READ.getMessage(), response);
+    }
+
+    /** 안 읽은 알림 존재 여부 조회 */
+    @Operation(summary = "안 읽은 알림 존재 여부 조회", description = "안 읽은 알림이 하나라도 있는지 여부를 조회합니다. 홈 화면 알림 뱃지(빨간 점) 표시용입니다.")
+    @GetMapping("/v1/user/notifications/unread")
+    public ApiResponse<NotificationUnreadResDTO> getUnreadStatus() {
+        Long memberId = SecurityUtils.getCurrentMemberId();
+        NotificationUnreadResDTO response = notificationUsecase.getUnreadStatus(memberId);
+        return ApiResponse.response(HttpStatus.OK, NOTIFICATION_UNREAD_READ.getMessage(), response);
     }
 }

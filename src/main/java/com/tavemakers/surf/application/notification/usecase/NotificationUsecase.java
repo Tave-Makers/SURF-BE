@@ -11,6 +11,7 @@ import com.tavemakers.surf.domain.notification.service.NotificationCreateService
 import com.tavemakers.surf.domain.notification.service.NotificationService;
 import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.presentation.notification.dto.response.NotificationSliceResDTO;
+import com.tavemakers.surf.presentation.notification.dto.response.NotificationUnreadResDTO;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,12 @@ public class NotificationUsecase {
     public NotificationSliceResDTO getNotifications(Long memberId, NotificationCategory category, Pageable pageable) {
         return NotificationSliceResDTO.from(
                 notificationGetService.getNotifications(memberId, category, pageable));
+    }
+
+    /** 안 읽은 알림 존재 여부 조회 (홈 화면 빨간 점 표시용) */
+    @Transactional(readOnly = true)
+    public NotificationUnreadResDTO getUnreadStatus(Long memberId) {
+        return NotificationUnreadResDTO.from(notificationGetService.hasUnread(memberId));
     }
 
     /** 알림 읽음 처리 */
