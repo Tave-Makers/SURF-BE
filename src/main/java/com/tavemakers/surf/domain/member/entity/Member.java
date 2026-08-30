@@ -158,6 +158,21 @@ public class Member extends BaseEntity {
     }
 
     /**
+     * 이름이 비어 있을 때만 채운다 — Apple은 최초 인가 1회만 이름을 주므로,
+     * 과거 유실된 회원이 인가 취소 후 재로그인할 때 복구하는 용도 (이슈 #392).
+     * 이미 저장된 이름은 절대 덮어쓰지 않는다.
+     */
+    public void assignNameIfAbsent(String name) {
+        if (this.name != null && !this.name.isBlank()) {
+            return;
+        }
+        if (name == null || name.isBlank()) {
+            return;
+        }
+        this.name = name;
+    }
+
+    /**
      * 회원가입 폼 값을 반영한다. 트랙 추가는 호출자(usecase)가 {@link #addTrack(Integer, Part)}로 해체해 수행한다.
      */
     public void applySignup(String name, String university, String graduateSchool,
