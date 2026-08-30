@@ -54,6 +54,11 @@ public class NotificationGetService {
         return new SliceImpl<>(content, pageable, notifications.hasNext());
     }
 
+    /** 안 읽은 알림 존재 여부 조회 */
+    public boolean hasUnread(Long memberId) {
+        return notificationRepository.existsByMemberIdAndIsReadFalse(memberId);
+    }
+
     /**
      * 단건 변환 (프로필 이미지 없이)
      */

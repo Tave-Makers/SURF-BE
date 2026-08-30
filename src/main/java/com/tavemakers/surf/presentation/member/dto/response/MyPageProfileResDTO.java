@@ -20,10 +20,11 @@ public record MyPageProfileResDTO(
         String role,
         BigDecimal activityScore,
         boolean isActive,
+        boolean blockedByMe,
         List<TrackResDTO> trackList,
         List<CareerResDTO> careerList
 ) {
-    public static MyPageProfileResDTO of(Member member, List<TrackResDTO> trackList, BigDecimal activityScore, List<CareerResDTO> careerList) {
+    public static MyPageProfileResDTO of(Member member, List<TrackResDTO> trackList, BigDecimal activityScore, List<CareerResDTO> careerList, boolean blockedByMe) {
         boolean isPhoneNumberVisible = !member.isNotOwner() || member.getPhoneNumberPublic();
         return MyPageProfileResDTO.builder()
                 .username(member.getName())
@@ -38,6 +39,7 @@ public record MyPageProfileResDTO(
                 .role(member.getRole().name())
                 .activityScore(activityScore)
                 .isActive((member.isActivityStatus()))
+                .blockedByMe(blockedByMe)
                 .trackList(trackList)
                 .careerList(careerList)
                 .build();

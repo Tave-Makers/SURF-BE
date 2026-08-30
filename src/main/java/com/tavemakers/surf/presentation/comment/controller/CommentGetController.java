@@ -1,6 +1,7 @@
 package com.tavemakers.surf.presentation.comment.controller;
 
 import com.tavemakers.surf.presentation.comment.dto.response.CommentListResDTO;
+import com.tavemakers.surf.presentation.comment.dto.response.CommentResDTO;
 import com.tavemakers.surf.application.comment.usecase.CommentUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -34,6 +35,15 @@ public class CommentGetController {
     ){
         Long memberId = SecurityUtils.getCurrentMemberId();
         CommentListResDTO data = commentUsecase.getComments(postId, pageable, memberId);
+        return ApiResponse.response(HttpStatus.OK, COMMENT_READ.getMessage(), data);
+    }
+
+    /** 댓글 단건 조회 */
+    @Operation(summary = "댓글 단건 조회", description = "댓글 ID로 특정 댓글 하나를 조회합니다. 신고 화면처럼 대상 댓글만 필요할 때 사용합니다.")
+    @GetMapping("/v1/user/comments/{commentId}")
+    public ApiResponse<CommentResDTO> getComment(@PathVariable Long commentId) {
+        Long memberId = SecurityUtils.getCurrentMemberId();
+        CommentResDTO data = commentUsecase.getComment(commentId, memberId);
         return ApiResponse.response(HttpStatus.OK, COMMENT_READ.getMessage(), data);
     }
 }

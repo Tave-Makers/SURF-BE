@@ -80,6 +80,17 @@ public class CommentUsecase {
         commentService.deleteComment(postId, commentId, memberId);
     }
 
+    /** 댓글 단건 조회 — 신고 등 특정 댓글만 필요한 화면에서 사용. 가시성 정책은 목록 조회와 동일하다 */
+    @Transactional(readOnly = true)
+    public CommentResDTO getComment(Long commentId, Long memberId) {
+        Comment comment = commentGetService.getComment(commentId);
+
+        // 게시글 작성자를 차단했으면 상세와 동일하게 404. 단건 조회로 우회 열람되면 안 된다.
+        postGetService.validateVisiblePost(comment.getPost().getId(), memberId);
+
+        return commentGetService.getCommentDetail(comment, memberId);
+    }
+
     /** 댓글 목록 조회 — 게시글 자체가 차단으로 가려지면 댓글도 보여주지 않는다 */
     @Transactional(readOnly = true)
     public CommentListResDTO getComments(Long postId, Pageable pageable, Long memberId) {

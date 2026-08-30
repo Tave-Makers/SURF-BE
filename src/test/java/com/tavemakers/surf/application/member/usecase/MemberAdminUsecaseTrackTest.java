@@ -5,13 +5,13 @@ import com.tavemakers.surf.application.member.query.CareerGetService;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.application.member.query.TrackGetService;
 import com.tavemakers.surf.application.score.query.PersonalScoreGetService;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.entity.enums.Part;
+import com.tavemakers.surf.domain.member.event.ActiveMembersResyncedEvent;
 import com.tavemakers.surf.domain.member.service.MemberBlacklistCreateService;
 import com.tavemakers.surf.domain.member.service.MemberDismissService;
 import com.tavemakers.surf.domain.member.service.MemberGenerationSyncService;
@@ -19,8 +19,6 @@ import com.tavemakers.surf.domain.member.service.MemberPatchService;
 import com.tavemakers.surf.domain.member.service.MemberWithdrawService;
 import com.tavemakers.surf.domain.member.service.TrackService;
 import com.tavemakers.surf.domain.member.validator.RoleChangeValidator;
-import com.tavemakers.surf.domain.score.service.PersonalScoreCreateService;
-import com.tavemakers.surf.global.jwt.JwtService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +26,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -46,15 +45,13 @@ class MemberAdminUsecaseTrackTest {
     @Mock private MemberDismissService memberDismissService;
     @Mock private MemberDismissUsecase memberDismissUsecase;
     @Mock private CareerGetService careerGetService;
-    @Mock private PersonalScoreCreateService personalScoreCreateService;
     @Mock private PersonalScoreGetService scoreGetService;
-    @Mock private JwtService jwtService;
-    @Mock private RefreshTokenService refreshTokenService;
     @Mock private TrackGetService trackGetService;
     @Mock private TrackService trackService;
     @Mock private MemberWithdrawService memberWithdrawService;
     @Mock private LogEventEmitter logEventEmitter;
     @Mock private RoleChangeValidator roleChangeValidator;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private MemberAdminUsecase memberAdminUsecase;
@@ -75,7 +72,7 @@ class MemberAdminUsecaseTrackTest {
         memberAdminUsecase.addTrack(1L, 25, Part.BACKEND);
 
         then(memberGenerationSyncService).should().syncApprovedMember(member, 25);
-        then(personalScoreCreateService).should().resetPersonalScores(List.of(member));
+        then(eventPublisher).should().publishEvent(new ActiveMembersResyncedEvent(List.of(member)));
     }
 
     @Test
@@ -93,7 +90,7 @@ class MemberAdminUsecaseTrackTest {
         memberAdminUsecase.updateTrack(10L, null, Part.WEB_FRONTEND);
 
         then(memberGenerationSyncService).should().syncApprovedMember(member, 25);
-        then(personalScoreCreateService).shouldHaveNoInteractions();
+        then(eventPublisher).shouldHaveNoInteractions();
     }
 
     private Member member(Long id, MemberStatus status, MemberType memberType, boolean isActive) {

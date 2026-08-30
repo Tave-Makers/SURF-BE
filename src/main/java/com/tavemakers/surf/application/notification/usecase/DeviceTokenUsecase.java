@@ -26,6 +26,12 @@ public class DeviceTokenUsecase {
         deviceTokenRegisterService.register(memberId, dto.token(), dto.platform());
     }
 
+    /** 로그아웃한 기기의 디바이스 토큰 삭제 — 본인 소유 토큰만 삭제된다 */
+    @Transactional
+    public void unregister(Long memberId, String token) {
+        deviceTokenRepository.deleteByMemberIdAndToken(memberId, token);
+    }
+
     /** FCM 발송 실패로 확인된 무효 토큰 일괄 비활성화 */
     @Transactional
     public void disableTokens(List<String> tokens) {
