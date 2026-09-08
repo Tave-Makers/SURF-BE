@@ -2,12 +2,6 @@ package com.tavemakers.surf.presentation.member.controller;
 
 import com.tavemakers.surf.presentation.member.dto.request.MemberSignupReqDTO;
 import com.tavemakers.surf.presentation.member.dto.response.MemberSignupResDTO;
-import com.tavemakers.surf.domain.member.exception.AccountIntegrationAvailableException;
-import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
-import com.tavemakers.surf.domain.member.exception.MemberAlreadyExistsException;
-import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
-import com.tavemakers.surf.domain.member.exception.MemberSignupRejectedException;
-import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.presentation.member.dto.response.OnboardingCheckResDTO;
 import com.tavemakers.surf.application.member.usecase.MemberUsecase;
 import com.tavemakers.surf.global.common.response.ApiResponse;
@@ -18,12 +12,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "자체 회원가입", description = "회원가입 및 온보딩 관련 API")
@@ -41,52 +33,20 @@ public class MemberSignupController {
             description = "카카오 로그인 후 추가 정보를 입력하여 회원가입을 요청합니다."
     )
     @PostMapping("/v1/user/members/signup")
+    @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<MemberSignupResDTO> signup(
             @Valid @RequestBody MemberSignupReqDTO request,
             @Parameter(hidden = true) @LogParam("request_id") String requestId
     ) {
         Long userId = SecurityUtils.getCurrentMemberId();
 
-        try {
-            ApiResponse<MemberSignupResDTO> response = ApiResponse.response(
-                    HttpStatus.CREATED,
-                    "회원가입 요청 접수",
-                    memberUsecase.signup(userId, request)
-            );
-
-            return response;
-        } catch (AccountIntegrationAvailableException | EmailAlreadyUsedException | PhoneAlreadyUsedException e) {
-            // 온보딩 검증 예외(case B/C)는 전용 핸들러에 위임해 실제 409로 응답 (§3.5)
-            throw e;
-        } catch (Exception e) {
-
-            int statusCode;
-            String errorReason;
-
-            if (e instanceof MemberAlreadyExistsException) {
-                statusCode = 409;
-                errorReason = "MEMBER_ALREADY_EXISTS";
-            } else if (e instanceof MemberSignupRejectedException) {
-                statusCode = 403;
-                errorReason = "ADMIN_REJECTED";
-            } else if (e instanceof MemberBlacklistedException) {
-                statusCode = 403;
-                errorReason = "MEMBER_BLACKLISTED";
-            } else if (e instanceof IllegalArgumentException) {
-                statusCode = 400;
-                errorReason = "INVALID_ARGUMENT";
-            } else {
-                statusCode = 500;
-                errorReason = "INTERNAL_SERVER_ERROR";
-            }
-
-            // 로깅은 AOP에서 처리되므로, 적절한 에러 응답만 반환
-            return ApiResponse.response(
-                            HttpStatus.valueOf(statusCode),
-                            errorReason,
-                            null
-            );
-        }
+        // 실패 예외는 GlobalExceptionHandler 로 흘려보내 실제 HTTP 상태(403/409/400)로 응답한다.
+        // 컨트롤러에서 잡아 ApiResponse 로 감싸면 상태가 200 으로 고정되므로 여기서 catch 하지 않는다.
+        return ApiResponse.response(
+                HttpStatus.CREATED,
+                "회원가입 요청 접수",
+                memberUsecase.signup(userId, request)
+        );
     }
 
     /**

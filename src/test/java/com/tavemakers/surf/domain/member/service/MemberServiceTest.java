@@ -8,6 +8,7 @@ import com.tavemakers.surf.domain.member.entity.enums.MemberRole;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.entity.enums.MemberType;
 import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
+import com.tavemakers.surf.domain.member.exception.InvalidMemberInfoException;
 import com.tavemakers.surf.domain.member.exception.MemberBlacklistedException;
 import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
@@ -111,23 +112,23 @@ class MemberServiceTest {
 
         assertThatThrownBy(() -> memberService.signup(
                 integratedAway, "홍길동", "서울대", "서울대학원", "test@example.com", "010-1234-5678"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidMemberInfoException.class);
 
         then(memberBlacklistGetService).shouldHaveNoInteractions();
         assertThat(integratedAway.getStatus()).isEqualTo(MemberStatus.REGISTERING);
     }
 
     @Test
-    @DisplayName("이메일이 null/공백이면 IllegalArgumentException — DTO 검증에 의존하지 않는 서비스 자체 방어")
-    void signup_blankEmail_throwsIllegalArgument() {
+    @DisplayName("이메일이 null/공백이면 InvalidMemberInfoException(400) — DTO 검증에 의존하지 않는 서비스 자체 방어")
+    void signup_blankEmail_throwsInvalidMemberInfo() {
         Member member = registeringMember();
 
         assertThatThrownBy(() -> memberService.signup(
                 member, "홍길동", "서울대", "서울대학원", "   ", "010-1234-5678"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidMemberInfoException.class);
         assertThatThrownBy(() -> memberService.signup(
                 member, "홍길동", "서울대", "서울대학원", null, "010-1234-5678"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidMemberInfoException.class);
 
         then(memberBlacklistGetService).shouldHaveNoInteractions();
         assertThat(member.getStatus()).isEqualTo(MemberStatus.REGISTERING);
