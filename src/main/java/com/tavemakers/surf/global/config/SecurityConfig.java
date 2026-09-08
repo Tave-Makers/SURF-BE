@@ -77,6 +77,16 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable()) // 우리는 소셜 로그인 + JWT 사용 → formLogin 비활성화
                 .httpBasic(basic -> basic.disable()) // Basic Auth 비활성화
                 .exceptionHandling(exception -> exception
+                        // 무토큰(익명) 요청이 보호 경로에 닿으면 401 — 미등록 시 Spring 기본값이 403(Http403ForbiddenEntryPoint)이라 인증/인가 기준이 섞인다
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.setCharacterEncoding("UTF-8");
+                            objectMapper.writeValue(
+                                    response.getWriter(),
+                                    ApiResponse.response(HttpStatus.UNAUTHORIZED, "[인증]이 필요한 요청입니다.", null)
+                            );
+                        })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
