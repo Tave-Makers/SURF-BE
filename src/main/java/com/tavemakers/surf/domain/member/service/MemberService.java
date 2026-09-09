@@ -2,6 +2,7 @@ package com.tavemakers.surf.domain.member.service;
 
 import com.tavemakers.surf.domain.member.entity.Member;
 import com.tavemakers.surf.domain.member.exception.EmailAlreadyUsedException;
+import com.tavemakers.surf.domain.member.exception.InvalidMemberInfoException;
 import com.tavemakers.surf.domain.member.exception.PhoneAlreadyUsedException;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
 import com.tavemakers.surf.domain.member.validator.OnboardingAccountValidator;
@@ -37,12 +38,12 @@ public class MemberService {
     ) {
         // 이메일 필수 방어 — DTO 검증에 기대지 않는다. 빈 값이 findByEmail("") 조회·UNIQUE '' 점유로 샌다
         if (!StringUtils.hasText(rawEmail)) {
-            throw new IllegalArgumentException("이메일은 필수 입력값입니다.");
+            throw new InvalidMemberInfoException("이메일은 필수 입력값입니다.");
         }
 
         // 통합으로 소셜 계정이 이전된 회원(잔존 access token)의 온보딩 차단 — 고아 회원 방지 (§3.6.3)
         if (member.getSocialAccounts().isEmpty()) {
-            throw new IllegalArgumentException("소셜 계정이 연결되지 않은 회원은 온보딩할 수 없습니다.");
+            throw new InvalidMemberInfoException("소셜 계정이 연결되지 않은 회원은 온보딩할 수 없습니다.");
         }
 
         // 이메일 및 전화번호 정규화 — 전화번호는 숫자만 남기고, 빈 결과는 null(미입력)로 접는다
