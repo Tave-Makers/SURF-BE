@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -16,18 +17,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SecurityE2ETest extends E2ESupport {
 
     @Test
-    @DisplayName("유효하지 않은 액세스 토큰으로 보호 엔드포인트 호출 시 401")
+    @DisplayName("유효하지 않은 액세스 토큰으로 보호 엔드포인트 호출 시 401 + ApiResponse 형식 body")
     void invalidToken_returns401() throws Exception {
         mockMvc.perform(get("/v1/user/home")
                         .header("Authorization", "Bearer not-a-valid-jwt"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").isString())
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test
-    @DisplayName("토큰 없이 보호 엔드포인트 호출 시 인증 실패(4xx)")
-    void noToken_isRejected() throws Exception {
+    @DisplayName("토큰 없이 보호 엔드포인트 호출 시 401 (403 아님) + ApiResponse 형식 body — 인증 실패는 401, 인가 실패는 403")
+    void noToken_returns401() throws Exception {
         mockMvc.perform(get("/v1/user/home"))
-                .andExpect(status().is4xxClientError());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").isString())
+                .andExpect(jsonPath("$.data").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("토큰 없이 관리자 엔드포인트 호출 시에도 401 — 역할 규칙 이전에 인증부터 실패")
+    void noToken_onAdminEndpoint_returns401() throws Exception {
+        mockMvc.perform(get("/v1/admin/boards/1"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test

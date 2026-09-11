@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tavemakers.surf.domain.member.entity.CustomUserDetails;
 import com.tavemakers.surf.domain.member.entity.enums.MemberStatus;
 import com.tavemakers.surf.domain.member.repository.MemberRepository;
+import com.tavemakers.surf.global.common.response.ApiResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,7 +19,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -103,9 +104,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .orElse(AuthResult.NOT_FOUND);
     }
 
+    /** 401 응답 — 다른 에러 응답과 동일하게 ApiResponse(code, message, data) 형식으로 내보낸다. */
     private void unauthorized(HttpServletResponse res, String message) throws IOException {
         res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         res.setContentType("application/json;charset=UTF-8");
-        res.getWriter().write(objectMapper.writeValueAsString(Map.of("message", message)));
+        res.getWriter().write(objectMapper.writeValueAsString(
+                ApiResponse.response(HttpStatus.UNAUTHORIZED, message, null)));
     }
 }
