@@ -15,7 +15,11 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -83,8 +87,16 @@ public class RefreshTokenService {
 
     /** RTR 핵심: refresh 검증 + 재사용 탐지 + 회전(rotation). ClientType 분기로 송출 채널 결정. */
     public RotateResult rotate(HttpServletResponse response, ClientType clientType, String refreshToken) {
+        return rotate(response, clientType, refreshToken, null);
+    }
+
+    /** 호출 출처를 포함한 RTR 회전. 출처는 진단 로그에만 사용한다. */
+    public RotateResult rotate(HttpServletResponse response, ClientType clientType, String refreshToken, String originHeader) {
+        String origin = sanitizeOrigin(originHeader);
+        String reqTokenFp = tokenFingerprint(refreshToken);
         boolean valid = jwtService.isTokenValid(refreshToken);
-        log.info("[RTR][ROTATE] isTokenValid={} clientType={}", valid, clientType);
+        log.info("[RTR][ROTATE] isTokenValid={} clientType={} origin={} reqTokenFp={}",
+                valid, clientType, origin, reqTokenFp);
 
         if (!valid) {
             throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_INVALID.getMessage());
@@ -107,13 +119,17 @@ public class RefreshTokenService {
         if (consumeResult != ConsumeResult.CONSUMED) {
             String alreadyRotated = findGraceToken(memberId, deviceId, refreshToken);
             if (alreadyRotated != null) {
-                log.info("[RTR][ROTATE] idempotent rotation (grace hit) memberId={}", memberId);
-                return emit(response, clientType, memberId, alreadyRotated);
+                log.info("[RTR][ROTATE] idempotent rotation (grace hit) memberId={} origin={} reqTokenFp={} respTokenFp={}",
+                        memberId, origin, reqTokenFp, tokenFingerprint(alreadyRotated));
+                return emit(response, clientType, memberId, alreadyRotated, origin, reqTokenFp);
             }
             if (consumeResult == ConsumeResult.NOT_FOUND) {
+                log.warn("[RTR][ROTATE] refresh not found memberId={} origin={} reqTokenFp={}",
+                        memberId, origin, reqTokenFp);
                 throw new UnauthorizedException(TokenErrorMessage.REFRESH_TOKEN_NOT_FOUND.getMessage());
             }
-            log.error("[RTR][ROTATE] refresh reuse detected memberId={}", memberId);
+            log.error("[RTR][ROTATE] refresh reuse detected memberId={} origin={} reqTokenFp={}",
+                    memberId, origin, reqTokenFp);
             try {
                 invalidateAll(memberId);
             } catch (RuntimeException ex) {
@@ -131,7 +147,7 @@ public class RefreshTokenService {
         saveGrace(memberId, deviceId, refreshToken, newRefresh);
         save(newRefresh);
 
-        return emit(response, clientType, memberId, newRefresh);
+        return emit(response, clientType, memberId, newRefresh, origin, reqTokenFp);
     }
 
     /** 특정 디바이스 refresh 무효화 (로그아웃) — 유예 키도 함께 폐기 */
@@ -200,14 +216,40 @@ public class RefreshTokenService {
     }
 
     /** ClientType에 따라 새 refresh 토큰을 송출하고 결과를 반환 */
-    private RotateResult emit(HttpServletResponse response, ClientType clientType, Long memberId, String newRefresh) {
+    private RotateResult emit(HttpServletResponse response, ClientType clientType, Long memberId,
+                              String newRefresh, String origin, String reqTokenFp) {
+        String respTokenFp = tokenFingerprint(newRefresh);
         if (clientType == ClientType.APP) {
-            log.info("[RTR][ROTATE] rotation success (app body) memberId={}", memberId);
+            log.info("[RTR][ROTATE] rotation success (app body) memberId={} origin={} reqTokenFp={} respTokenFp={}",
+                    memberId, origin, reqTokenFp, respTokenFp);
             return new RotateResult(memberId, newRefresh);
         }
         jwtService.sendRefreshToken(response, newRefresh);
-        log.info("[RTR][ROTATE] rotation success (web cookie) memberId={}", memberId);
+        log.info("[RTR][ROTATE] rotation success (web cookie) memberId={} origin={} reqTokenFp={} respTokenFp={}",
+                memberId, origin, reqTokenFp, respTokenFp);
         return new RotateResult(memberId, null);
+    }
+
+    /** 외부 입력이 로그에 그대로 삽입되지 않도록 알려진 출처만 허용한다. */
+    private String sanitizeOrigin(String origin) {
+        if (origin == null) {
+            return "unknown";
+        }
+        return switch (origin) {
+            case "middleware", "csr", "rsc" -> origin;
+            default -> "unknown";
+        };
+    }
+
+    /** 토큰을 노출하지 않고 회전 전후를 연결하기 위한 SHA-256 앞 8자리. */
+    private String tokenFingerprint(String token) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                    .digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest, 0, 4);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("SHA-256 unavailable", ex);
+        }
     }
 
     /**

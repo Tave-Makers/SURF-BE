@@ -6,6 +6,9 @@ import com.tavemakers.surf.global.jwt.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.ValueOperations;
@@ -13,6 +16,7 @@ import org.springframework.data.redis.core.script.RedisScript;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -28,6 +32,7 @@ import static org.mockito.Mockito.when;
  * 인프라 예외 경로(invalidateAll 실패, Lua null 반환)를 Mockito로 검증한다.
  */
 @DisplayName("RefreshTokenService — 인프라 예외 처리 단위 테스트")
+@ExtendWith(OutputCaptureExtension.class)
 class RefreshTokenServiceUnitTest {
 
     private static final Long MEMBER_ID = 1L;
@@ -87,5 +92,20 @@ class RefreshTokenServiceUnitTest {
         // 후속 회전·세션 폐기 동작이 일절 실행되지 않아야 함
         verify(jwtService, never()).createRefreshToken(anyLong(), anyString());
         verify(redisTemplate, never()).scan(any(ScanOptions.class));
+    }
+
+    @Test
+    @DisplayName("진단 로그는 허용된 출처와 토큰 지문만 남기고 원본 토큰과 임의 헤더를 노출하지 않는다")
+    void rotationLog_recordsSafeOriginAndFingerprint(CapturedOutput output) {
+        when(jwtService.isTokenValid(REFRESH_TOKEN)).thenReturn(false);
+
+        assertThatThrownBy(() -> refreshTokenService.rotate(null, ClientType.WEB, REFRESH_TOKEN, "rsc"))
+                .isInstanceOf(UnauthorizedException.class);
+        assertThatThrownBy(() -> refreshTokenService.rotate(null, ClientType.WEB, REFRESH_TOKEN, "rsc\nforged-log"))
+                .isInstanceOf(UnauthorizedException.class);
+
+        assertThat(output.getOut()).contains("origin=rsc reqTokenFp=256d04db")
+                .contains("origin=unknown reqTokenFp=256d04db")
+                .doesNotContain(REFRESH_TOKEN, "forged-log");
     }
 }
