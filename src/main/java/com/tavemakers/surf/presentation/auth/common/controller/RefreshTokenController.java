@@ -3,10 +3,7 @@ package com.tavemakers.surf.presentation.auth.common.controller;
 import com.tavemakers.surf.domain.auth.common.enums.ClientType;
 import com.tavemakers.surf.presentation.auth.common.dto.RefreshTokenResDTO;
 import com.tavemakers.surf.domain.auth.common.exception.TokenErrorMessage;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService;
-import com.tavemakers.surf.domain.auth.common.service.RefreshTokenService.RotateResult;
-import com.tavemakers.surf.domain.member.entity.Member;
-import com.tavemakers.surf.application.member.query.MemberGetService;
+import com.tavemakers.surf.application.auth.common.usecase.RefreshTokenUsecase;
 import com.tavemakers.surf.global.common.exception.UnauthorizedException;
 import com.tavemakers.surf.global.common.response.ApiResponse;
 import com.tavemakers.surf.global.jwt.JwtService;
@@ -25,10 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class RefreshTokenController {
 
     private static final String APP_REFRESH_HEADER = "X-Refresh-Token";
+    private static final String REFRESH_ORIGIN_HEADER = "X-Refresh-Origin";
 
-    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenUsecase refreshTokenUsecase;
     private final JwtService jwtService;
-    private final MemberGetService memberGetService;
 
     /**
      * Refresh Token 기반 Access Token 재발급.
@@ -47,17 +44,9 @@ public class RefreshTokenController {
         // 1) 클라이언트 타입별 RefreshToken 추출
         String refreshToken = extractRefreshToken(request, clientType);
 
-        // 2) RTR: 검증 + 회전 (WEB=쿠키 부착, APP=새 토큰 반환)
-        RotateResult result = refreshTokenService.rotate(response, clientType, refreshToken);
-
-        // 3) 새 access 발급
-        Member member = memberGetService.getMember(result.memberId());
-        String newAccessToken = jwtService.createAccessToken(member.getId(), member.getRole().name());
-
-        // 4) 클라이언트 타입별 응답 본문 조립
-        RefreshTokenResDTO body = (clientType == ClientType.APP)
-                ? RefreshTokenResDTO.app(newAccessToken, result.newRefreshToken())
-                : RefreshTokenResDTO.web(newAccessToken);
+        // 2) RTR 회전과 새 Access Token 발급
+        RefreshTokenResDTO body = refreshTokenUsecase.refresh(
+                response, clientType, refreshToken, request.getHeader(REFRESH_ORIGIN_HEADER));
 
         return ApiResponse.response(HttpStatus.OK, "Access token 재발급 성공", body);
     }
