@@ -1,16 +1,12 @@
 package com.tavemakers.surf.domain.schedule.entity;
 
-import com.tavemakers.surf.domain.post.entity.Post;
 import com.tavemakers.surf.domain.schedule.exception.ScheduleTimeException;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,15 +38,7 @@ public class Schedule extends BaseEntity {
     @Column(nullable = false)
     private String location;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private Post post;
-
     public static Schedule from(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location) {
-        return of(category, title, startAt, endAt, location, null);
-    }
-
-    public static Schedule of(String category, String title, LocalDateTime startAt, LocalDateTime endAt, String location, Post post) {
         validateScheduleTime(startAt, endAt);
         return Schedule.builder()
                 .category(category)
@@ -58,7 +46,6 @@ public class Schedule extends BaseEntity {
                 .startAt(startAt)
                 .endAt(endAt)
                 .location(location)
-                .post(post)
                 .build();
     }
 
