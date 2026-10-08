@@ -19,30 +19,15 @@ public record ScheduleResDTO(
         LocalDateTime endAt,
         @Schema(description = "일정 장소", example = "세종대학교 광개토대왕관")
         String location,
-        @Schema(description = "공지사항 연동 여부", example = "true/false")
+        @Schema(description = "조회 가능한 연결 공지 존재 여부", example = "true")
         boolean mappedByPost,
-        @Schema(description = "연동되어있는 공지사항의 ID", example = "12")
-        Long postId
+        @Schema(description = "연결된 공지 목록 (예약 공지 제외, 최신순)", example = "[{\"postId\":12,\"title\":\"만남의 장 추가 안내\"},{\"postId\":11,\"title\":\"만남의 장 공지\"}]")
+        List<SchedulePostResDTO> posts
 ) {
-    public static ScheduleResDTO fromEntity(Schedule schedule) {
-        boolean mappedByPost = schedule.getPost() != null;
-        Long postId = mappedByPost ? schedule.getPost().getId() : null;
-
+    public static ScheduleResDTO fromEntity(Schedule schedule, List<SchedulePostResDTO> posts) {
         return new ScheduleResDTO(
-                schedule.getId(),
-                schedule.getCategory(),
-                schedule.getTitle(),
-                schedule.getStartAt(),
-                schedule.getEndAt(),
-                schedule.getLocation(),
-                mappedByPost,
-                postId
-        );
-    }
-
-    public static List<ScheduleResDTO> fromEntities(List<Schedule> schedules) {
-        return schedules.stream()
-                .map(ScheduleResDTO::fromEntity)
-                .toList();
+                schedule.getId(), schedule.getCategory(), schedule.getTitle(),
+                schedule.getStartAt(), schedule.getEndAt(), schedule.getLocation(),
+                !posts.isEmpty(), List.copyOf(posts));
     }
 }

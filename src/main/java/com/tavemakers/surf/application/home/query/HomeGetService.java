@@ -10,6 +10,8 @@ import com.tavemakers.surf.domain.member.entity.Track;
 import com.tavemakers.surf.domain.member.exception.MemberNotFoundException;
 import com.tavemakers.surf.application.member.query.MemberGetService;
 import com.tavemakers.surf.domain.schedule.entity.Schedule;
+import com.tavemakers.surf.domain.post.entity.Post;
+import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.application.schedule.query.ScheduleGetService;
 import com.tavemakers.surf.global.logging.LogEventEmitter;
 import com.tavemakers.surf.global.util.SecurityUtils;
@@ -40,6 +42,7 @@ public class HomeGetService {
 
     private final MemberGetService memberGetService;
     private final ScheduleGetService scheduleGetService;
+    private final PostGetService postGetService;
     private final LogEventEmitter logEventEmitter;
 
     /** 홈 화면 정보 조회 (메시지, 배너, 회원정보, 일정) */
@@ -114,11 +117,11 @@ public class HomeGetService {
             scheduleTitle = s.getTitle();
             scheduleDate = s.getStartAt().toLocalDate().format(formatter);
 
-            if (s.getPost() != null && s.getPost().getBoard() != null) {
-                Long postId = s.getPost().getId();
-                Long boardId = s.getPost().getBoard().getId();
-                scheduleDeepLink = "/board/" + boardId + "/post/" + postId;
-            }
+            // 행사에 대해 가장 먼저 작성된 공개 공지로 이동한다. 작성 시각이 같으면 ID가 작은 공지를 선택한다.
+            scheduleDeepLink = postGetService.getPublishedPostsByScheduleIds(List.of(s.getId())).stream()
+                    .min(Comparator.comparing(Post::getPostedAt).thenComparing(Post::getId))
+                    .map(post -> "/board/" + post.getBoard().getId() + "/post/" + post.getId())
+                    .orElse(null);
         }
 
         Map<String, Object> homeViewProps = new HashMap<>();
