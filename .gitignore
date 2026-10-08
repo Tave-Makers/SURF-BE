@@ -63,4 +63,5 @@ src/main/resources/application-local.yml
 google-cloud-cli-*.tar.gz
 tave-surf.env.example
 /.claude/
-/docs/
+/docs/*
+!/docs/notice-schedule-tagging.md
