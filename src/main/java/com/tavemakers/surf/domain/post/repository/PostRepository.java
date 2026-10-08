@@ -18,10 +18,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     List<Post> findAllBySchedule_Id(Long scheduleId);
 
-    /** 캘린더 공지 바로가기 — 예약 공지와 차단 작성자를 제외하고 일괄 조회 */
+    /** 캘린더 공지 바로가기 — 공지사항 게시판에서 예약 공지와 차단 작성자를 제외하고 일괄 조회 */
     @Query("""
         select p from Post p join fetch p.board
         where p.schedule.id in :scheduleIds
+          and p.board.type = com.tavemakers.surf.domain.board.entity.BoardType.NOTICE
           and p.isReserved = false
           and p.member.id not in :excludedAuthorIds
         order by p.postedAt desc, p.id desc
