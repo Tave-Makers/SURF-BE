@@ -34,7 +34,7 @@ class PostUpdateReqDTOTest {
         return new PostUpdateReqDTO(
                 title, content, 2L, true,
                 isReservationChanged, RESERVED_AT,
-                isImageChanged, IMAGES, isFileChanged, FILES, false);
+                isImageChanged, IMAGES, isFileChanged, FILES, false, null);
     }
 
     @Test

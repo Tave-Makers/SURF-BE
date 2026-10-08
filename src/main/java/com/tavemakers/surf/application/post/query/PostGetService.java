@@ -14,6 +14,7 @@ import com.tavemakers.surf.domain.post.service.support.ViewCountService;
 import com.tavemakers.surf.domain.reservation.entity.Reservation;
 import com.tavemakers.surf.application.reservation.query.ReservationGetService;
 import com.tavemakers.surf.application.scrap.query.ScrapGetService;
+import com.tavemakers.surf.global.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +39,20 @@ public class PostGetService {
     private final PostFileGetService fileGetService;
     private final ViewCountService viewCountService;
     private final ReservationGetService reservationGetService;
+
+    /** 일정 삭제 시 예약 여부와 무관하게 모든 연결 공지 조회 */
+    public List<Post> getPostsByScheduleId(Long scheduleId) {
+        return postRepository.findAllBySchedule_Id(scheduleId);
+    }
+
+    /** 일정별 공개 공지 목록 — 차단 작성자는 기존 게시글 조회와 동일하게 제외 */
+    public List<Post> getPublishedPostsByScheduleIds(List<Long> scheduleIds) {
+        if (scheduleIds.isEmpty()) return List.of();
+        Long viewerId = SecurityUtils.getCurrentMemberId();
+        Set<Long> excluded = viewerId == null ? Set.of(-1L)
+                : blockGetService.getMyBlockedMemberIds(viewerId);
+        return postRepository.findPublishedByScheduleIds(scheduleIds, excluded);
+    }
 
     /** 게시글 ID로 엔티티 조회 (없으면 예외 발생) */
     @Transactional

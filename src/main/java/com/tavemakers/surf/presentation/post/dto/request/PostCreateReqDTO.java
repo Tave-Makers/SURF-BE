@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.AssertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,9 +41,18 @@ public record PostCreateReqDTO(
         List<PostFileCreateReqDTO> fileList,
 
         @Schema(description = "일정 매핑 유무", example = "true")
-        Boolean hasSchedule
+        Boolean hasSchedule,
+
+        @Schema(description = "태그할 기존 일정 ID (생략하면 일정 없이 생성)", example = "5")
+        @Positive Long scheduleId
 
 ) implements LogPropsProvider {
+
+        @AssertTrue(message = "일정 연결 시 scheduleId가 필요하며, 연결 해제 시 scheduleId를 보낼 수 없습니다.")
+        public boolean isScheduleTagValid() {
+                return !(Boolean.TRUE.equals(hasSchedule) && scheduleId == null)
+                        && !(Boolean.FALSE.equals(hasSchedule) && scheduleId != null);
+        }
 
         @Override
         public Map<String, Object> buildProps() {

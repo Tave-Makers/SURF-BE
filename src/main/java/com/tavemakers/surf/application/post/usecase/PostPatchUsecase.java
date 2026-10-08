@@ -1,5 +1,7 @@
 package com.tavemakers.surf.application.post.usecase;
 import com.tavemakers.surf.domain.post.service.post.PostPatchService;
+import com.tavemakers.surf.domain.post.service.post.PostScheduleService;
+import com.tavemakers.surf.application.post.query.PostGetService;
 
 import com.tavemakers.surf.presentation.post.dto.request.PostUpdateReqDTO;
 import com.tavemakers.surf.presentation.post.dto.response.PostDetailResDTO;
@@ -19,6 +21,8 @@ import java.util.Map;
 public class PostPatchUsecase {
 
     private final PostPatchService postPatchService;
+    private final PostScheduleService postScheduleService;
+    private final PostGetService postGetService;
     private final ReservationUsecase reservationUsecase;
     private final ProfanityMasker profanityMasker;
     private final LogEventEmitter logEventEmitter;
@@ -31,6 +35,10 @@ public class PostPatchUsecase {
         }
         PostUpdateReqDTO masked = req.withMaskedText(
                 maskAndLog(req.title(), "post.title"), maskAndLog(req.content(), "post.content"));
+        if (req.scheduleId() != null || Boolean.FALSE.equals(req.hasSchedule())) {
+            postScheduleService.updateScheduleTag(
+                    postGetService.getPost(postId), req.scheduleId(), req.hasSchedule());
+        }
         return postPatchService.updatePost(postId, masked, memberId);
     }
 

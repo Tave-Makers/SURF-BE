@@ -6,6 +6,7 @@ import com.tavemakers.surf.domain.post.entity.PostImageUrl;
 import com.tavemakers.surf.domain.post.service.file.PostFileCreateService;
 import com.tavemakers.surf.domain.post.service.image.PostImageCreateService;
 import com.tavemakers.surf.domain.post.service.post.PostCreateService;
+import com.tavemakers.surf.domain.post.service.post.PostScheduleService;
 
 import com.tavemakers.surf.presentation.post.dto.request.PostCreateReqDTO;
 import com.tavemakers.surf.presentation.post.dto.request.PostFileCreateReqDTO;
@@ -35,6 +36,7 @@ import java.util.Map;
 public class PostCreateUsecase {
 
     private final PostCreateService postCreateService;
+    private final PostScheduleService postScheduleService;
     private final ReservationUsecase reservationUsecase;
     private final LogEventEmitter logEventEmitter;
     private final ProfanityMasker profanityMasker;
@@ -44,11 +46,12 @@ public class PostCreateUsecase {
     public PostDetailResDTO createPost(PostCreateReqDTO req, Long memberId) {
         PostCreateService.PostCreateResult result = postCreateService.createPost(
                 maskAndLog(req.title(), "post.title"), maskAndLog(req.content(), "post.content"),
-                req.pinned(), req.isReserved(), req.hasSchedule(),
+                req.pinned(), req.isReserved(), false,
                 req.boardId(), req.categoryId(),
                 toImageData(req.imageUrlList()), toFileData(req.fileList()), memberId);
 
         Post saved = result.post();
+        postScheduleService.updateScheduleTag(saved, req.scheduleId(), req.hasSchedule());
 
         if (req.isReserved()) {
             reservationUsecase.reservePost(saved.getId(), req.reservedAt());

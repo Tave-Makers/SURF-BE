@@ -26,13 +26,4 @@ public class ScheduleDeleteController {
         scheduleUseCase.deleteSchedule(scheduleId);
         return ApiResponse.response(HttpStatus.OK, SCHEDULE_DELETED.getMessage(), null);
     }
-
-    @Operation(summary = "게시글과 매핑된 일정 삭제", description = "일정을 삭제합니다.")
-    @DeleteMapping("/v1/admin/posts/{postId}/schedules/{scheduleId}")
-    public ApiResponse<Void> deleteScheduleAtPost(
-            @PathVariable("postId") Long postId,
-            @PathVariable("scheduleId") Long scheduleId) {
-        scheduleUseCase.deleteScheduleAtPost(postId, scheduleId);
-        return ApiResponse.response(HttpStatus.OK, SCHEDULE_DELETED.getMessage(), null);
-    }
 }

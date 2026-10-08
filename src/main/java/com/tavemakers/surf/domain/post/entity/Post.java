@@ -3,6 +3,7 @@ package com.tavemakers.surf.domain.post.entity;
 import com.tavemakers.surf.domain.board.entity.Board;
 import com.tavemakers.surf.domain.board.entity.BoardCategory;
 import com.tavemakers.surf.domain.member.entity.Member;
+import com.tavemakers.surf.domain.schedule.entity.Schedule;
 import com.tavemakers.surf.global.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -72,8 +73,9 @@ public class Post extends BaseEntity {
 
     private Boolean hasSchedule = false;
 
-    @Column(nullable = true)
-    private Long scheduleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id", foreignKey = @ForeignKey(name = "fk_post_schedule"))
+    private Schedule schedule;
 
 
     public static Post of(String title, String content, Boolean pinned, boolean isReserved,
@@ -116,7 +118,7 @@ public class Post extends BaseEntity {
         this.hasSchedule = hasSchedule != null ? hasSchedule : this.hasSchedule;
 
         if (Boolean.FALSE.equals(hasSchedule)) {
-            this.scheduleId = null;
+            tagSchedule(null);
         }
     }
 
@@ -155,12 +157,14 @@ public class Post extends BaseEntity {
         this.viewCount++;
     }
 
-    public void addScheduleId(Long scheduleId) {
-        this.scheduleId = scheduleId;
+    /** 기존 일정 연결 또는 연결 해제 — 공지 하나에는 일정 하나만 연결한다 */
+    public void tagSchedule(Schedule schedule) {
+        this.schedule = schedule;
+        this.hasSchedule = schedule != null;
     }
 
-    public void updateScheduleIdNull(){
-        this.scheduleId = null;
+    public Long getScheduleId() {
+        return schedule != null ? schedule.getId() : null;
     }
 
 }

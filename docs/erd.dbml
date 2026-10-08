@@ -182,7 +182,7 @@ Table post {
   comment_count  bigint      [default: 0, note: "댓글 수 (캐싱)"]
   scrap_count    bigint      [default: 0, note: "스크랩 수 (캐싱)"]
   has_schedule   boolean     [default: false, note: "연결된 일정 존재 여부"]
-  schedule_id    bigint      [note: "연결된 일정 ID (has_schedule=true인 경우)"]
+  schedule_id    bigint      [ref: > schedule.schedule_id, note: "태그된 일정 (일정:공지=1:N, 없으면 null)"]
   version        bigint      [note: "낙관적 락 버전 (좋아요/스크랩 동시성 제어)"]
   created_at     datetime    [note: "작성 시각"]
   updated_at     datetime    [note: "수정 시각"]
@@ -254,7 +254,7 @@ Table comment_like {
 
 Table schedule {
   schedule_id    bigint      [pk, increment, note: "일정 고유 식별자"]
-  post_id        bigint      [ref: - post.post_id, note: "연결된 게시글 (없으면 null)"]
+
   category       varchar     [not null, note: "일정 카테고리 (예: 정규세션, 스터디)"]
   title          varchar     [not null, note: "일정 제목"]
   start_at       datetime    [not null, note: "일정 시작 시각"]

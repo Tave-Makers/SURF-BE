@@ -3,6 +3,8 @@ package com.tavemakers.surf.presentation.post.dto.request;
 import com.tavemakers.surf.global.logging.LogPropsProvider;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.AssertTrue;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,10 +46,19 @@ public record PostUpdateReqDTO(
         @Schema(description = "게시글 첨부파일")
         List<PostFileCreateReqDTO> fileList,
 
-        @Schema(description = "일정 매핑 유무", example = "true")
-        Boolean hasSchedule
+        @Schema(description = "false이면 일정 태그 해제, 생략하면 기존 연결 유지", example = "false")
+        Boolean hasSchedule,
+
+        @Schema(description = "연결·교체할 기존 일정 ID (생략하면 기존 연결 유지)", example = "5")
+        @Positive Long scheduleId
 
 ) implements LogPropsProvider {
+
+        @AssertTrue(message = "일정 연결 시 scheduleId가 필요하며, 연결 해제 시 scheduleId를 보낼 수 없습니다.")
+        public boolean isScheduleTagValid() {
+                return !(Boolean.TRUE.equals(hasSchedule) && scheduleId == null)
+                        && !(Boolean.FALSE.equals(hasSchedule) && scheduleId != null);
+        }
 
         /**
          * title·content만 마스킹된 값으로 교체한 사본.
@@ -57,7 +68,7 @@ public record PostUpdateReqDTO(
                 return new PostUpdateReqDTO(
                         maskedTitle, maskedContent, categoryId, pinned,
                         isReservationChanged, reservedAt,
-                        isImageChanged, imageUrlList, isFileChanged, fileList, hasSchedule);
+                        isImageChanged, imageUrlList, isFileChanged, fileList, hasSchedule, scheduleId);
         }
 
         @Override

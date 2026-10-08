@@ -16,6 +16,21 @@ import org.springframework.data.repository.query.Param;
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByMemberId(Long memberId);
 
+    List<Post> findAllBySchedule_Id(Long scheduleId);
+
+    /** 캘린더 공지 바로가기 — 공지사항 게시판에서 예약 공지와 차단 작성자를 제외하고 일괄 조회 */
+    @Query("""
+        select p from Post p join fetch p.board
+        where p.schedule.id in :scheduleIds
+          and p.board.type = com.tavemakers.surf.domain.board.entity.BoardType.NOTICE
+          and p.isReserved = false
+          and p.member.id not in :excludedAuthorIds
+        order by p.postedAt desc, p.id desc
+    """)
+    List<Post> findPublishedByScheduleIds(
+            @Param("scheduleIds") List<Long> scheduleIds,
+            @Param("excludedAuthorIds") Set<Long> excludedAuthorIds);
+
     /** 게시글 행 잠금 조회 — postId 단위 직렬화가 필요한 작업(예약 변경)이 앵커로 사용 */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Post p where p.id = :id")
