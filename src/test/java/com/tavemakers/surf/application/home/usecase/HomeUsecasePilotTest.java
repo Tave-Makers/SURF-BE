@@ -1,6 +1,7 @@
 package com.tavemakers.surf.application.home.usecase;
 
 import com.tavemakers.surf.application.home.query.HomeGetService;
+import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.home.service.HomeBannerService;
 import com.tavemakers.surf.domain.home.service.HomeContentService;
 import com.tavemakers.surf.presentation.home.dto.request.HomeBannerCreateReqDTO;
@@ -52,6 +53,7 @@ class HomeUsecasePilotTest {
     @Autowired
     private HomeUsecase homeUsecase;
 
+    @MockBean private PostGetService postGetService;
     @MockBean private MemberGetService memberGetService;
     @MockBean private ScheduleGetService scheduleGetService;
 
