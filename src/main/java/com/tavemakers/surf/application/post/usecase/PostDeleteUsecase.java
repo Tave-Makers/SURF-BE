@@ -6,7 +6,6 @@ import com.tavemakers.surf.domain.post.repository.PostRepository;
 import com.tavemakers.surf.domain.post.service.post.PostDeleteService;
 import com.tavemakers.surf.application.post.query.PostGetService;
 import com.tavemakers.surf.domain.reservation.service.ReservationDeleteService;
-import com.tavemakers.surf.domain.schedule.service.ScheduleDeleteService;
 import com.tavemakers.surf.application.scrap.query.ScrapGetService;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +23,6 @@ public class PostDeleteUsecase {
     private final PostGetService postGetService;
     private final PostRepository postRepository;
     private final CommentDeleteService commentDeleteService;
-    private final ScheduleDeleteService scheduleDeleteService;
     private final ScrapGetService scrapGetService;
     private final ReservationDeleteService reservationDeleteService;
 
@@ -34,7 +32,6 @@ public class PostDeleteUsecase {
         Post post = postGetService.getPost(postId);
 
         // 연관 데이터 먼저 삭제
-        scheduleDeleteService.deleteByPost(post);
         reservationDeleteService.deleteByPostId(postId);
         scrapGetService.deleteByPostId(postId);
         commentDeleteService.deleteAllByPostId(postId);
@@ -46,7 +43,6 @@ public class PostDeleteUsecase {
     /** 권한 검증 없이 게시글 강제 삭제 — dismiss 전용 */
     @Transactional
     public void forceDeletePost(Post post) {
-        scheduleDeleteService.deleteByPost(post);
         reservationDeleteService.deleteByPostId(post.getId());
         scrapGetService.deleteByPostId(post.getId());
         commentDeleteService.deleteAllByPostId(post.getId());

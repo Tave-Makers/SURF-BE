@@ -23,6 +23,8 @@ public enum ErrorMessage {
 
     BOARD_WRITE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "[공지사항] 게시판은 관리자만 게시글을 작성할 수 있습니다."),
 
+    INVALID_SCHEDULE_TAG(HttpStatus.BAD_REQUEST, "[일정]은 [공지사항]에만 태그할 수 있습니다."),
+
     POST_LIKE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 좋아요를 누른 [게시글]입니다.");
 
     private final HttpStatus status;
